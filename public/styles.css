@@ -176,7 +176,11 @@ body {
     transition: var(--transition);
     font-weight: 500;
     background: white !important;
-    color: var(--text-primary) !important;
+    color: #333333 !important;
+    font-size: 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .time-slot:hover {
@@ -447,17 +451,27 @@ body {
 
 /* Ensure all text in time slots is visible */
 .time-slots .time-slot {
-    color: var(--text-primary) !important;
+    color: #333333 !important;
+    background: white !important;
+    border: 2px solid #e0e0e0 !important;
+}
+
+.time-slots .time-slot:hover {
+    color: #333333 !important;
+    border-color: var(--primary-color) !important;
+    background-color: rgba(33, 150, 243, 0.05) !important;
 }
 
 .time-slots .time-slot.selected {
     color: white !important;
     background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
 }
 
 .time-slots .time-slot.booked {
     color: #999 !important;
     background-color: #f0f0f0 !important;
+    border-color: #ddd !important;
 }
 
 /* Animations */
