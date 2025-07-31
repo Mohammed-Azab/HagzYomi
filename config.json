@@ -1,0 +1,13 @@
+{
+  "courtName": "ملعب حجز يومي",
+  "openingHours": {
+    "start": "10:00",
+    "end": "22:00"
+  },
+  "workingDays": ["sunday", "monday", "tuesday", "wednesday", "thursday"],
+  "maxHoursPerPersonPerDay": 3,
+  "adminPassword": "admin123",
+  "slotDurationMinutes": 60,
+  "currency": "جنيه",
+  "pricePerHour": 100
+}

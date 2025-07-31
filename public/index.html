@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حجز يومي - حجز ملعب كرة القدم</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>⚽ حجز يومي</h1>
+                <p>احجز ملعبك بسهولة</p>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-link active">الرئيسية</a>
+                <a href="/admin" class="nav-link">لوحة الإدارة</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <section class="hero">
+                <h2 class="hero-title" id="courtName">ملعب حجز يومي</h2>
+                <p class="hero-subtitle">احجز موعدك الآن واستمتع بلعب كرة القدم</p>
+            </section>
+
+            <section class="booking-section">
+                <div class="booking-form-container">
+                    <h3 class="section-title">حجز موعد جديد</h3>
+                    
+                    <form class="booking-form" id="bookingForm">
+                        <div class="form-group">
+                            <label for="customerName">الاسم كاملاً</label>
+                            <input type="text" id="customerName" name="name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="customerPhone">رقم الهاتف</label>
+                            <input type="tel" id="customerPhone" name="phone" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="bookingDate">التاريخ</label>
+                            <input type="date" id="bookingDate" name="date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>المواعيد المتاحة</label>
+                            <div class="time-slots" id="timeSlots">
+                                <p class="loading">اختر التاريخ لعرض المواعيد المتاحة</p>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                            احجز الآن
+                        </button>
+                    </form>
+                </div>
+
+                <div class="info-panel">
+                    <h4>معلومات مهمة</h4>
+                    <ul class="info-list">
+                        <li>ساعات العمل: <span id="workingHours">10:00 - 22:00</span></li>
+                        <li>أيام العمل: <span id="workingDays">الأحد - الخميس</span></li>
+                        <li>الحد الأقصى للحجز: <span id="maxHours">3 ساعات يومياً</span></li>
+                        <li>مدة الحجز: <span id="slotDuration">ساعة واحدة</span></li>
+                        <li>السعر: <span id="priceInfo">100 جنيه/ساعة</span></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="features">
+                <h3 class="section-title">لماذا تختار ملعبنا؟</h3>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🏆</div>
+                        <h4>جودة عالية</h4>
+                        <p>ملعب بمواصفات عالمية وأرضية ممتازة</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💡</div>
+                        <h4>إضاءة ممتازة</h4>
+                        <p>إضاءة ليد قوية للعب الليلي المريح</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🚿</div>
+                        <h4>مرافق كاملة</h4>
+                        <p>غرف تغيير ملابس ودورات مياه نظيفة</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🅿️</div>
+                        <h4>موقف سيارات</h4>
+                        <p>موقف واسع ومجاني للسيارات</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 حجز يومي. جميع الحقوق محفوظة.</p>
+        </div>
+    </footer>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✅ تم الحجز بنجاح!</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body" id="successMessage">
+                تم حجز موعدك بنجاح. ستتلقى رسالة تأكيد قريباً.
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="closeModalBtn">حسناً</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal" id="errorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>❌ خطأ في الحجز</h3>
+                <button class="modal-close" id="closeErrorModal">&times;</button>
+            </div>
+            <div class="modal-body" id="errorMessage">
+                حدث خطأ أثناء الحجز. يرجى المحاولة مرة أخرى.
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeErrorModalBtn">حسناً</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
