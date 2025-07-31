@@ -409,21 +409,40 @@ body {
 
 /* Additional color fixes for visibility */
 #successMessage, #errorMessage {
-    color: var(--text-primary) !important;
+    color: #333333 !important;
     background: white !important;
-    font-size: 1rem;
-    line-height: 1.6;
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-weight: normal !important;
+    text-align: right !important;
 }
 
 #successModal .modal-content,
 #errorModal .modal-content {
     background: white !important;
-    color: var(--text-primary) !important;
+    color: #333333 !important;
 }
 
 #successModal .modal-header h3,
 #errorModal .modal-header h3 {
-    color: var(--text-primary) !important;
+    color: #333333 !important;
+}
+
+#successModal .modal-body,
+#errorModal .modal-body {
+    color: #333333 !important;
+    background: white !important;
+    font-size: 1rem !important;
+    padding: 1.5rem !important;
+}
+
+/* Force visibility for modal text content */
+.modal-body * {
+    color: #333333 !important;
+    background: transparent !important;
 }
 
 /* Ensure all text in time slots is visible */
