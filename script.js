@@ -505,7 +505,7 @@ ${result.booking.paymentInfo.instaPay ? `💳 إنستاباي: ${result.booking
                 }
             } else {
                 // Regular confirmed booking
-                successMessage = `🎉 تم تأكيد حجزك بنجاح!
+                successMessage = `🎉 تم إنشاء حجزك بنجاح!
 
 🔢 رقم الحجز: ${result.booking.bookingNumber}
 📅 التاريخ: ${selectedDate}

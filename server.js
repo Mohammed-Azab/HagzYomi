@@ -349,8 +349,8 @@ app.get('/api/config', (req, res) => {
         contactInfo: config.contactInfo,
         features: config.features,
         ui: config.ui,
-        requirePaymentConfirmation: config.requirePaymentConfirmation,
-        paymentTimeoutMinutes: config.paymentTimeoutMinutes,
+        requirePaymentConfirmation: config.features && config.features.requirePaymentConfirmation,
+        paymentTimeoutMinutes: config.features && config.features.paymentTimeoutMinutes,
         paymentInfo: config.paymentInfo
     });
 });
@@ -638,12 +638,12 @@ app.post('/api/book', (req, res) => {
     const bookingNumber = generateBookingNumber();
     
     // Use global configuration
-    const requirePaymentConfirmation = config.requirePaymentConfirmation || false;
+    const requirePaymentConfirmation = (config.features && config.features.requirePaymentConfirmation) || false;
     
     // Set booking status and expiration
     const status = requirePaymentConfirmation ? 'pending' : 'confirmed';
     const expiresAt = requirePaymentConfirmation ? 
-        new Date(Date.now() + (config.paymentTimeoutMinutes || 60) * 60 * 1000).toISOString() : 
+        new Date(Date.now() + ((config.features && config.features.paymentTimeoutMinutes) || 60) * 60 * 1000).toISOString() : 
         null;
     
     const allNewBookings = [];
@@ -651,27 +651,36 @@ app.post('/api/book', (req, res) => {
     
     // Create bookings for each date
     for (const bookingDate of allBookingDates) {
-        const newBookings = timeSlots.map((slot, slotIndex) => ({
-            id: `${bookingId}-${bookingIndex}`,
-            groupId: bookingId,
-            bookingNumber: bookingNumber,
-            name,
-            phone,
-            date: bookingDate,
-            time: slot,
-            duration: duration,
-            totalSlots: timeSlots.length,
-            slotIndex: slotIndex,
-            startTime: time,
-            endTime: timeSlots[timeSlots.length - 1],
-            createdAt: new Date().toISOString(),
-            price: (bookingIndex === 0 && slotIndex === 0) ? totalPrice : 0, // Only charge once for the entire group
-            status: status,
-            expiresAt: expiresAt,
-            isRecurring: isRecurring,
-            recurringWeeks: recurringWeeks,
-            bookingDates: allBookingDates
-        }));
+        const newBookings = timeSlots.map((slot, slotIndex) => {
+            const booking = {
+                id: `${bookingId}-${bookingIndex}`,
+                groupId: bookingId,
+                bookingNumber: bookingNumber,
+                name,
+                phone,
+                date: bookingDate,
+                time: slot,
+                duration: duration,
+                totalSlots: timeSlots.length,
+                slotIndex: slotIndex,
+                startTime: time,
+                endTime: timeSlots[timeSlots.length - 1],
+                createdAt: new Date().toISOString(),
+                price: (bookingIndex === 0 && slotIndex === 0) ? totalPrice : 0, // Only charge once for the entire group
+                status: status,
+                expiresAt: expiresAt,
+                isRecurring: isRecurring,
+                recurringWeeks: recurringWeeks,
+                bookingDates: allBookingDates
+            };
+            
+            // Add payment information if payment confirmation is required
+            if (requirePaymentConfirmation) {
+                booking.paymentInfo = config.paymentInfo;
+            }
+            
+            return booking;
+        });
         
         allNewBookings.push(...newBookings);
         bookingIndex += timeSlots.length;
@@ -714,7 +723,7 @@ app.post('/api/book', (req, res) => {
         response.booking.paymentInfo = config.paymentInfo;
         response.booking.expiresAt = expiresAt;
         response.booking.paymentRequired = true;
-        response.message = `تم إنشاء الحجز برقم ${bookingNumber}. يرجى الدفع خلال ${config.paymentTimeoutMinutes || 60} دقيقة لتأكيد الحجز.`;
+        response.message = `تم إنشاء الحجز برقم ${bookingNumber}. يرجى الدفع خلال ${(config.features && config.features.paymentTimeoutMinutes) || 60} دقيقة لتأكيد الحجز.`;
     } else {
         response.message = `تم تأكيد الحجز برقم ${bookingNumber} بنجاح!`;
     }

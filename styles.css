@@ -1065,7 +1065,7 @@ body {
 .payment-info {
     margin-top: 20px;
     padding: 20px;
-    background: #f8f9fa;
+    background: #0e78e2;
     border-radius: 8px;
     border: 2px dashed #28a745;
 }
@@ -1084,7 +1084,7 @@ body {
 .payment-instructions {
     margin-top: 15px;
     padding: 10px;
-    background: #e8f5e8;
+    background: #dfdfdf;
     border-radius: 6px;
     font-style: italic;
     color: #155724;
