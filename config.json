@@ -27,7 +27,9 @@
     "enableOnlineBooking": true,
     "requirePhoneVerification": false,
     "allowCancellation": true,
-    "cancellationHours": 2
+    "cancellationHours": 2,
+    "enableRecurringBooking": true,
+    "maxRecurringWeeks": 8
   },
   "ui": {
     "headerTitle": "مركز شباب قرموط صهبرة",

@@ -65,6 +65,23 @@
                             </select>
                         </div>
                         
+                        <div class="form-group" id="recurringSection" style="display: none;">
+                            <label>
+                                <input type="checkbox" id="enableRecurring" name="recurring">
+                                حجز متكرر أسبوعياً
+                            </label>
+                            <div id="recurringOptions" style="display: none; margin-top: 0.5rem;">
+                                <label for="recurringWeeks">عدد الأسابيع:</label>
+                                <select id="recurringWeeks" name="recurringWeeks">
+                                    <option value="2">أسبوعين</option>
+                                    <option value="3">3 أسابيع</option>
+                                    <option value="4">شهر (4 أسابيع)</option>
+                                    <option value="8">شهرين (8 أسابيع)</option>
+                                </select>
+                                <small class="help-text">سيتم حجز نفس الموعد في نفس يوم الأسبوع</small>
+                            </div>
+                        </div>
+                        
                         <div class="form-group">
                             <label>المواعيد المتاحة</label>
                             <div class="time-slots" id="timeSlots">

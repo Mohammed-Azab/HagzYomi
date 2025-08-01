@@ -19,6 +19,12 @@ const durationSelect = document.getElementById('bookingDuration');
 const timeSlotsContainer = document.getElementById('timeSlots');
 const submitBtn = document.getElementById('submitBtn');
 
+// Recurring booking elements
+const recurringSection = document.getElementById('recurringSection');
+const enableRecurringCheckbox = document.getElementById('enableRecurring');
+const recurringOptions = document.getElementById('recurringOptions');
+const recurringWeeksSelect = document.getElementById('recurringWeeks');
+
 // Modal elements
 const successModal = document.getElementById('successModal');
 const errorModal = document.getElementById('errorModal');
@@ -70,6 +76,28 @@ async function loadConfig() {
             }
         }
         
+        // Show recurring booking section if enabled
+        if (config.features && config.features.enableRecurringBooking) {
+            recurringSection.style.display = 'block';
+            
+            // Update max weeks based on config
+            const maxWeeks = Math.min(
+                config.features.maxRecurringWeeks || 8,
+                Math.floor(config.maxBookingDaysAhead / 7)
+            );
+            
+            // Update recurring weeks options
+            recurringWeeksSelect.innerHTML = '';
+            for (let i = 2; i <= maxWeeks; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i === 4 ? 'شهر (4 أسابيع)' : 
+                                   i === 8 ? 'شهرين (8 أسابيع)' : 
+                                   `${i} أسابيع`;
+                recurringWeeksSelect.appendChild(option);
+            }
+        }
+        
     } catch (error) {
         console.error('Error loading config:', error);
         showError('خطأ في تحميل إعدادات الموقع');
@@ -87,8 +115,20 @@ function setupEventListeners() {
     // Form submission
     bookingForm.addEventListener('submit', handleFormSubmit);
     
+    // Recurring booking handlers
+    enableRecurringCheckbox.addEventListener('change', handleRecurringToggle);
+    
     // Modal close handlers
     setupModalHandlers();
+}
+
+// Handle recurring booking toggle
+function handleRecurringToggle() {
+    if (enableRecurringCheckbox.checked) {
+        recurringOptions.style.display = 'block';
+    } else {
+        recurringOptions.style.display = 'none';
+    }
 }
 
 // Set minimum date to today
@@ -397,12 +437,17 @@ async function handleFormSubmit(event) {
     
     const formData = new FormData(bookingForm);
     const selectedDuration = parseInt(durationSelect.value);
+    const isRecurring = enableRecurringCheckbox.checked;
+    const recurringWeeks = isRecurring ? parseInt(recurringWeeksSelect.value) : 1;
+    
     const bookingData = {
         name: formData.get('name').trim(),
         phone: formData.get('phone').trim(),
         date: selectedDate,
         time: selectedTime,
-        duration: selectedDuration
+        duration: selectedDuration,
+        isRecurring: isRecurring,
+        recurringWeeks: recurringWeeks
     };
     
     // Validate form data
@@ -436,14 +481,24 @@ async function handleFormSubmit(event) {
                                 selectedDuration === 60 ? 'ساعة واحدة' :
                                 selectedDuration === 90 ? 'ساعة ونصف' : 'ساعتان';
             
-            showSuccess(`🎉 تم حجز موعدك بنجاح!
+            let successMessage = `🎉 تم حجز موعدك بنجاح!
 
 📅 التاريخ: ${selectedDate}
 ⏰ الوقت: ${result.booking.startTime} - ${result.booking.endTime}
 ⏱️ المدة: ${durationText}
-💰 السعر: ${result.booking.price} ${config.currency}
+💰 السعر: ${result.booking.price} ${config.currency}`;
 
-📍 يرجى الوصول قبل الموعد بـ 10 دقائق`);
+            // Add recurring booking info if applicable
+            if (result.booking.isRecurring && result.booking.recurringWeeks > 1) {
+                successMessage += `\n� حجز متكرر: ${result.booking.recurringWeeks} أسابيع`;
+                if (result.booking.bookingDates && result.booking.bookingDates.length > 1) {
+                    successMessage += `\n📋 التواريخ: ${result.booking.bookingDates.join(', ')}`;
+                }
+            }
+            
+            successMessage += `\n\n�📍 يرجى الوصول قبل الموعد بـ 10 دقائق`;
+            
+            showSuccess(successMessage);
             
             // Reset form
             bookingForm.reset();
