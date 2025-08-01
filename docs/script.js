@@ -1,5 +1,5 @@
-// GitHub Pages Compatible Booking System
-// Uses localStorage instead of server backend
+// GitHub Pages Compatible Booking System with Firebase
+// Uses Firestore for shared cloud database
 
 // Configuration
 const CONFIG = {
@@ -13,21 +13,42 @@ const CONFIG = {
     adminPassword: "admin123"
 };
 
-// Initialize storage
-function initializeStorage() {
-    if (!localStorage.getItem('hagz_bookings')) {
-        localStorage.setItem('hagz_bookings', JSON.stringify([]));
+// Firestore Database functions
+async function getBookings() {
+    try {
+        const snapshot = await bookingsCollection.get();
+        const bookings = [];
+        snapshot.forEach(doc => {
+            bookings.push({ id: doc.id, ...doc.data() });
+        });
+        return bookings;
+    } catch (error) {
+        console.error('Error getting bookings:', error);
+        return [];
     }
 }
 
-// Get bookings from localStorage
-function getBookings() {
-    return JSON.parse(localStorage.getItem('hagz_bookings') || '[]');
+async function saveBooking(bookingData) {
+    try {
+        const docRef = await bookingsCollection.add({
+            ...bookingData,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        return { id: docRef.id, ...bookingData };
+    } catch (error) {
+        console.error('Error saving booking:', error);
+        throw error;
+    }
 }
 
-// Save bookings to localStorage
-function saveBookings(bookings) {
-    localStorage.setItem('hagz_bookings', JSON.stringify(bookings));
+async function deleteBooking(bookingId) {
+    try {
+        await bookingsCollection.doc(bookingId).delete();
+        return true;
+    } catch (error) {
+        console.error('Error deleting booking:', error);
+        throw error;
+    }
 }
 
 // Generate time slots
@@ -64,8 +85,8 @@ function isValidDate(dateString) {
 }
 
 // Get available slots for a date
-function getAvailableSlots(date) {
-    const bookings = getBookings();
+async function getAvailableSlots(date) {
+    const bookings = await getBookings();
     const dayBookings = bookings.filter(b => b.date === date);
     const bookedTimes = dayBookings.map(b => b.time);
     
@@ -74,11 +95,21 @@ function getAvailableSlots(date) {
 }
 
 // Calculate user's daily hours
-function getUserDailyHours(phone, date) {
-    const bookings = getBookings();
+async function getUserDailyHours(phone, date) {
+    const bookings = await getBookings();
     return bookings
         .filter(b => b.customerPhone === phone && b.date === date)
         .reduce((total, booking) => total + (CONFIG.slotDurationMinutes / 60), 0);
+}
+
+// Show loading indicator
+function showLoading() {
+    document.getElementById('loadingIndicator').style.display = 'block';
+}
+
+// Hide loading indicator
+function hideLoading() {
+    document.getElementById('loadingIndicator').style.display = 'none';
 }
 
 // Format Arabic date
@@ -101,8 +132,6 @@ function formatArabicDate(dateString) {
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
-    initializeStorage();
-    
     const bookingForm = document.getElementById('bookingForm');
     const dateInput = document.getElementById('bookingDate');
     const timeSelect = document.getElementById('timeSlot');
@@ -118,35 +147,51 @@ document.addEventListener('DOMContentLoaded', function() {
     dateInput.max = maxDate.toISOString().split('T')[0];
     
     // Handle date change
-    dateInput.addEventListener('change', function() {
+    dateInput.addEventListener('change', async function() {
         const selectedDate = this.value;
+        
+        showLoading();
         
         if (!isValidDate(selectedDate)) {
             showError('التاريخ المحدد غير متاح للحجز');
             this.value = '';
             timeSelect.innerHTML = '<option value="">اختر الوقت</option>';
             slotsDisplay.style.display = 'none';
+            hideLoading();
             return;
         }
         
-        const availableSlots = getAvailableSlots(selectedDate);
+        try {
+            const availableSlots = await getAvailableSlots(selectedDate);
+            
+            // Update time select
+            timeSelect.innerHTML = '<option value="">اختر الوقت</option>';
+            availableSlots.forEach(slot => {
+                const option = document.createElement('option');
+                option.value = slot;
+                option.textContent = slot;
+                timeSelect.appendChild(option);
+            });
+            
+            // Show available slots
+            displayAvailableSlots(availableSlots);
+        } catch (error) {
+            console.error('Error loading slots:', error);
+            showError('خطأ في تحميل المواعيد المتاحة');
+        }
         
-        // Update time select
-        timeSelect.innerHTML = '<option value="">اختر الوقت</option>';
-        availableSlots.forEach(slot => {
-            const option = document.createElement('option');
-            option.value = slot;
-            option.textContent = slot;
-            timeSelect.appendChild(option);
-        });
-        
-        // Show available slots
-        displayAvailableSlots(availableSlots);
+        hideLoading();
     });
     
     // Handle form submission
-    bookingForm.addEventListener('submit', function(e) {
+    bookingForm.addEventListener('submit', async function(e) {
         e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="btn-text">جاري الحجز...</span><span class="btn-icon">⏳</span>';
+        
+        showLoading();
         
         const formData = new FormData(this);
         const bookingData = {
@@ -156,61 +201,67 @@ document.addEventListener('DOMContentLoaded', function() {
             time: formData.get('timeSlot')
         };
         
-        // Validate form data
-        if (!bookingData.customerName || !bookingData.customerPhone || !bookingData.date || !bookingData.time) {
-            showError('يرجى ملء جميع الحقول');
-            return;
+        try {
+            // Validate form data
+            if (!bookingData.customerName || !bookingData.customerPhone || !bookingData.date || !bookingData.time) {
+                showError('يرجى ملء جميع الحقول');
+                return;
+            }
+            
+            // Validate phone number
+            const phonePattern = /^05[0-9]{8}$/;
+            if (!phonePattern.test(bookingData.customerPhone)) {
+                showError('رقم الهاتف يجب أن يبدأ بـ 05 ويحتوي على 10 أرقام');
+                return;
+            }
+            
+            // Check if date is valid
+            if (!isValidDate(bookingData.date)) {
+                showError('التاريخ المحدد غير متاح للحجز');
+                return;
+            }
+            
+            // Check daily limit
+            const userDailyHours = await getUserDailyHours(bookingData.customerPhone, bookingData.date);
+            const slotHours = CONFIG.slotDurationMinutes / 60;
+            
+            if (userDailyHours + slotHours > CONFIG.maxHoursPerPersonPerDay) {
+                showError(`تجاوزت الحد الأقصى للحجز (${CONFIG.maxHoursPerPersonPerDay} ساعات يومياً)`);
+                return;
+            }
+            
+            // Check if slot is still available
+            const availableSlots = await getAvailableSlots(bookingData.date);
+            if (!availableSlots.includes(bookingData.time)) {
+                showError('هذا الموعد محجوز بالفعل');
+                return;
+            }
+            
+            // Create booking
+            const booking = {
+                ...bookingData,
+                price: CONFIG.pricePerHour * slotHours
+            };
+            
+            // Save booking to Firestore
+            const savedBooking = await saveBooking(booking);
+            
+            // Show success
+            showSuccess(savedBooking);
+            
+            // Reset form
+            this.reset();
+            timeSelect.innerHTML = '<option value="">اختر الوقت</option>';
+            slotsDisplay.style.display = 'none';
+            
+        } catch (error) {
+            console.error('Error creating booking:', error);
+            showError('خطأ في إنشاء الحجز. يرجى المحاولة مرة أخرى.');
+        } finally {
+            hideLoading();
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span class="btn-text">احجز الآن</span><span class="btn-icon">⚽</span>';
         }
-        
-        // Validate phone number
-        const phonePattern = /^05[0-9]{8}$/;
-        if (!phonePattern.test(bookingData.customerPhone)) {
-            showError('رقم الهاتف يجب أن يبدأ بـ 05 ويحتوي على 10 أرقام');
-            return;
-        }
-        
-        // Check if date is valid
-        if (!isValidDate(bookingData.date)) {
-            showError('التاريخ المحدد غير متاح للحجز');
-            return;
-        }
-        
-        // Check daily limit
-        const userDailyHours = getUserDailyHours(bookingData.customerPhone, bookingData.date);
-        const slotHours = CONFIG.slotDurationMinutes / 60;
-        
-        if (userDailyHours + slotHours > CONFIG.maxHoursPerPersonPerDay) {
-            showError(`تجاوزت الحد الأقصى للحجز (${CONFIG.maxHoursPerPersonPerDay} ساعات يومياً)`);
-            return;
-        }
-        
-        // Check if slot is still available
-        const availableSlots = getAvailableSlots(bookingData.date);
-        if (!availableSlots.includes(bookingData.time)) {
-            showError('هذا الموعد محجوز بالفعل');
-            return;
-        }
-        
-        // Create booking
-        const booking = {
-            id: Date.now().toString(),
-            ...bookingData,
-            timestamp: new Date().toISOString(),
-            price: CONFIG.pricePerHour * slotHours
-        };
-        
-        // Save booking
-        const bookings = getBookings();
-        bookings.push(booking);
-        saveBookings(bookings);
-        
-        // Show success
-        showSuccess(booking);
-        
-        // Reset form
-        this.reset();
-        timeSelect.innerHTML = '<option value="">اختر الوقت</option>';
-        slotsDisplay.style.display = 'none';
     });
     
     // Modal functionality
