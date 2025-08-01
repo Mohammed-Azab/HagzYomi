@@ -98,7 +98,18 @@ function updateInfoPanel() {
         'saturday': 'السبت'
     };
     
-    const workingDaysArabic = config.workingDays.map(day => dayNames[day]).join(' - ');
+    // Check if workingDays are already in Arabic
+    const isArabic = config.workingDays.some(day => Object.values(dayNames).includes(day));
+    
+    let workingDaysArabic;
+    if (isArabic) {
+        // Already in Arabic, just join them
+        workingDaysArabic = config.workingDays.join(' - ');
+    } else {
+        // Convert from English to Arabic
+        workingDaysArabic = config.workingDays.map(day => dayNames[day]).join(' - ');
+    }
+    
     document.getElementById('workingDays').textContent = workingDaysArabic;
 }
 

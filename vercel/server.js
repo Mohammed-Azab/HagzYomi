@@ -29,7 +29,7 @@ const config = {
     workingDays: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
     maxHoursPerPersonPerDay: 3,
     slotDurationMinutes: 60,
-    currency: "ريال",
+    currency: "جنيه",
     pricePerHour: 50,
     adminPassword: "admin123"
 };

@@ -29,7 +29,7 @@ const config = {
     workingDays: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
     maxHoursPerPersonPerDay: 3,
     slotDurationMinutes: 60,
-    currency: "ريال",
+    currency: "جنيه",
     pricePerHour: 50,
     adminPassword: "admin123"
 };
@@ -59,8 +59,8 @@ app.use(session({
     saveUninitialized: true
 }));
 
-// Serve static files
-app.use(express.static('public'));
+// Serve static files from current directory
+app.use(express.static(__dirname));
 
 // Helper functions
 function loadBookings() {
@@ -236,8 +236,9 @@ function generatePDF(bookings, reportType, dateInfo) {
 }
 
 function isWorkingDay(date) {
-    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const dayName = dayNames[new Date(date).getDay()];
+    const dayIndex = new Date(date).getDay();
+    const arabicDays = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+    const dayName = arabicDays[dayIndex];
     return config.workingDays.includes(dayName);
 }
 
@@ -268,14 +269,14 @@ function getUserBookingHours(phone, date) {
 
 // Routes
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/admin', (req, res) => {
     if (!req.session.isAdmin) {
-        res.sendFile(path.join(__dirname, 'public', 'admin-login.html'));
+        res.sendFile(path.join(__dirname, 'admin-login.html'));
     } else {
-        res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+        res.sendFile(path.join(__dirname, 'admin.html'));
     }
 });
 
