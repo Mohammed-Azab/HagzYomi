@@ -19,8 +19,20 @@ require('jspdf-autotable');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Load configuration
-const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+// Default configuration
+const config = {
+    courtName: "ملعب كرة القدم",
+    openingHours: {
+        start: "08:00",
+        end: "22:00"
+    },
+    workingDays: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
+    maxHoursPerPersonPerDay: 3,
+    slotDurationMinutes: 60,
+    currency: "ريال",
+    pricePerHour: 50,
+    adminPassword: "admin123"
+};
 
 // Initialize data files (with Vercel serverless compatibility)
 const dataDir = './data';
