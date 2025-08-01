@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: hagz-yomi
+    runtime: node
+    repo: https://github.com/Mohammed-Azab/HagzYomi.git
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+    plan: free
