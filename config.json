@@ -1,5 +1,6 @@
 {
   "courtName": "ملعب مركز الشباب الرياضي",
+  "adminPassword": "admin123",
   "openingHours": {
     "start": "07:00",
     "end": "03:00"
@@ -29,7 +30,14 @@
     "allowCancellation": true,
     "cancellationHours": 2,
     "enableRecurringBooking": true,
-    "maxRecurringWeeks": 8
+    "maxRecurringWeeks": 8,
+    "requirePaymentConfirmation": true,
+    "paymentTimeoutMinutes": 60
+  },
+  "paymentInfo": {
+    "vodafoneCash": "01234567890",
+    "instaPay": "محمد عزب",
+    "instructions": "يرجى إرسال قيمة الحجز خلال ساعة واحدة لتأكيد الحجز"
   },
   "ui": {
     "headerTitle": "مركز شباب قرموط صهبرة",

@@ -350,6 +350,93 @@ app.get('/api/config', (req, res) => {
     });
 });
 
+// Generate random booking number
+function generateBookingNumber() {
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `HY${timestamp}${random}`;
+}
+
+// Check booking status endpoint
+app.post('/api/check-booking', (req, res) => {
+    try {
+        const { bookingNumber, name } = req.body;
+        
+        if (!bookingNumber || !name) {
+            return res.json({ success: false, message: 'رقم الحجز والاسم مطلوبان' });
+        }
+        
+        const data = JSON.parse(fs.readFileSync('./bookings.json', 'utf8'));
+        const booking = data.bookings.find(b => 
+            b.bookingNumber === bookingNumber && 
+            b.name.toLowerCase() === name.toLowerCase()
+        );
+        
+        if (!booking) {
+            return res.json({ success: false, message: 'لم يتم العثور على حجز بهذا الرقم والاسم' });
+        }
+        
+        // Check if booking expired
+        if (booking.status === 'pending' && booking.expiresAt) {
+            const now = new Date();
+            const expires = new Date(booking.expiresAt);
+            if (now > expires) {
+                booking.status = 'expired';
+                // Save updated status
+                fs.writeFileSync('./bookings.json', JSON.stringify(data, null, 2));
+            }
+        }
+        
+        // Add payment info if pending
+        if (booking.status === 'pending') {
+            const configData = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+            booking.paymentInfo = configData.paymentInfo;
+        }
+        
+        res.json({ success: true, booking });
+        
+    } catch (error) {
+        console.error('Check booking error:', error);
+        res.status(500).json({ success: false, message: 'حدث خطأ في النظام' });
+    }
+});
+
+// Confirm booking payment endpoint (for admin)
+app.post('/api/confirm-booking', (req, res) => {
+    try {
+        const { bookingNumber, action } = req.body; // action: 'confirm' or 'decline'
+        
+        if (!bookingNumber || !action) {
+            return res.json({ success: false, message: 'رقم الحجز والإجراء مطلوبان' });
+        }
+        
+        const data = JSON.parse(fs.readFileSync('./bookings.json', 'utf8'));
+        const bookingIndex = data.bookings.findIndex(b => b.bookingNumber === bookingNumber);
+        
+        if (bookingIndex === -1) {
+            return res.json({ success: false, message: 'لم يتم العثور على الحجز' });
+        }
+        
+        const booking = data.bookings[bookingIndex];
+        
+        if (action === 'confirm') {
+            booking.status = 'confirmed';
+            booking.confirmedAt = new Date().toISOString();
+        } else if (action === 'decline') {
+            booking.status = 'declined';
+            booking.declinedAt = new Date().toISOString();
+        }
+        
+        fs.writeFileSync('./bookings.json', JSON.stringify(data, null, 2));
+        
+        res.json({ success: true, message: `تم ${action === 'confirm' ? 'تأكيد' : 'رفض'} الحجز بنجاح` });
+        
+    } catch (error) {
+        console.error('Confirm booking error:', error);
+        res.status(500).json({ success: false, message: 'حدث خطأ في النظام' });
+    }
+});
+
 // Admin endpoint to reload configuration
 app.post('/api/admin/reload-config', (req, res) => {
     if (!req.session.isAdmin) {
@@ -416,7 +503,7 @@ app.get('/api/slots/:date', (req, res) => {
 });
 
 app.post('/api/book', (req, res) => {
-    const { name, phone, date, time, duration = 30 } = req.body;
+    const { name, phone, date, time, duration = 30, isRecurring = false, recurringWeeks = 1 } = req.body;
     
     // Validation
     if (!name || !phone || !date || !time) {
@@ -493,25 +580,98 @@ app.post('/api/book', (req, res) => {
         });
     }
     
-    // Create bookings for all time slots
-    const bookingId = Date.now().toString();
-    const price = config.pricePerHour * bookingHours;
+    // Handle recurring bookings
+    let allBookingDates = [date];
+    let totalPrice = config.pricePerHour * bookingHours;
     
-    const newBookings = timeSlots.map((slot, index) => ({
-        id: `${bookingId}-${index}`,
-        groupId: bookingId,
-        name,
-        phone,
-        date,
-        time: slot,
-        duration: duration,
-        totalSlots: timeSlots.length,
-        slotIndex: index,
-        startTime: time,
-        endTime: timeSlots[timeSlots.length - 1],
-        createdAt: new Date().toISOString(),
-        price: index === 0 ? price : 0 // Only charge once for the group
-    }));
+    if (isRecurring && recurringWeeks > 1) {
+        // Validate recurring weeks
+        const maxRecurringWeeks = (configData.features && configData.features.maxRecurringWeeks) || 8;
+        if (recurringWeeks > maxRecurringWeeks) {
+            return res.json({ 
+                success: false, 
+                message: `الحد الأقصى للحجز المتكرر هو ${maxRecurringWeeks} أسابيع` 
+            });
+        }
+        
+        // Generate all recurring dates
+        for (let week = 1; week < recurringWeeks; week++) {
+            const recurringDate = new Date(date);
+            recurringDate.setDate(recurringDate.getDate() + (week * 7));
+            const recurringDateStr = recurringDate.toISOString().split('T')[0];
+            
+            // Check if recurring date is a working day
+            if (!isWorkingDay(recurringDateStr)) {
+                return res.json({ 
+                    success: false, 
+                    message: `التاريخ ${recurringDateStr} ليس يوم عمل` 
+                });
+            }
+            
+            // Check if any of the required slots are already booked on recurring dates
+            for (const slot of timeSlots) {
+                const existingBooking = bookings.find(booking => 
+                    booking.date === recurringDateStr && booking.time === slot
+                );
+                
+                if (existingBooking) {
+                    return res.json({ 
+                        success: false, 
+                        message: `الموعد ${slot} في تاريخ ${recurringDateStr} محجوز بالفعل` 
+                    });
+                }
+            }
+            
+            allBookingDates.push(recurringDateStr);
+        }
+        
+        totalPrice = totalPrice * recurringWeeks;
+    }
+    
+    // Create bookings for all time slots and all dates
+    const bookingId = Date.now().toString();
+    const bookingNumber = generateBookingNumber();
+    
+    // Load configuration for payment settings
+    const configData = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+    const requirePaymentConfirmation = configData.requirePaymentConfirmation || false;
+    
+    // Set booking status and expiration
+    const status = requirePaymentConfirmation ? 'pending' : 'confirmed';
+    const expiresAt = requirePaymentConfirmation ? 
+        new Date(Date.now() + (configData.paymentTimeoutMinutes || 60) * 60 * 1000).toISOString() : 
+        null;
+    
+    const allNewBookings = [];
+    let bookingIndex = 0;
+    
+    // Create bookings for each date
+    for (const bookingDate of allBookingDates) {
+        const newBookings = timeSlots.map((slot, slotIndex) => ({
+            id: `${bookingId}-${bookingIndex}`,
+            groupId: bookingId,
+            bookingNumber: bookingNumber,
+            name,
+            phone,
+            date: bookingDate,
+            time: slot,
+            duration: duration,
+            totalSlots: timeSlots.length,
+            slotIndex: slotIndex,
+            startTime: time,
+            endTime: timeSlots[timeSlots.length - 1],
+            createdAt: new Date().toISOString(),
+            price: (bookingIndex === 0 && slotIndex === 0) ? totalPrice : 0, // Only charge once for the entire group
+            status: status,
+            expiresAt: expiresAt,
+            isRecurring: isRecurring,
+            recurringWeeks: recurringWeeks,
+            bookingDates: allBookingDates
+        }));
+        
+        allNewBookings.push(...newBookings);
+        bookingIndex += timeSlots.length;
+    }
     
     // Calculate proper end time by adding slot duration to the last slot
     const endTimeSlot = timeSlots[timeSlots.length - 1];
@@ -521,23 +681,41 @@ app.post('/api/book', (req, res) => {
     const finalEndMinute = endTimeMinutes % 60;
     const finalEndTime = `${finalEndHour.toString().padStart(2, '0')}:${finalEndMinute.toString().padStart(2, '0')}`;
     
-    bookings.push(...newBookings);
+    bookings.push(...allNewBookings);
     saveBookings(bookings);
     
-    res.json({ 
+    // Prepare response with payment info if needed
+    const response = { 
         success: true, 
         booking: {
             id: bookingId,
+            bookingNumber: bookingNumber,
             name,
             phone,
             date,
             startTime: time,
             endTime: finalEndTime,
             duration,
-            price,
-            slots: timeSlots
+            price: totalPrice,
+            status: status,
+            slots: timeSlots,
+            isRecurring: isRecurring,
+            recurringWeeks: recurringWeeks,
+            bookingDates: allBookingDates
         }
-    });
+    };
+    
+    // Add payment information if payment confirmation is required
+    if (requirePaymentConfirmation) {
+        response.booking.paymentInfo = configData.paymentInfo;
+        response.booking.expiresAt = expiresAt;
+        response.booking.paymentRequired = true;
+        response.message = `تم إنشاء الحجز برقم ${bookingNumber}. يرجى الدفع خلال ${configData.paymentTimeoutMinutes || 60} دقيقة لتأكيد الحجز.`;
+    } else {
+        response.message = `تم تأكيد الحجز برقم ${bookingNumber} بنجاح!`;
+    }
+    
+    res.json(response);
 });
 
 app.get('/api/admin/bookings', (req, res) => {

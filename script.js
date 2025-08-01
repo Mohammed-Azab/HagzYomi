@@ -481,12 +481,38 @@ async function handleFormSubmit(event) {
                                 selectedDuration === 60 ? 'ساعة واحدة' :
                                 selectedDuration === 90 ? 'ساعة ونصف' : 'ساعتان';
             
-            let successMessage = `🎉 تم حجز موعدك بنجاح!
+            let successMessage = '';
+            
+            // Handle payment confirmation scenario
+            if (result.booking.paymentRequired) {
+                successMessage = `✅ تم إنشاء حجزك بنجاح!
 
+🔢 رقم الحجز: ${result.booking.bookingNumber}
+📅 التاريخ: ${selectedDate}
+⏰ الوقت: ${result.booking.startTime} - ${result.booking.endTime}
+⏱️ المدة: ${durationText}
+💰 السعر: ${result.booking.price} ${config.currency}
+
+💳 معلومات الدفع:
+${result.booking.paymentInfo.vodafoneCash ? `📱 فودافون كاش: ${result.booking.paymentInfo.vodafoneCash}` : ''}
+${result.booking.paymentInfo.instaPay ? `💳 إنستاباي: ${result.booking.paymentInfo.instaPay}` : ''}
+
+⚠️ يرجى الدفع خلال ساعة واحدة لتأكيد الحجز
+📞 للاستعلام عن حالة الحجز، اختر "فحص الحجز" من القائمة`;
+
+                if (result.booking.paymentInfo.instructions) {
+                    successMessage += `\n\n📋 ${result.booking.paymentInfo.instructions}`;
+                }
+            } else {
+                // Regular confirmed booking
+                successMessage = `🎉 تم تأكيد حجزك بنجاح!
+
+🔢 رقم الحجز: ${result.booking.bookingNumber}
 📅 التاريخ: ${selectedDate}
 ⏰ الوقت: ${result.booking.startTime} - ${result.booking.endTime}
 ⏱️ المدة: ${durationText}
 💰 السعر: ${result.booking.price} ${config.currency}`;
+            }
 
             // Add recurring booking info if applicable
             if (result.booking.isRecurring && result.booking.recurringWeeks > 1) {

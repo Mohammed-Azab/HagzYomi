@@ -141,7 +141,7 @@ function renderBookings() {
     if (bookings.length === 0) {
         bookingsTable.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align: center; padding: 2rem;">
+                <td colspan="9" style="text-align: center; padding: 2rem;">
                     لا توجد حجوزات حتى الآن
                 </td>
             </tr>
@@ -158,6 +158,7 @@ function renderBookings() {
     
     bookingsTable.innerHTML = sortedBookings.map(booking => `
         <tr>
+            <td style="font-weight: 600; color: var(--primary-color);">${booking.bookingNumber || booking.id}</td>
             <td>${booking.name}</td>
             <td>
                 <a href="tel:${booking.phone}" style="color: var(--primary-color); text-decoration: none;">
@@ -167,11 +168,26 @@ function renderBookings() {
             <td>${formatDate(booking.date)}</td>
             <td>${booking.time}</td>
             <td>${booking.price} جنيه</td>
+            <td>
+                <span class="status-badge status-${booking.status || 'confirmed'}">
+                    ${getStatusText(booking.status || 'confirmed')}
+                </span>
+            </td>
             <td>${formatDateTime(booking.createdAt)}</td>
             <td>
-                <button class="btn btn-danger btn-small" onclick="showDeleteModal('${booking.id}')">
-                    🗑️ حذف
-                </button>
+                <div class="action-buttons">
+                    ${booking.status === 'pending' ? `
+                        <button class="btn btn-success btn-small" onclick="confirmBooking('${booking.bookingNumber}', 'confirm')" title="تأكيد الحجز">
+                            ✅ تأكيد
+                        </button>
+                        <button class="btn btn-warning btn-small" onclick="confirmBooking('${booking.bookingNumber}', 'decline')" title="رفض الحجز">
+                            ❌ رفض
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-danger btn-small" onclick="showDeleteModal('${booking.id}')" title="حذف الحجز">
+                        🗑️ حذف
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');
@@ -667,3 +683,49 @@ setInterval(() => {
         loadBookings();
     }
 }, 30000);
+
+// Get status text in Arabic
+function getStatusText(status) {
+    switch(status) {
+        case 'pending': return 'في انتظار الدفع';
+        case 'confirmed': return 'مؤكد';
+        case 'declined': return 'مرفوض';
+        case 'expired': return 'منتهي الصلاحية';
+        default: return 'مؤكد';
+    }
+}
+
+// Confirm or decline booking payment
+async function confirmBooking(bookingNumber, action) {
+    const actionText = action === 'confirm' ? 'تأكيد' : 'رفض';
+    
+    if (!confirm(`هل أنت متأكد من ${actionText} هذا الحجز؟`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/confirm-booking', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                bookingNumber: bookingNumber,
+                action: action
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage(result.message, 'success');
+            await loadBookings(); // Reload bookings to reflect changes
+        } else {
+            showMessage(result.message || `فشل في ${actionText} الحجز`, 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error confirming booking:', error);
+        showMessage(`حدث خطأ أثناء ${actionText} الحجز`, 'error');
+    }
+}

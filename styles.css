@@ -894,3 +894,278 @@ body {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
 }
+
+/* Booking status check page styles */
+.check-booking-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.check-form {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.check-form h2 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 30px;
+    font-size: 28px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+    color: #2196F3;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.check-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.check-btn:hover {
+    background: var(--primary-dark);
+}
+
+.check-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.booking-result {
+    display: none;
+}
+
+.booking-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.booking-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.booking-header h4 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-confirmed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-declined {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-expired {
+    background: #f5f5f5;
+    color: #6c757d;
+}
+
+.booking-info {
+    padding: 25px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-row .label {
+    font-weight: 600;
+    color: #555;
+}
+
+.info-row .value {
+    color: #333;
+    font-weight: 500;
+}
+
+.recurring-info {
+    margin-top: 20px;
+    padding: 15px;
+    background: #e3f2fd;
+    border-radius: 8px;
+    border-left: 4px solid #2196f3;
+}
+
+.time-remaining {
+    margin-top: 15px;
+    padding: 12px;
+    background: #fff3cd;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+    font-weight: 600;
+    color: #856404;
+    text-align: center;
+}
+
+.payment-info {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 2px dashed #28a745;
+}
+
+.payment-info h4 {
+    margin-top: 0;
+    color: #28a745;
+    font-size: 18px;
+}
+
+.payment-info p {
+    margin: 8px 0;
+    font-weight: 500;
+}
+
+.payment-instructions {
+    margin-top: 15px;
+    padding: 10px;
+    background: #e8f5e8;
+    border-radius: 6px;
+    font-style: italic;
+    color: #155724;
+}
+
+@media (max-width: 768px) {
+    .check-booking-container {
+        padding: 15px;
+    }
+    
+    .check-form {
+        padding: 20px;
+    }
+    
+    .check-form h2 {
+        font-size: 24px;
+    }
+    
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+}
+
+/* Admin panel styles */
+.action-buttons {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.btn-small {
+    padding: 5px 10px;
+    font-size: 12px;
+    min-width: auto;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-confirmed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-declined {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-expired {
+    background: #f5f5f5;
+    color: #6c757d;
+}
