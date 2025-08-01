@@ -2,11 +2,7 @@
 # .gitignore file for clean repository structure
 
 # Git worktree deployment directories (linked to branches)
-github-pages-deploy/
-localhost-deploy/ 
-vercel-deploy/
-railway-deploy/
-render-deploy/
+
 
 # Legacy deployment directories (will be removed)
 github-pages/
