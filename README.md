@@ -1,27 +1,249 @@
+# HagzYomi - Football Court Booking System
+
+A complete Arabic football court booking system with admin panel and advanced reporting features.
+
+## 👨‍💻 Developer
+**Mohammed Azab**
+- 📧 Email: [Mohammed@azab.io](mailto:Mohammed@azab.io)
+- 🌐 GitHub: [Mohammed-Azab](https://github.com/Mohammed-Azab)
+
+## ✨ Features
+
+### For Users:
+- 🌍 **Complete Arabic Interface** with RTL (Right-to-Left) support
+- ⚽ **Easy Booking System** for football court slots
+- 📱 **Responsive Design** works on all devices
+- 🕐 **Real-time Availability** showing booked and available slots
+- 🚫 **Past Time Prevention** - cannot book expired time slots
+- 💰 **Transparent Pricing** with clear cost display
+
+### For Administrators:
+- 📊 **Comprehensive Admin Panel** with booking management
+- 📈 **Advanced Reports** (Daily, Weekly, Monthly, Custom Range)
+- 📥 **Multi-format Export** (CSV, Excel, PDF)
+- 🗑️ **Booking Management** - view and delete bookings
+- 📋 **Detailed Statistics** with revenue tracking
+- 🔐 **Secure Authentication** with session management
+
+## 🛠️ Tech Stack
+
+- **Backend**: Node.js, Express.js
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript
+- **Database**: JSON Files (no paid database required)
+- **Reports**: XLSX, jsPDF, jsPDF-AutoTable
+- **Design**: Arabic RTL, Mobile-first Responsive Design
+
+## 📋 Requirements
+
+- Node.js (version 12+ or higher)
+- NPM or Yarn
+
+## 🚀 Installation & Setup
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/Mohammed-Azab/HagzYomi.git
+cd HagzYomi
+```
+
+2. **Install dependencies:**
+```bash
+npm install
+```
+
+3. **Start the application:**
+```bash
+npm start
+```
+
+Or for development with auto-reload:
+```bash
+npm run dev
+```
+
+4. **Access the system:**
+- Main website: http://localhost:3000
+- Admin panel: http://localhost:3000/admin
+- Default admin password: `admin123`
+
+## ⚙️ Configuration
+
+Customize the system through `config.json`:
+
+```json
+{
+  "courtName": "ملعب حجز يومي",
+  "openingHours": {
+    "start": "10:00",
+    "end": "22:00"
+  },
+  "workingDays": ["sunday", "monday", "tuesday", "wednesday", "thursday"],
+  "maxHoursPerPersonPerDay": 3,
+  "adminPassword": "admin123",
+  "slotDurationMinutes": 60,
+  "currency": "جنيه",
+  "pricePerHour": 100
+}
+```
+
+### Configuration Options:
+
+- **courtName**: Court/facility name
+- **openingHours**: Operating hours (start and end)
+- **workingDays**: Working days of the week
+- **maxHoursPerPersonPerDay**: Maximum hours per person per day
+- **adminPassword**: Admin panel password
+- **slotDurationMinutes**: Duration of each booking slot
+- **currency**: Currency symbol/name
+- **pricePerHour**: Price per hour
+
+## 📁 Project Structure
+
+```
+HagzYomi/
+├── public/              # Static files
+│   ├── index.html       # Main booking page
+│   ├── admin.html       # Admin dashboard
+│   ├── admin-login.html # Admin login page
+│   ├── styles.css       # CSS styles
+│   ├── script.js        # Main page JavaScript
+│   └── admin.js         # Admin panel JavaScript
+├── data/                # Data directory (auto-created)
+│   └── bookings.json    # Bookings database
+├── server.js            # Main server file
+├── config.json          # Configuration file
+├── package.json         # Node.js dependencies
+└── README.md           # This file
+```
+
+## 📡 API Endpoints
+
+### Public Endpoints:
+- `GET /api/config` - Get system configuration
+- `GET /api/slots/:date` - Get available slots for a date
+- `POST /api/book` - Create a new booking
+
+### Admin Endpoints:
+- `POST /admin/login` - Admin authentication
+- `GET /api/admin/bookings` - Get all bookings
+- `GET /api/admin/report` - Download reports (CSV/Excel/PDF)
+- `DELETE /api/admin/booking/:id` - Delete a booking
+
+## 🎨 Customization
+
+### Change Colors:
+Edit CSS variables in `public/styles.css`:
+
+```css
+:root {
+    --primary-color: #2196F3;    /* Primary color */
+    --secondary-color: #4CAF50;  /* Secondary color */
+    --accent-color: #FF9800;     /* Accent color */
+}
+```
+
+### Add New Features:
+- Modify `server.js` to add new API endpoints
+- Add required JavaScript in appropriate files
+- Update HTML files as needed
+
+## 🔒 Security Features
+
+- Server-side password validation
+- Secure admin sessions with timeout
+- Input data validation and sanitization
+- CSRF protection and common attack prevention
+- Past time booking prevention
+
+## 🌐 Deployment
+
+### Local Development:
+```bash
+npm start
+```
+
+### Production Server:
+1. Upload files to server
+2. Install Node.js
+3. Run `npm install`
+4. Run `npm start`
+5. Use PM2 for continuous operation (optional)
+
+### Using PM2:
+```bash
+npm install -g pm2
+pm2 start server.js --name "hagz-yomi"
+pm2 startup
+pm2 save
+```
+
+## 🔧 Maintenance
+
+- Regularly backup the `data` folder
+- Monitor server logs for errors
+- Update admin password regularly
+- Check `data/bookings.json` periodically
+
+## 📄 License
+
+This project is licensed under the MIT License for personal and educational use.
+
+## 💬 Support & Contact
+
+- 📧 **Email**: [Mohammed@azab.io](mailto:Mohammed@azab.io)
+- 🐛 **Bug Reports**: Create a new GitHub Issue
+- 💡 **Feature Requests**: Contact directly via email
+- 🤝 **Technical Support**: Available via email
+
+---
+
+## 📖 النسخة العربية
+
 # حجز يومي - نظام حجز ملعب كرة القدم
 
-نظام حجز إلكتروني باللغة العربية لحجز مواعيد ملعب كرة القدم.
+نظام حجز إلكتروني باللغة العربية لحجز مواعيد ملعب كرة القدم مع لوحة إدارة متطورة.
 
-## الميزات
+## 👨‍💻 المطور
+**Mohammed Azab**
+- 📧 البريد الإلكتروني: [Mohammed@azab.io](mailto:Mohammed@azab.io)
+- 🌐 GitHub: [Mohammed-Azab](https://github.com/Mohammed-Azab)
 
+## ✨ الميزات
+
+### للمستخدمين:
 - 🌍 **واجهة عربية كاملة** مع دعم الكتابة من اليمين إلى اليسار
 - ⚽ **حجز المواعيد** بسهولة ويسر
-- 📊 **لوحة إدارة** شاملة لمتابعة الحجوزات
-- 📈 **تقارير يومية** قابلة للتحميل
-- ⏰ **إدارة ساعات العمل** والأيام المتاحة
-- 🔒 **حد أقصى للحجز** لكل شخص يومياً
-- 💾 **قاعدة بيانات JSON** بسيطة (لا تحتاج قاعدة بيانات مدفوعة)
+- 📱 **تصميم متجاوب** يعمل على جميع الأجهزة
+- 🕐 **عرض الحالة المباشرة** للمواعيد المتاحة والمحجوزة
+- � **منع الحجز المتأخر** - لا يمكن حجز مواعيد منتهية
+- 💰 **عرض الأسعار بوضوح** مع تفاصيل التكلفة
 
-## متطلبات التشغيل
+### للإدارة:
+- 📊 **لوحة إدارة شاملة** لمتابعة الحجوزات
+- 📈 **تقارير متقدمة** (يومية، أسبوعية، شهرية، مخصصة)
+- 📥 **تصدير متعدد الصيغ** (CSV, Excel, PDF)
+- 🗑️ **إدارة الحجوزات** - عرض وحذف الحجوزات
+- 📋 **إحصائيات مفصلة** مع تتبع الإيرادات
+- 🔐 **مصادقة آمنة** مع إدارة الجلسات
 
-- Node.js (النسخة 14 أو أحدث)
+## 🛠️ التقنيات المستخدمة
+
+- **الخادم**: Node.js, Express.js
+- **الواجهة**: HTML5, CSS3, JavaScript العادي
+- **قاعدة البيانات**: ملفات JSON (لا تحتاج قاعدة بيانات مدفوعة)
+- **التقارير**: XLSX, jsPDF, jsPDF-AutoTable
+- **التصميم**: عربي RTL، تصميم متجاوب
+
+## 📋 المتطلبات
+
+- Node.js (النسخة 12 أو أحدث)
 - NPM أو Yarn
 
-## التثبيت والتشغيل
+## 🚀 التثبيت والتشغيل
 
 1. **نسخ المشروع:**
 ```bash
-git clone <repository-url>
+git clone https://github.com/Mohammed-Azab/HagzYomi.git
 cd HagzYomi
 ```
 
@@ -40,11 +262,12 @@ npm start
 npm run dev
 ```
 
-4. **فتح الموقع:**
+4. **الوصول للنظام:**
 - الموقع الرئيسي: http://localhost:3000
 - لوحة الإدارة: http://localhost:3000/admin
+- كلمة مرور الإدارة الافتراضية: `admin123`
 
-## الإعدادات
+## ⚙️ الإعدادات
 
 يمكن تخصيص النظام من خلال ملف `config.json`:
 
@@ -66,66 +289,48 @@ npm run dev
 
 ### شرح الإعدادات:
 
-- **courtName**: اسم الملعب
+- **courtName**: اسم الملعب/المنشأة
 - **openingHours**: ساعات العمل (بداية ونهاية)
-- **workingDays**: أيام العمل (sunday, monday, tuesday, wednesday, thursday, friday, saturday)
-- **maxHoursPerPersonPerDay**: الحد الأقصى لعدد الساعات التي يمكن حجزها لكل شخص يومياً
+- **workingDays**: أيام العمل في الأسبوع
+- **maxHoursPerPersonPerDay**: الحد الأقصى للساعات لكل شخص يومياً
 - **adminPassword**: كلمة مرور لوحة الإدارة
-- **slotDurationMinutes**: مدة كل حجز بالدقائق
-- **currency**: العملة المستخدمة
+- **slotDurationMinutes**: مدة كل فترة حجز بالدقائق
+- **currency**: رمز/اسم العملة
 - **pricePerHour**: السعر لكل ساعة
 
-## بيانات النظام
-
-- الحجوزات يتم حفظها في: `data/bookings.json`
-- لا توجد حاجة لقاعدة بيانات خارجية
-
-## لوحة الإدارة
-
-### الوصول:
-- الرابط: `/admin`
-- كلمة المرور الافتراضية: `admin123` (يمكن تغييرها من config.json)
-
-### الميزات:
-- 📋 عرض جميع الحجوزات
-- 📊 إحصائيات شاملة
-- 📥 تحميل التقارير اليومية (CSV)
-- 🗑️ حذف الحجوزات
-- 🔄 تحديث تلقائي للبيانات
-
-## هيكل المشروع
+## � هيكل المشروع
 
 ```
 HagzYomi/
 ├── public/              # الملفات الثابتة
-│   ├── index.html       # الصفحة الرئيسية
+│   ├── index.html       # صفحة الحجز الرئيسية
 │   ├── admin.html       # لوحة الإدارة
 │   ├── admin-login.html # صفحة تسجيل دخول الإدارة
 │   ├── styles.css       # ملف التنسيقات
-│   ├── script.js        # JavaScript للصفحة الرئيسية
-│   └── admin.js         # JavaScript للوحة الإدارة
-├── data/                # مجلد البيانات (يتم إنشاؤه تلقائياً)
-│   └── bookings.json    # ملف الحجوزات
-├── server.js            # الخادم الرئيسي
+│   ├── script.js        # JavaScript الصفحة الرئيسية
+│   └── admin.js         # JavaScript لوحة الإدارة
+├── data/                # مجلد البيانات (ينشأ تلقائياً)
+│   └── bookings.json    # قاعدة بيانات الحجوزات
+├── server.js            # ملف الخادم الرئيسي
 ├── config.json          # ملف الإعدادات
 ├── package.json         # تبعيات Node.js
 └── README.md           # هذا الملف
 ```
 
-## API المتاح
+## 📡 نقاط API المتاحة
 
-### للمستخدمين:
+### النقاط العامة:
 - `GET /api/config` - جلب إعدادات النظام
 - `GET /api/slots/:date` - جلب المواعيد المتاحة لتاريخ معين
 - `POST /api/book` - إنشاء حجز جديد
 
-### للإدارة:
-- `POST /admin/login` - تسجيل دخول الإدارة
+### نقاط الإدارة:
+- `POST /admin/login` - مصادقة الإدارة
 - `GET /api/admin/bookings` - جلب جميع الحجوزات
-- `GET /api/admin/report/:date` - تحميل تقرير يومي
+- `GET /api/admin/report` - تحميل التقارير (CSV/Excel/PDF)
 - `DELETE /api/admin/booking/:id` - حذف حجز
 
-## التخصيص
+## 🎨 التخصيص
 
 ### تغيير الألوان:
 عدّل متغيرات CSS في `public/styles.css`:
@@ -134,30 +339,31 @@ HagzYomi/
 :root {
     --primary-color: #2196F3;    /* اللون الأساسي */
     --secondary-color: #4CAF50;  /* اللون الثانوي */
-    --accent-color: #FF9800;     /* لون مكمل */
+    --accent-color: #FF9800;     /* اللون المكمل */
 }
 ```
 
 ### إضافة ميزات جديدة:
-- عدّل `server.js` لإضافة API جديد
-- أضف الـ JavaScript المطلوب في الملفات المناسبة
+- عدّل `server.js` لإضافة نقاط API جديدة
+- أضف JavaScript المطلوب في الملفات المناسبة
 - حدّث ملفات HTML حسب الحاجة
 
-## الأمان
+## 🔒 ميزات الأمان
 
-- كلمات المرور يتم التحقق منها على الخادم
-- جلسات الإدارة آمنة ومحدودة الوقت
-- التحقق من صحة البيانات المدخلة
+- التحقق من كلمة المرور على جانب الخادم
+- جلسات إدارة آمنة مع انتهاء الصلاحية
+- التحقق من صحة البيانات المدخلة وتنظيفها
 - حماية من CSRF والهجمات الشائعة
+- منع حجز المواعيد المنتهية
 
-## النشر
+## 🌐 النشر
 
-### النشر المحلي:
+### التطوير المحلي:
 ```bash
 npm start
 ```
 
-### النشر على خادم:
+### خادم الإنتاج:
 1. رفع الملفات للخادم
 2. تثبيت Node.js
 3. تشغيل `npm install`
@@ -172,17 +378,32 @@ pm2 startup
 pm2 save
 ```
 
-## الدعم والصيانة
+## 🔧 الصيانة
 
-- تحقق من ملف `data/bookings.json` بانتظام
-- اعمل نسخ احتياطية من مجلد `data`
-- راقب سجلات الخادم للأخطاء
-- حدّث كلمة مرور الإدارة بانتظام
+- عمل نسخ احتياطية دورية لمجلد `data`
+- مراقبة سجلات الخادم للأخطاء
+- تحديث كلمة مرور الإدارة بانتظام
+- فحص `data/bookings.json` بشكل دوري
 
-## ترخيص
+## 📄 الترخيص
 
-هذا المشروع مفتوح المصدر تحت رخصة MIT.
+هذا المشروع مرخص تحت رخصة MIT للاستخدام الشخصي والتعليمي.
+
+## 💬 الدعم والتواصل
+
+- 📧 **البريد الإلكتروني**: [Mohammed@azab.io](mailto:Mohammed@azab.io)
+- 🐛 **الإبلاغ عن الأخطاء**: إنشاء Issue جديد في GitHub
+- 💡 **طلبات الميزات**: التواصل المباشر عبر البريد الإلكتروني
+- 🤝 **الدعم التقني**: متاح عبر البريد الإلكتروني
 
 ---
 
-للمساعدة والدعم، يرجى إنشاء Issue في GitHub أو التواصل مع المطور.
+## 📝 Copyright & License
+
+© 2025 **Mohammed Azab**. All rights reserved.
+
+This project is protected by copyright. Developed by Mohammed Azab.
+
+**تم التطوير بواسطة Mohammed Azab مع ❤️ للمجتمع العربي**
+
+💻 جميع الحقوق محفوظة لـ Mohammed Azab - [Mohammed@azab.io](mailto:Mohammed@azab.io)

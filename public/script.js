@@ -1,3 +1,12 @@
+/**
+ * HagzYomi - Football Court Booking System Frontend
+ * 
+ * @author Mohammed Azab
+ * @email Mohammed@azab.io
+ * @copyright 2025 Mohammed Azab. All rights reserved.
+ * @description JavaScript functionality for the football court booking system
+ */
+
 // Global variables
 let config = {};
 let selectedTime = null;

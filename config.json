@@ -1,4 +1,8 @@
 {
+  "_copyright": "© 2025 Mohammed Azab (Mohammed@azab.io). All rights reserved.",
+  "_author": "Mohammed Azab",
+  "_email": "Mohammed@azab.io",
+  "_description": "HagzYomi Football Court Booking System Configuration",
   "courtName": "ملعب حجز يومي",
   "openingHours": {
     "start": "10:00",

@@ -1,3 +1,12 @@
+/**
+ * HagzYomi - Admin Panel JavaScript
+ * 
+ * @author Mohammed Azab
+ * @email Mohammed@azab.io
+ * @copyright 2025 Mohammed Azab. All rights reserved.
+ * @description Admin panel functionality for managing bookings and generating reports
+ */
+
 // Global variables
 let bookings = [];
 let bookingToDelete = null;

@@ -1,3 +1,12 @@
+/**
+ * HagzYomi - Football Court Booking System
+ * 
+ * @author Mohammed Azab
+ * @email Mohammed@azab.io
+ * @copyright 2025 Mohammed Azab. All rights reserved.
+ * @description Complete Arabic football court booking website with admin panel
+ */
+
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
@@ -505,7 +514,14 @@ app.delete('/api/admin/booking/:id', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🚀 HagzYomi - Football Court Booking System');
+    console.log('💻 Developed by: Mohammed Azab');
+    console.log('📧 Contact: Mohammed@azab.io');
+    console.log('© 2025 Mohammed Azab. All rights reserved.');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log(`🌐 Server running on http://localhost:${PORT}`);
     console.log(`📊 Admin panel: http://localhost:${PORT}/admin`);
     console.log(`🔑 Admin password: ${config.adminPassword}`);
+    console.log('═══════════════════════════════════════════════════════');
 });

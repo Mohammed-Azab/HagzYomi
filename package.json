@@ -1,7 +1,12 @@
 {
   "name": "hagz-yomi",
   "version": "1.0.0",
-  "description": "Arabic Football Court Booking System",
+  "description": "Arabic Football Court Booking System - Complete booking website with admin panel",
+  "author": {
+    "name": "Mohammed Azab",
+    "email": "Mohammed@azab.io"
+  },
+  "copyright": "© 2025 Mohammed Azab. All rights reserved.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -23,8 +28,14 @@
     "booking",
     "football",
     "court",
-    "arabic"
+    "arabic",
+    "nodejs",
+    "express",
+    "booking-system"
   ],
-  "author": "Your Name",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mohammed-Azab/HagzYomi"
+  }
 }
