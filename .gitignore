@@ -1,6 +1,16 @@
 # 🏟️ HagzYomi - Football Court Booking System
 # .gitignore file for clean repository structure
 
+# Git worktree deployment directories (linked to branches)
+github-pages-deploy/
+localhost-deploy/ 
+vercel-deploy/
+
+# Legacy deployment directories (will be removed)
+github-pages/
+localhost/
+vercel/
+
 # Node.js dependencies
 node_modules/
 npm-debug.log*
@@ -16,7 +26,7 @@ package-lock.json
 .env.production.local
 
 # Data files (for localhost development)
-localhost/data/bookings.json
+data/bookings.json
 
 # Logs
 *.log

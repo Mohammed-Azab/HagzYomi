@@ -1,18 +1,36 @@
-# 🏟️ HagzYomi - Deployment Branches
+# 🏟️ HagzYomi - Deployment Branches with Git Worktrees
 
-This repository has been organized into separate branches for different hosting platforms to make deployment easier and cleaner.
+This repository uses **Git Worktrees** to link deployment directories to their respective branches, making development and deployment seamless.
+
+## 📋 Repository Structure
+
+```
+HagzYomi/                          # Main repository (main branch)
+├── github-pages-deploy/           # 🌐 Linked to github-pages branch
+├── localhost-deploy/              # 💻 Linked to localhost branch  
+├── vercel-deploy/                 # ☁️ Linked to vercel branch
+├── DEPLOYMENT_BRANCHES.md         # This documentation
+└── README.md                      # Main project documentation
+```
+
+## 🔗 Git Worktree Benefits
+
+- **Live sync:** Changes in directories automatically reflect in their branches
+- **No copying:** Direct branch access through directories  
+- **Parallel work:** Develop on different platforms simultaneously
+- **Clean structure:** Each deployment method isolated but accessible
 
 ## 📋 Branch Structure
 
-### 🌐 **`github-pages` Branch**
+### 🌐 **`github-pages` Branch** → `github-pages-deploy/`
 - **Purpose:** GitHub Pages deployment with Firebase cloud database
-- **Structure:** Uses `/docs` directory for GitHub Pages recognition
+- **Structure:** Uses `/docs` directory for GitHub Pages recognition  
 - **Database:** Firebase Firestore (cloud-based for multi-device access)
 - **Features:** Complete Arabic RTL booking system with admin panel
 - **Deploy:** Enable GitHub Pages from `/docs` folder in repository settings
 
 ```
-docs/
+github-pages-deploy/docs/
 ├── index.html          # Main booking page
 ├── admin.html          # Admin dashboard
 ├── admin-login.html    # Admin login
@@ -23,15 +41,15 @@ docs/
 └── README.md          # Deployment instructions
 ```
 
-### 💻 **`localhost` Branch**
+### 💻 **`localhost` Branch** → `localhost-deploy/`
 - **Purpose:** Local development environment
 - **Structure:** Node.js + Express.js backend in root directory
 - **Database:** JSON file-based storage (`data/bookings.json`)
 - **Features:** Full CRUD operations, PDF/Excel/CSV exports
-- **Deploy:** `npm install && npm start`
+- **Deploy:** `cd localhost-deploy && npm install && npm start`
 
 ```
-Root directory contains:
+localhost-deploy/
 ├── server.js          # Express.js backend
 ├── package.json       # Node.js dependencies
 ├── index.html         # Frontend pages
@@ -41,15 +59,15 @@ Root directory contains:
 └── data/              # JSON database
 ```
 
-### ☁️ **`vercel` Branch**
+### ☁️ **`vercel` Branch** → `vercel-deploy/`
 - **Purpose:** Vercel serverless deployment
 - **Structure:** Serverless functions with static files
 - **Database:** In-memory storage (resets on cold starts)
 - **Features:** Zero-config deployment, serverless optimization
-- **Deploy:** Connect to Vercel and deploy
+- **Deploy:** Connect `vercel-deploy/` to Vercel
 
 ```
-Root directory contains:
+vercel-deploy/
 ├── server.js          # Express.js serverless function
 ├── vercel.json        # Vercel configuration
 ├── package.json       # Dependencies
@@ -62,21 +80,45 @@ Root directory contains:
 ## 🚀 Quick Deployment Guide
 
 ### GitHub Pages (Recommended for Production)
-1. Switch to `github-pages` branch
-2. Configure Firebase (see `docs/FIREBASE_SETUP.md`)
-3. Enable GitHub Pages from `/docs` folder in repo settings
-4. Access via: `https://mohammed-azab.github.io/HagzYomi/`
+1. Work in `github-pages-deploy/` directory (linked to github-pages branch)
+2. Configure Firebase (see `github-pages-deploy/docs/FIREBASE_SETUP.md`)
+3. Push changes: `cd github-pages-deploy && git add . && git commit -m "Update" && git push`
+4. Enable GitHub Pages from `/docs` folder in repo settings
+5. Access via: `https://mohammed-azab.github.io/HagzYomi/`
 
 ### Local Development
-1. Switch to `localhost` branch
-2. Run: `npm install && npm start`
+1. Work in `localhost-deploy/` directory (linked to localhost branch)
+2. Run: `cd localhost-deploy && npm install && npm start`
 3. Access via: `http://localhost:3000`
+4. Push changes: `cd localhost-deploy && git add . && git commit -m "Update" && git push`
 
 ### Vercel Deployment
-1. Switch to `vercel` branch
-2. Connect repository to Vercel
+1. Work in `vercel-deploy/` directory (linked to vercel branch)
+2. Connect `vercel-deploy/` directory to Vercel
 3. Deploy with zero configuration
-4. Access via: `https://your-project.vercel.app`
+4. Push changes: `cd vercel-deploy && git add . && git commit -m "Update" && git push`
+5. Access via: `https://your-project.vercel.app`
+
+## 🔧 Managing Git Worktrees
+
+### Create worktrees (already done):
+```bash
+git worktree add github-pages-deploy github-pages
+git worktree add localhost-deploy localhost  
+git worktree add vercel-deploy vercel
+```
+
+### View worktrees:
+```bash
+git worktree list
+```
+
+### Remove worktrees (if needed):
+```bash
+git worktree remove github-pages-deploy
+git worktree remove localhost-deploy
+git worktree remove vercel-deploy
+```
 
 ## 🔧 Features Available in All Versions
 
