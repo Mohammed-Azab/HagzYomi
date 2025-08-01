@@ -5,6 +5,7 @@
 github-pages-deploy/
 localhost-deploy/ 
 vercel-deploy/
+railway-deploy/
 
 # Legacy deployment directories (will be removed)
 github-pages/
