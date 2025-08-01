@@ -1,4 +1,4 @@
-// Admin Panel Script for GitHub Pages
+// Admin Panel Script for GitHub Pages with Firebase
 
 // Check if user is authenticated
 if (!sessionStorage.getItem('hagz_admin')) {
@@ -74,9 +74,9 @@ function setupModalHandlers() {
     });
 
     // Confirm delete handlers
-    document.getElementById('confirmDelete').addEventListener('click', function() {
+    document.getElementById('confirmDelete').addEventListener('click', async function() {
         if (bookingToDelete) {
-            deleteBooking(bookingToDelete);
+            await deleteBookingHandler(bookingToDelete);
             document.getElementById('confirmModal').style.display = 'none';
             bookingToDelete = null;
         }
@@ -88,83 +88,117 @@ function setupModalHandlers() {
     });
 }
 
-function getBookings() {
-    return JSON.parse(localStorage.getItem('hagz_bookings') || '[]');
-}
-
-function saveBookings(bookings) {
-    localStorage.setItem('hagz_bookings', JSON.stringify(bookings));
-}
-
-function loadDashboard() {
-    const bookings = getBookings();
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Calculate statistics
-    const totalBookings = bookings.length;
-    const todayBookings = bookings.filter(b => b.date === today).length;
-    const totalRevenue = bookings.reduce((sum, b) => sum + (b.price || 0), 0);
-    const todayRevenue = bookings
-        .filter(b => b.date === today)
-        .reduce((sum, b) => sum + (b.price || 0), 0);
-    
-    // Update statistics display
-    document.getElementById('totalBookings').textContent = totalBookings;
-    document.getElementById('todayBookings').textContent = todayBookings;
-    document.getElementById('totalRevenue').textContent = `${totalRevenue} ريال`;
-    document.getElementById('todayRevenue').textContent = `${todayRevenue} ريال`;
-    
-    // Load bookings table
-    loadBookingsTable();
-}
-
-function loadBookingsTable(filterDate = '') {
-    const bookings = getBookings();
-    const tbody = document.getElementById('bookingsTableBody');
-    const noBookings = document.getElementById('noBookings');
-    
-    let filteredBookings = bookings;
-    if (filterDate) {
-        filteredBookings = bookings.filter(b => b.date === filterDate);
+// Firebase Database functions
+async function getBookings() {
+    try {
+        const snapshot = await bookingsCollection.get();
+        const bookings = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            bookings.push({ 
+                id: doc.id, 
+                ...data,
+                // Convert Firestore timestamp to date string if needed
+                date: data.date || (data.timestamp ? data.timestamp.toDate().toISOString().split('T')[0] : ''),
+                timestamp: data.timestamp ? data.timestamp.toDate().toISOString() : new Date().toISOString()
+            });
+        });
+        return bookings;
+    } catch (error) {
+        console.error('Error getting bookings:', error);
+        return [];
     }
-    
-    if (filteredBookings.length === 0) {
-        tbody.innerHTML = '';
-        noBookings.style.display = 'block';
-        return;
+}
+
+async function deleteBookingFromDB(bookingId) {
+    try {
+        await bookingsCollection.doc(bookingId).delete();
+        return true;
+    } catch (error) {
+        console.error('Error deleting booking:', error);
+        throw error;
     }
-    
-    noBookings.style.display = 'none';
-    
-    // Sort bookings by date and time (newest first)
-    filteredBookings.sort((a, b) => {
-        const dateA = new Date(a.date + ' ' + a.time);
-        const dateB = new Date(b.date + ' ' + b.time);
-        return dateB - dateA;
-    });
-    
-    tbody.innerHTML = filteredBookings.map(booking => {
-        const bookingDate = new Date(booking.timestamp || booking.date);
-        const formattedDate = formatArabicDate(booking.date);
-        const formattedBookingDate = bookingDate.toLocaleDateString('ar-SA');
+}
+
+async function loadDashboard() {
+    try {
+        const bookings = await getBookings();
+        const today = new Date().toISOString().split('T')[0];
         
-        return `
-            <tr>
-                <td>${booking.id}</td>
-                <td>${booking.customerName}</td>
-                <td>${booking.customerPhone}</td>
-                <td>${formattedDate}</td>
-                <td>${booking.time}</td>
-                <td>${booking.price || 50} ريال</td>
-                <td>${formattedBookingDate}</td>
-                <td>
-                    <button class="delete-btn small" onclick="confirmDelete('${booking.id}')">
-                        🗑️ حذف
-                    </button>
-                </td>
-            </tr>
-        `;
-    }).join('');
+        // Calculate statistics
+        const totalBookings = bookings.length;
+        const todayBookings = bookings.filter(b => b.date === today).length;
+        const totalRevenue = bookings.reduce((sum, b) => sum + (b.price || 0), 0);
+        const todayRevenue = bookings
+            .filter(b => b.date === today)
+            .reduce((sum, b) => sum + (b.price || 0), 0);
+        
+        // Update statistics display
+        document.getElementById('totalBookings').textContent = totalBookings;
+        document.getElementById('todayBookings').textContent = todayBookings;
+        document.getElementById('totalRevenue').textContent = `${totalRevenue} ريال`;
+        document.getElementById('todayRevenue').textContent = `${todayRevenue} ريال`;
+        
+        // Load bookings table
+        await loadBookingsTable();
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+        showError('خطأ في تحميل البيانات');
+    }
+}
+
+async function loadBookingsTable(filterDate = '') {
+    try {
+        const bookings = await getBookings();
+        const tbody = document.getElementById('bookingsTableBody');
+        const noBookings = document.getElementById('noBookings');
+        
+        let filteredBookings = bookings;
+        if (filterDate) {
+            filteredBookings = bookings.filter(b => b.date === filterDate);
+        }
+        
+        if (filteredBookings.length === 0) {
+            tbody.innerHTML = '';
+            noBookings.style.display = 'block';
+            return;
+        }
+        
+        noBookings.style.display = 'none';
+        
+        // Sort bookings by date and time (newest first)
+        filteredBookings.sort((a, b) => {
+            const dateA = new Date(a.date + ' ' + a.time);
+            const dateB = new Date(b.date + ' ' + b.time);
+            return dateB - dateA;
+        });
+        
+        tbody.innerHTML = filteredBookings.map(booking => {
+            const bookingDate = new Date(booking.timestamp || booking.date);
+            const formattedDate = formatArabicDate(booking.date);
+            const formattedBookingDate = bookingDate.toLocaleDateString('ar-SA');
+            
+            return `
+                <tr>
+                    <td>${booking.id}</td>
+                    <td>${booking.customerName || booking.name || ''}</td>
+                    <td>${booking.customerPhone || booking.phone || ''}</td>
+                    <td>${formattedDate}</td>
+                    <td>${booking.time}</td>
+                    <td>${booking.price || 50} ريال</td>
+                    <td>${formattedBookingDate}</td>
+                    <td>
+                        <button class="delete-btn small" onclick="confirmDelete('${booking.id}')">
+                            🗑️ حذف
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading bookings table:', error);
+        showError('خطأ في تحميل جدول الحجوزات');
+    }
 }
 
 function confirmDelete(bookingId) {
@@ -172,13 +206,15 @@ function confirmDelete(bookingId) {
     document.getElementById('confirmModal').style.display = 'block';
 }
 
-function deleteBooking(bookingId) {
-    const bookings = getBookings();
-    const updatedBookings = bookings.filter(b => b.id !== bookingId);
-    saveBookings(updatedBookings);
-    
-    showSuccess('تم حذف الحجز بنجاح');
-    loadDashboard();
+async function deleteBookingHandler(bookingId) {
+    try {
+        await deleteBookingFromDB(bookingId);
+        showSuccess('تم حذف الحجز بنجاح');
+        await loadDashboard();
+    } catch (error) {
+        console.error('Error deleting booking:', error);
+        showError('خطأ في حذف الحجز');
+    }
 }
 
 function updateDownloadButton() {
@@ -189,8 +225,8 @@ function updateDownloadButton() {
     downloadBtn.style.opacity = hasFormat ? '1' : '0.5';
 }
 
-function getFilteredBookings() {
-    const bookings = getBookings();
+async function getFilteredBookings() {
+    const bookings = await getBookings();
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     
@@ -207,29 +243,34 @@ function getFilteredBookings() {
     return filteredBookings;
 }
 
-function downloadReport(format) {
-    const bookings = getFilteredBookings();
-    
-    if (bookings.length === 0) {
-        showError('لا توجد حجوزات في النطاق المحدد');
-        return;
-    }
-    
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    const dateRange = startDate && endDate ? `${startDate}_${endDate}` : 'all';
-    const fileName = `bookings_report_${dateRange}`;
-    
-    switch (format) {
-        case 'pdf':
-            downloadPDF(bookings, fileName);
-            break;
-        case 'excel':
-            downloadExcel(bookings, fileName);
-            break;
-        case 'csv':
-            downloadCSV(bookings, fileName);
-            break;
+async function downloadReport(format) {
+    try {
+        const bookings = await getFilteredBookings();
+        
+        if (bookings.length === 0) {
+            showError('لا توجد حجوزات في النطاق المحدد');
+            return;
+        }
+        
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const dateRange = startDate && endDate ? `${startDate}_${endDate}` : 'all';
+        const fileName = `bookings_report_${dateRange}`;
+        
+        switch (format) {
+            case 'pdf':
+                downloadPDF(bookings, fileName);
+                break;
+            case 'excel':
+                downloadExcel(bookings, fileName);
+                break;
+            case 'csv':
+                downloadCSV(bookings, fileName);
+                break;
+        }
+    } catch (error) {
+        console.error('Error generating report:', error);
+        showError('خطأ في إنشاء التقرير');
     }
 }
 
@@ -257,8 +298,8 @@ function downloadPDF(bookings, fileName) {
         const headers = ['ID', 'Name', 'Phone', 'Date', 'Time', 'Price (SAR)'];
         const data = bookings.map(booking => [
             booking.id,
-            booking.customerName,
-            booking.customerPhone,
+            booking.customerName || booking.name || '',
+            booking.customerPhone || booking.phone || '',
             booking.date,
             booking.time,
             booking.price || 50
@@ -308,8 +349,8 @@ function downloadExcel(bookings, fileName) {
             const bookingDate = new Date(booking.timestamp || booking.date);
             data.push([
                 booking.id,
-                booking.customerName,
-                booking.customerPhone,
+                booking.customerName || booking.name || '',
+                booking.customerPhone || booking.phone || '',
                 booking.date,
                 booking.time,
                 booking.price || 50,
@@ -345,8 +386,8 @@ function downloadCSV(bookings, fileName) {
             const bookingDate = new Date(booking.timestamp || booking.date);
             return [
                 booking.id,
-                `"${booking.customerName}"`,
-                booking.customerPhone,
+                `"${booking.customerName || booking.name || ''}"`,
+                booking.customerPhone || booking.phone || '',
                 booking.date,
                 booking.time,
                 booking.price || 50,
