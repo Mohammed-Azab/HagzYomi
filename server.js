@@ -100,7 +100,8 @@ app.use(express.static(__dirname));
 function loadBookings() {
     // Use file storage for Render persistent storage
     try {
-        return JSON.parse(fs.readFileSync(bookingsFile, 'utf8'));
+        const data = JSON.parse(fs.readFileSync(bookingsFile, 'utf8'));
+        return data.bookings || [];
     } catch (error) {
         return [];
     }
@@ -108,7 +109,8 @@ function loadBookings() {
 
 function saveBookings(bookings) {
     // Use file storage for Render persistent storage
-    fs.writeFileSync(bookingsFile, JSON.stringify(bookings, null, 2));
+    const data = { bookings: bookings };
+    fs.writeFileSync(bookingsFile, JSON.stringify(data, null, 2));
 }
 
 function formatDate(date) {
@@ -346,7 +348,10 @@ app.get('/api/config', (req, res) => {
         pricePerHour: config.pricePerHour,
         contactInfo: config.contactInfo,
         features: config.features,
-        ui: config.ui
+        ui: config.ui,
+        requirePaymentConfirmation: config.requirePaymentConfirmation,
+        paymentTimeoutMinutes: config.paymentTimeoutMinutes,
+        paymentInfo: config.paymentInfo
     });
 });
 
@@ -366,8 +371,8 @@ app.post('/api/check-booking', (req, res) => {
             return res.json({ success: false, message: 'رقم الحجز والاسم مطلوبان' });
         }
         
-        const data = JSON.parse(fs.readFileSync('./bookings.json', 'utf8'));
-        const booking = data.bookings.find(b => 
+        const bookings = loadBookings();
+        const booking = bookings.find(b => 
             b.bookingNumber === bookingNumber && 
             b.name.toLowerCase() === name.toLowerCase()
         );
@@ -383,14 +388,13 @@ app.post('/api/check-booking', (req, res) => {
             if (now > expires) {
                 booking.status = 'expired';
                 // Save updated status
-                fs.writeFileSync('./bookings.json', JSON.stringify(data, null, 2));
+                saveBookings(bookings);
             }
         }
         
         // Add payment info if pending
         if (booking.status === 'pending') {
-            const configData = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
-            booking.paymentInfo = configData.paymentInfo;
+            booking.paymentInfo = config.paymentInfo;
         }
         
         res.json({ success: true, booking });
@@ -410,14 +414,14 @@ app.post('/api/confirm-booking', (req, res) => {
             return res.json({ success: false, message: 'رقم الحجز والإجراء مطلوبان' });
         }
         
-        const data = JSON.parse(fs.readFileSync('./bookings.json', 'utf8'));
-        const bookingIndex = data.bookings.findIndex(b => b.bookingNumber === bookingNumber);
+        const bookings = loadBookings();
+        const bookingIndex = bookings.findIndex(b => b.bookingNumber === bookingNumber);
         
         if (bookingIndex === -1) {
             return res.json({ success: false, message: 'لم يتم العثور على الحجز' });
         }
         
-        const booking = data.bookings[bookingIndex];
+        const booking = bookings[bookingIndex];
         
         if (action === 'confirm') {
             booking.status = 'confirmed';
@@ -427,7 +431,8 @@ app.post('/api/confirm-booking', (req, res) => {
             booking.declinedAt = new Date().toISOString();
         }
         
-        fs.writeFileSync('./bookings.json', JSON.stringify(data, null, 2));
+        
+        saveBookings(bookings);
         
         res.json({ success: true, message: `تم ${action === 'confirm' ? 'تأكيد' : 'رفض'} الحجز بنجاح` });
         
@@ -586,7 +591,7 @@ app.post('/api/book', (req, res) => {
     
     if (isRecurring && recurringWeeks > 1) {
         // Validate recurring weeks
-        const maxRecurringWeeks = (configData.features && configData.features.maxRecurringWeeks) || 8;
+        const maxRecurringWeeks = (config.features && config.features.maxRecurringWeeks) || 8;
         if (recurringWeeks > maxRecurringWeeks) {
             return res.json({ 
                 success: false, 
@@ -632,14 +637,13 @@ app.post('/api/book', (req, res) => {
     const bookingId = Date.now().toString();
     const bookingNumber = generateBookingNumber();
     
-    // Load configuration for payment settings
-    const configData = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
-    const requirePaymentConfirmation = configData.requirePaymentConfirmation || false;
+    // Use global configuration
+    const requirePaymentConfirmation = config.requirePaymentConfirmation || false;
     
     // Set booking status and expiration
     const status = requirePaymentConfirmation ? 'pending' : 'confirmed';
     const expiresAt = requirePaymentConfirmation ? 
-        new Date(Date.now() + (configData.paymentTimeoutMinutes || 60) * 60 * 1000).toISOString() : 
+        new Date(Date.now() + (config.paymentTimeoutMinutes || 60) * 60 * 1000).toISOString() : 
         null;
     
     const allNewBookings = [];
@@ -707,10 +711,10 @@ app.post('/api/book', (req, res) => {
     
     // Add payment information if payment confirmation is required
     if (requirePaymentConfirmation) {
-        response.booking.paymentInfo = configData.paymentInfo;
+        response.booking.paymentInfo = config.paymentInfo;
         response.booking.expiresAt = expiresAt;
         response.booking.paymentRequired = true;
-        response.message = `تم إنشاء الحجز برقم ${bookingNumber}. يرجى الدفع خلال ${configData.paymentTimeoutMinutes || 60} دقيقة لتأكيد الحجز.`;
+        response.message = `تم إنشاء الحجز برقم ${bookingNumber}. يرجى الدفع خلال ${config.paymentTimeoutMinutes || 60} دقيقة لتأكيد الحجز.`;
     } else {
         response.message = `تم تأكيد الحجز برقم ${bookingNumber} بنجاح!`;
     }
