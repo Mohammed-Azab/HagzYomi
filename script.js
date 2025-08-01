@@ -15,6 +15,7 @@ let selectedDate = null;
 // DOM elements
 const bookingForm = document.getElementById('bookingForm');
 const dateInput = document.getElementById('bookingDate');
+const durationSelect = document.getElementById('bookingDuration');
 const timeSlotsContainer = document.getElementById('timeSlots');
 const submitBtn = document.getElementById('submitBtn');
 
@@ -38,9 +39,37 @@ async function loadConfig() {
         const response = await fetch('/api/config');
         config = await response.json();
         
-        // Update court name
+        // Update court name and page title
         document.getElementById('courtName').textContent = config.courtName;
         document.title = `${config.courtName} - حجز ملعب كرة القدم`;
+        
+        // Update UI elements if available
+        if (config.ui) {
+            // Update header
+            const headerTitle = document.querySelector('.logo h1');
+            const headerSubtitle = document.querySelector('.logo p');
+            const heroTitle = document.getElementById('courtName');
+            const heroSubtitle = document.querySelector('.hero-subtitle');
+            
+            if (headerTitle && config.ui.headerTitle) {
+                headerTitle.textContent = `⚽ ${config.ui.headerTitle}`;
+            }
+            if (headerSubtitle && config.ui.headerSubtitle) {
+                headerSubtitle.textContent = config.ui.headerSubtitle;
+            }
+            if (heroTitle && config.ui.heroTitle) {
+                heroTitle.textContent = config.ui.heroTitle;
+            }
+            if (heroSubtitle && config.ui.heroSubtitle) {
+                heroSubtitle.textContent = config.ui.heroSubtitle;
+            }
+            
+            // Update primary color if specified
+            if (config.ui.primaryColor) {
+                document.documentElement.style.setProperty('--primary-color', config.ui.primaryColor);
+            }
+        }
+        
     } catch (error) {
         console.error('Error loading config:', error);
         showError('خطأ في تحميل إعدادات الموقع');
@@ -51,6 +80,9 @@ async function loadConfig() {
 function setupEventListeners() {
     // Date change handler
     dateInput.addEventListener('change', handleDateChange);
+    
+    // Duration change handler
+    durationSelect.addEventListener('change', handleDurationChange);
     
     // Form submission
     bookingForm.addEventListener('submit', handleFormSubmit);
@@ -71,18 +103,56 @@ function setMinDate() {
     dateInput.max = maxDate.toISOString().split('T')[0];
 }
 
+// Convert 24-hour time to 12-hour format with Arabic AM/PM
+function formatTimeToArabic12Hour(timeString) {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    let hour12 = hours;
+    let period = '';
+    
+    if (hours === 0) {
+        hour12 = 12;
+        period = 'منتصف الليل';
+    } else if (hours < 12) {
+        hour12 = hours;
+        period = 'صباحاً';
+    } else if (hours === 12) {
+        hour12 = 12;
+        period = 'ظهراً';
+    } else {
+        hour12 = hours - 12;
+        period = 'مساءً';
+    }
+    
+    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
 // Update info panel with config data
 function updateInfoPanel() {
     if (!config.openingHours) return;
     
-    document.getElementById('workingHours').textContent = 
-        `${config.openingHours.start} - ${config.openingHours.end}`;
+    // Format operating hours with AM/PM
+    const startTime12 = formatTimeToArabic12Hour(config.openingHours.start);
+    const endTime12 = formatTimeToArabic12Hour(config.openingHours.end);
+    
+    // Check if it's an overnight period
+    const [startHour] = config.openingHours.start.split(':').map(Number);
+    const [endHour] = config.openingHours.end.split(':').map(Number);
+    const isOvernight = endHour < startHour;
+    
+    let workingHoursText;
+    if (isOvernight) {
+        workingHoursText = `${startTime12} - ${endTime12} (اليوم التالي)`;
+    } else {
+        workingHoursText = `${startTime12} - ${endTime12}`;
+    }
+    
+    document.getElementById('workingHours').textContent = workingHoursText;
     
     document.getElementById('maxHours').textContent = 
-        `${config.maxHoursPerPersonPerDay} ساعات يومياً`;
+        `${config.maxHoursPerPersonPerDay} ساعة يومياً`;
     
     document.getElementById('slotDuration').textContent = 
-        `${config.slotDurationMinutes} دقيقة`;
+        `${config.slotDurationMinutes} دقيقة (الحد الأدنى)`;
     
     document.getElementById('priceInfo').textContent = 
         `${config.pricePerHour} ${config.currency}/ساعة`;
@@ -98,19 +168,24 @@ function updateInfoPanel() {
         'saturday': 'السبت'
     };
     
-    // Check if workingDays are already in Arabic
-    const isArabic = config.workingDays.some(day => Object.values(dayNames).includes(day));
-    
-    let workingDaysArabic;
-    if (isArabic) {
-        // Already in Arabic, just join them
-        workingDaysArabic = config.workingDays.join(' - ');
+    // Check if all 7 days are present
+    if (config.workingDays.length === 7) {
+        document.getElementById('workingDays').textContent = 'جميع أيام الأسبوع';
     } else {
-        // Convert from English to Arabic
-        workingDaysArabic = config.workingDays.map(day => dayNames[day]).join(' - ');
+        // Check if workingDays are already in Arabic
+        const isArabic = config.workingDays.some(day => Object.values(dayNames).includes(day));
+        
+        let workingDaysArabic;
+        if (isArabic) {
+            // Already in Arabic, just join them
+            workingDaysArabic = config.workingDays.join(' - ');
+        } else {
+            // Convert from English to Arabic
+            workingDaysArabic = config.workingDays.map(day => dayNames[day]).join(' - ');
+        }
+        
+        document.getElementById('workingDays').textContent = workingDaysArabic;
     }
-    
-    document.getElementById('workingDays').textContent = workingDaysArabic;
 }
 
 // Handle date change
@@ -123,6 +198,15 @@ async function handleDateChange() {
     submitBtn.disabled = true;
     
     await loadTimeSlots(date);
+}
+
+// Handle duration change
+async function handleDurationChange() {
+    if (selectedDate) {
+        selectedTime = null;
+        submitBtn.disabled = true;
+        await loadTimeSlots(selectedDate);
+    }
 }
 
 // Load available time slots for a date
@@ -155,7 +239,20 @@ async function loadTimeSlots(date) {
 // Check if a time slot is in the past
 function isTimeSlotInPast(date, time) {
     const now = new Date();
-    const slotDateTime = new Date(`${date}T${time}:00`);
+    const [hours, minutes] = time.split(':').map(Number);
+    
+    // For overnight periods, times like 00:00-03:00 are considered next day
+    const [startHour] = config.openingHours.start.split(':').map(Number);
+    const [endHour] = config.openingHours.end.split(':').map(Number);
+    
+    let slotDateTime = new Date(`${date}T${time}:00`);
+    
+    // If this is an overnight period and the current time is before start hour
+    if (endHour <= startHour && hours < startHour) {
+        // Add one day to the slot time
+        slotDateTime.setDate(slotDateTime.getDate() + 1);
+    }
+    
     return slotDateTime <= now;
 }
 
@@ -164,11 +261,15 @@ function renderTimeSlots(availableSlots, bookedSlots) {
     
     // Get all possible slots to show booked ones too
     const allSlots = generateAllTimeSlots();
+    const selectedDuration = parseInt(durationSelect.value);
+    const slotsNeeded = selectedDuration / config.slotDurationMinutes;
     
-    allSlots.forEach(time => {
+    allSlots.forEach((time, index) => {
         const slotElement = document.createElement('div');
         slotElement.className = 'time-slot';
-        slotElement.textContent = time;
+        
+        // Show only 12-hour format
+        slotElement.textContent = formatTimeToArabic12Hour(time);
         
         // Check if time slot is in the past
         const isPastTime = isTimeSlotInPast(selectedDate, time);
@@ -180,7 +281,23 @@ function renderTimeSlots(availableSlots, bookedSlots) {
             slotElement.classList.add('booked');
             slotElement.title = 'الوقت قد انتهى';
         } else if (availableSlots.includes(time)) {
-            slotElement.addEventListener('click', () => selectTimeSlot(time, slotElement));
+            // Check if we have enough consecutive slots for the selected duration
+            const canBook = canBookConsecutiveSlots(index, slotsNeeded, allSlots, bookedSlots, availableSlots);
+            
+            if (canBook) {
+                slotElement.addEventListener('click', () => selectTimeSlot(time, slotElement, selectedDuration));
+                
+                // Add duration indicator
+                if (selectedDuration > 30) {
+                    const durationText = document.createElement('span');
+                    durationText.className = 'duration-indicator';
+                    durationText.textContent = ` (${selectedDuration}د)`;
+                    slotElement.appendChild(durationText);
+                }
+            } else {
+                slotElement.classList.add('booked');
+                slotElement.title = 'لا توجد مواعيد كافية متتالية';
+            }
         } else {
             slotElement.classList.add('booked');
             slotElement.title = 'غير متاح';
@@ -190,6 +307,29 @@ function renderTimeSlots(availableSlots, bookedSlots) {
     });
 }
 
+// Check if we can book consecutive slots starting from a given index
+function canBookConsecutiveSlots(startIndex, slotsNeeded, allSlots, bookedSlots, availableSlots) {
+    // Check if we have enough slots remaining
+    if (startIndex + slotsNeeded > allSlots.length) {
+        return false;
+    }
+    
+    // Check if all required consecutive slots are available
+    for (let i = 0; i < slotsNeeded; i++) {
+        const slotTime = allSlots[startIndex + i];
+        if (bookedSlots.includes(slotTime) || !availableSlots.includes(slotTime)) {
+            return false;
+        }
+        
+        // Check if slot is in the past
+        if (isTimeSlotInPast(selectedDate, slotTime)) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 // Generate all possible time slots based on config
 function generateAllTimeSlots() {
     const slots = [];
@@ -197,10 +337,15 @@ function generateAllTimeSlots() {
     const [endHour, endMinute] = config.openingHours.end.split(':').map(Number);
     
     const startTime = startHour * 60 + startMinute;
-    const endTime = endHour * 60 + endMinute;
+    let endTime = endHour * 60 + endMinute;
+    
+    // Handle overnight periods (e.g., 22:00 to 03:00)
+    if (endTime <= startTime) {
+        endTime += 24 * 60; // Add 24 hours to end time
+    }
     
     for (let time = startTime; time < endTime; time += config.slotDurationMinutes) {
-        const hours = Math.floor(time / 60);
+        const hours = Math.floor(time / 60) % 24; // Use modulo to handle 24+ hours
         const minutes = time % 60;
         const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
         slots.push(timeString);
@@ -210,14 +355,30 @@ function generateAllTimeSlots() {
 }
 
 // Select a time slot
-function selectTimeSlot(time, element) {
+function selectTimeSlot(time, element, duration) {
     // Remove previous selection
-    document.querySelectorAll('.time-slot.selected').forEach(slot => {
-        slot.classList.remove('selected');
+    document.querySelectorAll('.time-slot.selected, .time-slot.selected-group').forEach(slot => {
+        slot.classList.remove('selected', 'selected-group');
     });
     
-    // Add selection to clicked slot
-    element.classList.add('selected');
+    // Add selection to clicked slot and consecutive slots
+    const allSlots = generateAllTimeSlots();
+    const startIndex = allSlots.indexOf(time);
+    const slotsNeeded = duration / config.slotDurationMinutes;
+    
+    // Highlight all selected slots
+    for (let i = 0; i < slotsNeeded; i++) {
+        const slotIndex = startIndex + i;
+        if (slotIndex < allSlots.length) {
+            const slotElement = timeSlotsContainer.children[slotIndex];
+            if (i === 0) {
+                slotElement.classList.add('selected');
+            } else {
+                slotElement.classList.add('selected-group');
+            }
+        }
+    }
+    
     selectedTime = time;
     
     // Enable submit button
@@ -234,11 +395,13 @@ async function handleFormSubmit(event) {
     }
     
     const formData = new FormData(bookingForm);
+    const selectedDuration = parseInt(durationSelect.value);
     const bookingData = {
         name: formData.get('name').trim(),
         phone: formData.get('phone').trim(),
         date: selectedDate,
-        time: selectedTime
+        time: selectedTime,
+        duration: selectedDuration
     };
     
     // Validate form data
@@ -268,16 +431,22 @@ async function handleFormSubmit(event) {
         const result = await response.json();
         
         if (result.success) {
-            showSuccess(`تم حجز موعدك بنجاح!
+            const durationText = selectedDuration === 30 ? '30 دقيقة' : 
+                                selectedDuration === 60 ? 'ساعة واحدة' :
+                                selectedDuration === 90 ? 'ساعة ونصف' : 'ساعتان';
             
-التاريخ: ${selectedDate}
-الوقت: ${selectedTime}
-السعر: ${result.booking.price} ${config.currency}
+            showSuccess(`🎉 تم حجز موعدك بنجاح!
 
-يرجى الوصول قبل الموعد بـ 10 دقائق.`);
+📅 التاريخ: ${selectedDate}
+⏰ الوقت: ${result.booking.startTime} - ${result.booking.endTime}
+⏱️ المدة: ${durationText}
+💰 السعر: ${result.booking.price} ${config.currency}
+
+📍 يرجى الوصول قبل الموعد بـ 10 دقائق`);
             
             // Reset form
             bookingForm.reset();
+            durationSelect.value = '60'; // Reset to default
             selectedTime = null;
             selectedDate = null;
             timeSlotsContainer.innerHTML = '<p class="loading">اختر التاريخ لعرض المواعيد المتاحة</p>';

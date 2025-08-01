@@ -17,6 +17,12 @@ const refreshBtn = document.getElementById('refreshBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const deleteModal = document.getElementById('deleteModal');
 
+// Configuration modal elements
+const configBtn = document.getElementById('configBtn');
+const configModal = document.getElementById('configModal');
+const reloadConfigBtn = document.getElementById('reloadConfigBtn');
+const configContent = document.getElementById('configContent');
+
 // Download modal elements
 const downloadModal = document.getElementById('downloadModal');
 const downloadModalBtn = document.getElementById('downloadModalBtn');
@@ -56,6 +62,12 @@ document.addEventListener('DOMContentLoaded', function() {
 function setupEventListeners() {
     refreshBtn.addEventListener('click', loadBookings);
     logoutBtn.addEventListener('click', logout);
+    
+    // Configuration modal handlers
+    configBtn.addEventListener('click', showConfigModal);
+    reloadConfigBtn.addEventListener('click', reloadConfiguration);
+    document.getElementById('closeConfigModal').addEventListener('click', hideConfigModal);
+    document.getElementById('closeConfigModalBtn').addEventListener('click', hideConfigModal);
     
     // Download modal handlers
     downloadModalBtn.addEventListener('click', showDownloadModal);
@@ -584,6 +596,69 @@ function showMessage(message, type = 'info') {
     setTimeout(() => {
         messageEl.remove();
     }, 3000);
+}
+
+// Configuration modal functions
+function showConfigModal() {
+    loadConfigContent();
+    configModal.classList.add('show');
+}
+
+function hideConfigModal() {
+    configModal.classList.remove('show');
+}
+
+async function loadConfigContent() {
+    try {
+        const response = await fetch('/api/config');
+        const config = await response.json();
+        
+        // Remove sensitive information before displaying
+        const displayConfig = { ...config };
+        delete displayConfig.adminPassword;
+        
+        // Format JSON with proper indentation
+        configContent.textContent = JSON.stringify(displayConfig, null, 2);
+    } catch (error) {
+        console.error('Error loading config:', error);
+        configContent.textContent = 'خطأ في تحميل الإعدادات';
+    }
+}
+
+async function reloadConfiguration() {
+    try {
+        reloadConfigBtn.disabled = true;
+        reloadConfigBtn.textContent = 'جاري إعادة التحميل...';
+        
+        const response = await fetch('/api/admin/reload-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage('تم إعادة تحميل الإعدادات بنجاح', 'success');
+            
+            // Reload the config content in the modal
+            await loadConfigContent();
+            
+            // Optionally reload the page to reflect changes
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showMessage(result.message || 'فشل في إعادة تحميل الإعدادات', 'error');
+        }
+    } catch (error) {
+        console.error('Error reloading config:', error);
+        showMessage('خطأ في الاتصال بالخادم', 'error');
+    } finally {
+        reloadConfigBtn.disabled = false;
+        reloadConfigBtn.textContent = '🔄 إعادة تحميل الإعدادات';
+    }
 }
 
 // Auto-refresh bookings every 30 seconds

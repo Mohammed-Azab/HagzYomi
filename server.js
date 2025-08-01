@@ -19,20 +19,55 @@ require('jspdf-autotable');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Default configuration
-const config = {
-    courtName: "ملعب كرة القدم",
-    openingHours: {
-        start: "08:00",
-        end: "22:00"
-    },
-    workingDays: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
-    maxHoursPerPersonPerDay: 3,
-    slotDurationMinutes: 60,
-    currency: "جنيه",
-    pricePerHour: 50,
-    adminPassword: process.env.ADMIN_PASSWORD
-};
+// Load configuration from config.json
+let config;
+try {
+    const configFile = fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8');
+    config = JSON.parse(configFile);
+    
+    // Add admin password from environment or default
+    config.adminPassword = process.env.ADMIN_PASSWORD;
+    
+    console.log('✅ Configuration loaded from config.json');
+} catch (error) {
+    console.error('❌ Error loading config.json:', error.message);
+    
+    // Fallback to default configuration
+    config = {
+        courtName: "ملعب كرة القدم",
+        openingHours: {
+            start: "08:00",
+            end: "22:00"
+        },
+        workingDays: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
+        maxHoursPerPersonPerDay: 2,
+        slotDurationMinutes: 30,
+        currency: "جنيه",
+        pricePerHour: 50,
+        adminPassword: process.env.ADMIN_PASSWORD,
+        contactInfo: {
+            phone: "01234567890",
+            address: "مركز شباب قرموط صهبرة",
+            email: "info@example.com"
+        },
+        features: {
+            enableOnlineBooking: true,
+            requirePhoneVerification: false,
+            allowCancellation: true,
+            cancellationHours: 2
+        },
+        ui: {
+            headerTitle: "مركز شباب قرموط صهبرة",
+            headerSubtitle: "احجز ملعبك بسهولة",
+            heroTitle: "ملعب حجز يومي",
+            heroSubtitle: "احجز موعدك الآن واستمتع بلعب كرة القدم",
+            primaryColor: "#2196F3",
+            theme: "light"
+        }
+    };
+    
+    console.log('⚠️  Using fallback configuration');
+}
 
 // Initialize data files for Render persistent storage
 const dataDir = process.env.RENDER_PERSISTENT_DISK_PATH ? 
@@ -236,10 +271,15 @@ function getTimeSlots() {
     const [endHour, endMinute] = config.openingHours.end.split(':').map(Number);
     
     const startTime = startHour * 60 + startMinute;
-    const endTime = endHour * 60 + endMinute;
+    let endTime = endHour * 60 + endMinute;
+    
+    // Handle overnight periods (e.g., 22:00 to 03:00)
+    if (endTime <= startTime) {
+        endTime += 24 * 60; // Add 24 hours to end time
+    }
     
     for (let time = startTime; time < endTime; time += config.slotDurationMinutes) {
-        const hours = Math.floor(time / 60);
+        const hours = Math.floor(time / 60) % 24; // Use modulo to handle 24+ hours
         const minutes = time % 60;
         const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
         slots.push(timeString);
@@ -250,9 +290,20 @@ function getTimeSlots() {
 
 function getUserBookingHours(phone, date) {
     const bookings = loadBookings();
-    return bookings
-        .filter(booking => booking.phone === phone && booking.date === date)
-        .reduce((total, booking) => total + (config.slotDurationMinutes / 60), 0);
+    const userBookings = bookings.filter(booking => booking.phone === phone && booking.date === date);
+    
+    // Group bookings by groupId to avoid counting the same booking multiple times
+    const uniqueBookings = new Map();
+    
+    userBookings.forEach(booking => {
+        const groupId = booking.groupId || booking.id;
+        if (!uniqueBookings.has(groupId)) {
+            const duration = booking.duration || config.slotDurationMinutes;
+            uniqueBookings.set(groupId, duration / 60);
+        }
+    });
+    
+    return Array.from(uniqueBookings.values()).reduce((total, hours) => total + hours, 0);
 }
 
 // Routes
@@ -291,8 +342,35 @@ app.get('/api/config', (req, res) => {
         maxHoursPerPersonPerDay: config.maxHoursPerPersonPerDay,
         slotDurationMinutes: config.slotDurationMinutes,
         currency: config.currency,
-        pricePerHour: config.pricePerHour
+        pricePerHour: config.pricePerHour,
+        contactInfo: config.contactInfo,
+        features: config.features,
+        ui: config.ui
     });
+});
+
+// Admin endpoint to reload configuration
+app.post('/api/admin/reload-config', (req, res) => {
+    if (!req.session.isAdmin) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    try {
+        const configFile = fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8');
+        const newConfig = JSON.parse(configFile);
+        
+        // Preserve admin password
+        newConfig.adminPassword = config.adminPassword;
+        
+        // Update global config
+        config = newConfig;
+        
+        console.log('🔄 Configuration reloaded from config.json');
+        res.json({ success: true, message: 'تم إعادة تحميل الإعدادات بنجاح' });
+    } catch (error) {
+        console.error('❌ Error reloading config:', error.message);
+        res.status(500).json({ success: false, message: 'خطأ في إعادة تحميل الإعدادات' });
+    }
 });
 
 app.get('/api/slots/:date', (req, res) => {
@@ -327,7 +405,7 @@ app.get('/api/slots/:date', (req, res) => {
 });
 
 app.post('/api/book', (req, res) => {
-    const { name, phone, date, time } = req.body;
+    const { name, phone, date, time, duration = 30 } = req.body;
     
     // Validation
     if (!name || !phone || !date || !time) {
@@ -336,6 +414,11 @@ app.post('/api/book', (req, res) => {
     
     if (!isWorkingDay(date)) {
         return res.json({ success: false, message: 'لا يمكن الحجز في هذا اليوم' });
+    }
+    
+    // Validate duration (30, 60, 90, or 120 minutes)
+    if (![30, 60, 90, 120].includes(duration)) {
+        return res.json({ success: false, message: 'مدة الحجز غير صحيحة' });
     }
     
     // Check if booking time is in the past
@@ -348,41 +431,93 @@ app.post('/api/book', (req, res) => {
     
     const bookings = loadBookings();
     
-    // Check if slot is already booked
-    const existingBooking = bookings.find(booking => 
-        booking.date === date && booking.time === time
-    );
+    // Generate all time slots that will be booked
+    const timeSlots = [];
+    const allSlots = getTimeSlots();
+    const startIndex = allSlots.indexOf(time);
     
-    if (existingBooking) {
-        return res.json({ success: false, message: 'هذا الموعد محجوز بالفعل' });
+    if (startIndex === -1) {
+        return res.json({ success: false, message: 'وقت غير صحيح' });
+    }
+    
+    const slotsNeeded = duration / config.slotDurationMinutes;
+    
+    // Check if we have enough consecutive slots available
+    if (startIndex + slotsNeeded > allSlots.length) {
+        return res.json({ success: false, message: 'لا توجد مواعيد كافية متتالية' });
+    }
+    
+    for (let i = 0; i < slotsNeeded; i++) {
+        timeSlots.push(allSlots[startIndex + i]);
+    }
+    
+    // Check if any of the required slots are already booked
+    for (const slot of timeSlots) {
+        const existingBooking = bookings.find(booking => 
+            booking.date === date && booking.time === slot
+        );
+        
+        if (existingBooking) {
+            return res.json({ success: false, message: `الموعد ${slot} محجوز بالفعل` });
+        }
     }
     
     // Check daily limit
     const userDailyHours = getUserBookingHours(phone, date);
-    const slotHours = config.slotDurationMinutes / 60;
+    const bookingHours = duration / 60;
     
-    if (userDailyHours + slotHours > config.maxHoursPerPersonPerDay) {
+    if (userDailyHours + bookingHours > config.maxHoursPerPersonPerDay) {
         return res.json({ 
             success: false, 
             message: `تجاوزت الحد الأقصى للحجز (${config.maxHoursPerPersonPerDay} ساعات يومياً)` 
         });
     }
     
-    // Create booking
-    const booking = {
-        id: Date.now().toString(),
+    // Create bookings for all time slots
+    const bookingId = Date.now().toString();
+    const price = config.pricePerHour * bookingHours;
+    
+    const newBookings = timeSlots.map((slot, index) => ({
+        id: `${bookingId}-${index}`,
+        groupId: bookingId,
         name,
         phone,
         date,
-        time,
+        time: slot,
+        duration: duration,
+        totalSlots: timeSlots.length,
+        slotIndex: index,
+        startTime: time,
+        endTime: timeSlots[timeSlots.length - 1],
         createdAt: new Date().toISOString(),
-        price: config.pricePerHour * slotHours
-    };
+        price: index === 0 ? price : 0 // Only charge once for the group
+    }));
     
-    bookings.push(booking);
+    // Calculate proper end time by adding slot duration to the last slot
+    const endTimeSlot = timeSlots[timeSlots.length - 1];
+    const [endHour, endMinute] = endTimeSlot.split(':').map(Number);
+    const endTimeMinutes = endHour * 60 + endMinute + config.slotDurationMinutes;
+    const finalEndHour = Math.floor(endTimeMinutes / 60);
+    const finalEndMinute = endTimeMinutes % 60;
+    const finalEndTime = `${finalEndHour.toString().padStart(2, '0')}:${finalEndMinute.toString().padStart(2, '0')}`;
+    
+    bookings.push(...newBookings);
     saveBookings(bookings);
     
-    res.json({ success: true, booking });
+    res.json({ 
+        success: true, 
+        booking: {
+            id: bookingId,
+            name,
+            phone,
+            date,
+            startTime: time,
+            endTime: finalEndTime,
+            duration,
+            price,
+            slots: timeSlots
+        }
+    });
 });
 
 app.get('/api/admin/bookings', (req, res) => {

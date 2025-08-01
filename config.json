@@ -1,0 +1,39 @@
+{
+  "courtName": "ملعب مركز الشباب الرياضي",
+  "openingHours": {
+    "start": "07:00",
+    "end": "03:00"
+  },
+  "workingDays": [
+    "الأحد",
+    "الاثنين", 
+    "الثلاثاء",
+    "الأربعاء",
+    "الخميس",
+    "الجمعة",
+    "السبت"
+  ],
+  "maxHoursPerPersonPerDay": 2,
+  "slotDurationMinutes": 30,
+  "currency": "جنيه",
+  "pricePerHour": 50,
+  "contactInfo": {
+    "phone": "01234567890",
+    "address": "مركز شباب قرموط صهبرة",
+    "email": "info@example.com"
+  },
+  "features": {
+    "enableOnlineBooking": true,
+    "requirePhoneVerification": false,
+    "allowCancellation": true,
+    "cancellationHours": 2
+  },
+  "ui": {
+    "headerTitle": "مركز شباب قرموط صهبرة",
+    "headerSubtitle": "احجز ملعبك بسهولة",
+    "heroTitle": "ملعب مركز الشباب الرياضي",
+    "heroSubtitle": "احجز موعدك الآن واستمتع بلعب كرة القدم",
+    "primaryColor": "#4CAF50",
+    "theme": "light"
+  }
+}
