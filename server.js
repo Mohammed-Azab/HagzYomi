@@ -546,16 +546,17 @@ app.delete('/api/admin/booking/:id', (req, res) => {
 });
 
 // Start the server for Railway deployment
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log('═══════════════════════════════════════════════════════');
     console.log('🚀 HagzYomi - Football Court Booking System');
     console.log('💻 Developed by: Mohammed Azab');
     console.log('📧 Contact: Mohammed@azab.io');
     console.log('© 2025 Mohammed Azab. All rights reserved.');
     console.log('═══════════════════════════════════════════════════════');
-    console.log(`🌐 Server running on http://localhost:${PORT}`);
-    console.log(`📊 Admin panel: http://localhost:${PORT}/admin`);
+    console.log(`🌐 Server running on port ${PORT}`);
+    console.log(`📊 Admin panel available at /admin`);
     console.log(`🔑 Admin password: ${config.adminPassword}`);
+    console.log('Railway deployment ready! 🚄');
     console.log('═══════════════════════════════════════════════════════');
 });
 
