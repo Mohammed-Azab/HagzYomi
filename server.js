@@ -34,21 +34,18 @@ const config = {
     adminPassword: "admin123"
 };
 
-// Initialize data files (with Vercel serverless compatibility)
+// Initialize data files for Railway persistent storage
 const dataDir = './data';
 const bookingsFile = path.join(dataDir, 'bookings.json');
 
-// Create data directory and file if they don't exist (for local development)
-if (!process.env.VERCEL && !fs.existsSync(dataDir)) {
+// Create data directory and file if they don't exist
+if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir);
 }
 
-if (!process.env.VERCEL && !fs.existsSync(bookingsFile)) {
+if (!fs.existsSync(bookingsFile)) {
     fs.writeFileSync(bookingsFile, JSON.stringify([]));
 }
-
-// In-memory storage for Vercel serverless (temporary solution)
-let bookingsMemory = [];
 
 // Middleware
 app.use(bodyParser.json());
@@ -64,12 +61,7 @@ app.use(express.static(__dirname));
 
 // Helper functions
 function loadBookings() {
-    // Use in-memory storage for Vercel serverless
-    if (process.env.VERCEL) {
-        return bookingsMemory;
-    }
-    
-    // Use file storage for local development
+    // Use file storage for Railway persistent storage
     try {
         return JSON.parse(fs.readFileSync(bookingsFile, 'utf8'));
     } catch (error) {
@@ -78,13 +70,7 @@ function loadBookings() {
 }
 
 function saveBookings(bookings) {
-    // Use in-memory storage for Vercel serverless
-    if (process.env.VERCEL) {
-        bookingsMemory = bookings;
-        return;
-    }
-    
-    // Use file storage for local development
+    // Use file storage for Railway persistent storage
     fs.writeFileSync(bookingsFile, JSON.stringify(bookings, null, 2));
 }
 

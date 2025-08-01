@@ -1,53 +1,62 @@
-# 💻 Localhost Version - HagzYomi
+# � Railway.app Deployment - HagzYomi
 
-**Local development with Node.js backend**
+**Live hosting for Arabic football court booking system**
 
 ## ✨ Features
-- 🖥️ **Full Node.js backend** with Express.js
-- 📁 **Persistent file storage** (JSON files)
-- 🔄 **Hot reload** during development
+- 🌍 **Live public hosting** on Railway.app
+- 📁 **Persistent file storage** (JSON files with 1GB free space)
+- 🔄 **Auto-deployment** from GitHub branch
 - 📊 **Server-side report generation** (PDF/Excel/CSV)
 - 🔒 **Session-based authentication**
+- 💰 **FREE hosting** ($5/month credit covers completely)
 
-## 🚀 Setup Instructions
+## 🚀 Deployment Instructions
 
-### 1. Install Dependencies
-```bash
-cd localhost/
-npm install
-```
+### 1. Deploy to Railway
+1. Go to [railway.app](https://railway.app)
+2. Sign up/Login with GitHub
+3. Click **"New Project"**
+4. Select **"Deploy from GitHub repo"**
+5. Choose your **HagzYomi** repository
+6. **IMPORTANT:** Select the **`railway`** branch
+7. Click **"Deploy"**
 
-### 2. Start Development Server
-```bash
-npm start
-```
-
-### 3. Access Your Website
-- **Main site**: `http://localhost:3000`
-- **Admin panel**: `http://localhost:3000/admin`
+### 2. Access Your Live Website
+- **Main site**: `https://your-app-name.up.railway.app`
+- **Admin panel**: `https://your-app-name.up.railway.app/admin`
 - **Password**: `admin123`
 
-## 📁 Files Structure
+### 3. Local Testing (Optional)
+```bash
+cd railway-deploy/
+npm install
+npm start
+# Access: http://localhost:3000
 ```
-localhost/
+
+## 📁 Railway Configuration
+```
+railway-deploy/
+├── railway.json            # Railway deployment config
+├── package.json            # Dependencies & start command
+├── server.js               # Express.js backend optimized for Railway
 ├── index.html              # Main booking page
 ├── admin-login.html        # Admin login
 ├── admin.html              # Admin dashboard
 ├── script.js               # Frontend functionality
 ├── admin.js                # Admin frontend
 ├── styles.css              # All styling
-├── server.js               # Backend API
-├── package.json            # Dependencies
-└── data/                   # Data storage folder
+└── data/                   # Persistent data storage (1GB free)
     └── bookings.json       # Bookings database
 ```
 
-## 🎯 Benefits
-✅ **Persistent storage** - Data saved to files
-✅ **Full backend** - Complete server functionality
-✅ **Development friendly** - Easy debugging
-✅ **Real database** - JSON file storage
-✅ **Sessions** - Proper authentication
+## 🎯 Railway Benefits
+✅ **FREE hosting** - $5/month credit covers app completely
+✅ **Auto-deployment** - Push to `railway` branch = auto deploy
+✅ **Persistent storage** - Data survives deployments
+✅ **Custom domains** - Free SSL and custom domain support
+✅ **No cold starts** - Always-on hosting
+✅ **1GB storage** - Plenty for booking data
 ✅ **Hot reload** - Changes update instantly
 
 ## 🔧 Configuration
