@@ -1,203 +1,0 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإدارة - حجز يومي</title>
-    
-    <!-- Author & Copyright Information -->
-    <meta name="author" content="Mohammed Azab">
-    <meta name="contact" content="Mohammed@azab.io">
-    <meta name="copyright" content="© 2025 Mohammed Azab. All rights reserved.">
-    <meta name="description" content="لوحة إدارة نظام حجز ملاعب كرة القدم - تطوير Mohammed Azab">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <header class="header">
-        <div class="container">
-            <div class="logo">
-                <h1>⚽ حجز يومي</h1>
-                <p>لوحة إدارة النظام</p>
-            </div>
-            <nav class="nav">
-                <a href="/" class="nav-link">الرئيسية</a>
-                <a href="/admin" class="nav-link active">لوحة الإدارة</a>
-                <button class="nav-link" id="logoutBtn" style="background:none;border:none;color:white;cursor:pointer;">تسجيل خروج</button>
-            </nav>
-        </div>
-    </header>
-
-    <main class="main">
-        <div class="admin-container">
-            <div class="admin-header">
-                <h2>📊 لوحة إدارة الحجوزات</h2>
-                <div class="admin-actions">
-                    <button class="btn btn-success" id="downloadModalBtn">
-                        📥 تحميل التقارير
-                    </button>
-                    <button class="btn btn-primary" id="refreshBtn">
-                        🔄 تحديث
-                    </button>
-                </div>
-            </div>
-
-            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                <div class="stat-card" style="background: var(--card-background); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); text-align: center;">
-                    <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">إجمالي الحجوزات</h3>
-                    <div id="totalBookings" style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">0</div>
-                </div>
-                <div class="stat-card" style="background: var(--card-background); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); text-align: center;">
-                    <h3 style="color: var(--secondary-color); margin-bottom: 0.5rem;">حجوزات اليوم</h3>
-                    <div id="todayBookings" style="font-size: 2rem; font-weight: bold; color: var(--secondary-color);">0</div>
-                </div>
-                <div class="stat-card" style="background: var(--card-background); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); text-align: center;">
-                    <h3 style="color: var(--accent-color); margin-bottom: 0.5rem;">إجمالي الإيرادات</h3>
-                    <div id="totalRevenue" style="font-size: 2rem; font-weight: bold; color: var(--accent-color);">0 جنيه</div>
-                </div>
-            </div>
-
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>الاسم</th>
-                            <th>رقم الهاتف</th>
-                            <th>التاريخ</th>
-                            <th>الوقت</th>
-                            <th>السعر</th>
-                            <th>وقت الحجز</th>
-                            <th>الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="bookingsTable">
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 2rem;">
-                                <div class="loading">جاري تحميل الحجوزات...</div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="quick-stats" style="background: var(--card-background); padding: 2rem; border-radius: var(--border-radius); box-shadow: var(--shadow);">
-                <h3 style="color: var(--primary-color); margin-bottom: 1rem;">📈 إحصائيات سريعة</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                    <div>
-                        <strong>أكثر الأوقات حجزاً:</strong>
-                        <div id="popularTimes">-</div>
-                    </div>
-                    <div>
-                        <strong>متوسط الحجوزات اليومية:</strong>
-                        <div id="avgDaily">-</div>
-                    </div>
-                    <div>
-                        <strong>آخر حجز:</strong>
-                        <div id="lastBooking">-</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Delete Confirmation Modal -->
-    <div class="modal" id="deleteModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>⚠️ تأكيد الحذف</h3>
-                <button class="modal-close" id="closeDeleteModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                هل أنت متأكد من حذف هذا الحجز؟ لا يمكن التراجع عن هذا الإجراء.
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-danger" id="confirmDeleteBtn">حذف</button>
-                <button class="btn btn-secondary" id="cancelDeleteBtn">إلغاء</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Download Options Modal -->
-    <div class="modal" id="downloadModal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h3>📥 تحميل التقارير</h3>
-                <button class="modal-close" id="closeDownloadModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="download-options">
-                    <div class="form-group">
-                        <label>نوع التقرير:</label>
-                        <select id="reportType" class="form-control">
-                            <option value="daily">تقرير يومي</option>
-                            <option value="weekly">تقرير أسبوعي</option>
-                            <option value="monthly">تقرير شهري</option>
-                            <option value="custom">فترة مخصصة</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="singleDateGroup">
-                        <label>التاريخ:</label>
-                        <input type="date" id="singleDate" class="form-control">
-                    </div>
-
-                    <div class="form-group" style="display: none;" id="weeklyGroup">
-                        <label>الأسبوع (اختر أي يوم في الأسبوع):</label>
-                        <input type="date" id="weekDate" class="form-control">
-                    </div>
-
-                    <div class="form-group" style="display: none;" id="monthlyGroup">
-                        <label>الشهر:</label>
-                        <input type="month" id="monthDate" class="form-control">
-                    </div>
-
-                    <div style="display: none;" id="customDateGroup">
-                        <div class="form-group">
-                            <label>من تاريخ:</label>
-                            <input type="date" id="startDate" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label>إلى تاريخ:</label>
-                            <input type="date" id="endDate" class="form-control">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>صيغة الملف:</label>
-                        <div class="format-buttons">
-                            <button class="btn btn-outline" data-format="csv" id="csvBtn">
-                                📄 CSV
-                            </button>
-                            <button class="btn btn-outline" data-format="excel" id="excelBtn">
-                                📊 Excel
-                            </button>
-                            <button class="btn btn-outline" data-format="pdf" id="pdfBtn">
-                                📕 PDF
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-success" id="downloadConfirmBtn" disabled>
-                    تحميل التقرير
-                </button>
-                <button class="btn btn-secondary" id="cancelDownloadBtn">إلغاء</button>
-            </div>
-        </div>
-    </div>
-
-    <footer class="footer" style="margin-top: 2rem; padding: 1rem 0; background-color: var(--card-background); border-top: 1px solid var(--border-color);">
-        <div class="container">
-            <p style="text-align: center;">&copy; 2025 حجز يومي - لوحة الإدارة. جميع الحقوق محفوظة.</p>
-            <p style="font-size: 0.9rem; margin-top: 0.5rem; color: #666; text-align: center;">
-                تطوير: <a href="mailto:Mohammed@azab.io" style="color: #2196F3; text-decoration: none;">Mohammed Azab</a> | 
-                <a href="mailto:Mohammed@azab.io" style="color: #2196F3; text-decoration: none;">Mohammed@azab.io</a>
-            </p>
-        </div>
-    </footer>
-
-    <script src="admin.js"></script>
-</body>
-</html>
