@@ -227,6 +227,30 @@ function updateInfoPanel() {
         
         document.getElementById('workingDays').textContent = workingDaysArabic;
     }
+    
+    // Update payment details if available
+    if (config.paymentInfo) {
+        const vodafoneCashElement = document.getElementById('vodafoneCash');
+        const instaPayElement = document.getElementById('instaPay');
+        const paymentInstructionsElement = document.getElementById('paymentInstructions');
+        const paymentTimeoutElement = document.getElementById('paymentTimeout');
+        
+        if (vodafoneCashElement && config.paymentInfo.vodafoneCash) {
+            vodafoneCashElement.textContent = config.paymentInfo.vodafoneCash;
+        }
+        
+        if (instaPayElement && config.paymentInfo.instaPay) {
+            instaPayElement.textContent = config.paymentInfo.instaPay;
+        }
+        
+        if (paymentInstructionsElement && config.paymentInfo.instructions) {
+            paymentInstructionsElement.textContent = config.paymentInfo.instructions;
+        }
+        
+        if (paymentTimeoutElement && config.paymentTimeoutMinutes) {
+            paymentTimeoutElement.textContent = config.paymentTimeoutMinutes;
+        }
+    }
 }
 
 // Handle date change

@@ -372,6 +372,96 @@ body {
     color: var(--primary-color);
 }
 
+/* Payment Details Section */
+.payment-details-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border-color);
+}
+
+.payment-details-section h4 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.payment-method {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: rgba(33, 150, 243, 0.05);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(33, 150, 243, 0.1);
+}
+
+.payment-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color);
+    color: #2196F3;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.payment-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.payment-info strong {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.payment-info span {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1rem;
+    direction: ltr;
+    text-align: right;
+}
+
+.payment-instructions {
+    background: rgba(76, 175, 80, 0.1);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--secondary-color);
+    text-align: center;
+}
+
+.payment-instructions p {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.payment-instructions small {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    display: block;
+}
+
+.payment-instructions small span {
+    color: var(--danger-color);
+    font-weight: 600;
+}
+
 /* Features Section */
 .features {
     margin-top: 3rem;
@@ -694,6 +784,16 @@ body {
     .booking-form-container,
     .info-panel {
         padding: 1.5rem;
+    }
+    
+    .payment-method {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .payment-info {
+        align-items: center;
     }
 }
 
