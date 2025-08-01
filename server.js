@@ -13,7 +13,7 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
-const jsPDF = require('jspdf');
+const { jsPDF } = require('jspdf');
 require('jspdf-autotable');
 
 const app = express();
@@ -125,6 +125,8 @@ function generateExcel(bookings, reportType, dateInfo) {
 }
 
 function generatePDF(bookings, reportType, dateInfo) {
+    console.log('Generating PDF for:', { reportType, bookingsCount: bookings.length, dateInfo });
+    
     const doc = new jsPDF();
     
     // Add Arabic font support (simplified for this example)
@@ -155,19 +157,22 @@ function generatePDF(bookings, reportType, dateInfo) {
     
     // Add summary
     doc.setFontSize(11);
+    const totalRevenue = bookings.reduce((sum, b) => sum + b.price, 0);
     doc.text(`عدد الحجوزات: ${bookings.length}`, 20, 45);
-    doc.text(`إجمالي الإيرادات: ${bookings.reduce((sum, b) => sum + b.price, 0)} جنيه`, 20, 55);
+    doc.text(`إجمالي الإيرادات: ${totalRevenue} جنيه`, 20, 55);
     
     // Add table
     const tableColumns = ['#', 'الاسم', 'رقم الهاتف', 'التاريخ', 'الوقت', 'السعر'];
     const tableRows = bookings.map((booking, index) => [
         (index + 1).toString(),
-        booking.name,
-        booking.phone,
-        booking.date,
-        booking.time,
-        `${booking.price} جنيه`
+        booking.name || '',
+        booking.phone || '',
+        booking.date || '',
+        booking.time || '',
+        `${booking.price || 0} جنيه`
     ]);
+    
+    console.log('PDF table rows:', tableRows.length);
     
     doc.autoTable({
         head: [tableColumns],
@@ -194,7 +199,10 @@ function generatePDF(bookings, reportType, dateInfo) {
         }
     });
     
-    return doc.output('arraybuffer');
+    const outputBuffer = doc.output('arraybuffer');
+    console.log('PDF generated successfully, buffer size:', outputBuffer.byteLength);
+    
+    return outputBuffer;
 }
 
 function isWorkingDay(date) {
@@ -469,7 +477,8 @@ app.get('/api/admin/report', (req, res) => {
                 break;
                 
             case 'pdf':
-                fileContent = generatePDF(filteredBookings, type, dateInfo);
+                const pdfArrayBuffer = generatePDF(filteredBookings, type, dateInfo);
+                fileContent = Buffer.from(pdfArrayBuffer);
                 contentType = 'application/pdf';
                 extension = 'pdf';
                 break;
@@ -485,6 +494,12 @@ app.get('/api/admin/report', (req, res) => {
                        `${startDate}_to_${endDate}`;
         
         const filename = `report_${type}_${dateStr}.${extension}`;
+        
+        console.log('Sending response:', {
+            filename,
+            contentType,
+            bufferSize: fileContent ? fileContent.length || fileContent.byteLength : 'undefined'
+        });
         
         res.setHeader('Content-Type', contentType);
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

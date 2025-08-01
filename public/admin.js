@@ -218,8 +218,21 @@ function showDownloadModal() {
 function hideDownloadModal() {
     downloadModal.classList.remove('show');
     selectedFormat = null;
-    formatButtons.forEach(btn => btn.classList.remove('selected'));
+    
+    // Reset all format buttons
+    formatButtons.forEach(btn => {
+        btn.classList.remove('selected');
+        btn.style.background = '';
+        btn.style.color = '';
+    });
+    
+    // Reset form
     downloadConfirmBtn.disabled = true;
+    downloadConfirmBtn.textContent = 'تحميل التقرير';
+    
+    // Reset report type to daily
+    reportTypeSelect.value = 'daily';
+    handleReportTypeChange();
 }
 
 // Handle report type change
@@ -252,9 +265,24 @@ function handleReportTypeChange() {
 // Select format
 function selectFormat(format) {
     selectedFormat = format;
-    formatButtons.forEach(btn => btn.classList.remove('selected'));
-    document.querySelector(`[data-format="${format}"]`).classList.add('selected');
+    
+    // Remove selected class from all buttons
+    formatButtons.forEach(btn => {
+        btn.classList.remove('selected');
+        btn.style.background = '';
+        btn.style.color = '';
+    });
+    
+    // Add selected class to clicked button
+    const selectedBtn = document.querySelector(`[data-format="${format}"]`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('selected');
+        console.log(`Format selected: ${format}`); // Debug log
+    }
+    
+    // Enable download button
     downloadConfirmBtn.disabled = false;
+    downloadConfirmBtn.textContent = 'تحميل التقرير';
 }
 
 // Download selected report
@@ -331,10 +359,19 @@ async function downloadSelectedReport() {
             throw new Error('فشل في تحميل التقرير');
         }
         
+        console.log('Response received:', response.status, response.headers.get('content-type'));
+        console.log('Response size:', response.headers.get('content-length'));
+        
         const blob = await response.blob();
+        console.log('Blob created:', blob.size, 'bytes, type:', blob.type);
+        
+        // Check if blob is empty
+        if (blob.size === 0) {
+            throw new Error('تم تحميل ملف فارغ - يرجى المحاولة مرة أخرى');
+        }
+        
+        // Create download using different method for better browser compatibility
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
         
         // Generate filename
         const formatExtensions = {
@@ -348,11 +385,33 @@ async function downloadSelectedReport() {
                        reportType === 'monthly' ? `month_${dateParams.month}` :
                        `${dateParams.startDate}_to_${dateParams.endDate}`;
         
-        a.download = `report_${reportType}_${dateStr}.${formatExtensions[selectedFormat]}`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        const filename = `report_${reportType}_${dateStr}.${formatExtensions[selectedFormat]}`;
+        
+        // Try multiple download methods for better compatibility
+        if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+            // For IE and Edge
+            window.navigator.msSaveOrOpenBlob(blob, filename);
+        } else {
+            // For modern browsers
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none';
+            
+            console.log('Download filename:', filename);
+            console.log('Blob URL:', url);
+            
+            document.body.appendChild(a);
+            a.click();
+            
+            // Cleanup after a delay
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+                if (document.body.contains(a)) {
+                    document.body.removeChild(a);
+                }
+            }, 1000);
+        }
         
         showMessage('تم تحميل التقرير بنجاح', 'success');
         hideDownloadModal();
