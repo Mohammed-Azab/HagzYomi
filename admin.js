@@ -11,6 +11,7 @@
 let bookings = [];
 let bookingToDelete = null;
 let config = {};
+let userRole = { isAdmin: false, isSuperAdmin: false };
 
 // DOM elements
 const bookingsTable = document.getElementById('bookingsTable');
@@ -55,6 +56,7 @@ const lastBookingEl = document.getElementById('lastBooking');
 // Initialize the admin panel
 document.addEventListener('DOMContentLoaded', async function() {
     await loadConfig();
+    await loadUserRole();
     setupEventListeners();
     setTodayDate();
     loadBookings();
@@ -69,8 +71,125 @@ function setupEventListeners() {
     // Configuration modal handlers
     configBtn.addEventListener('click', showConfigModal);
     reloadConfigBtn.addEventListener('click', reloadConfiguration);
+    saveConfigBtn.addEventListener('click', saveConfiguration);
     document.getElementById('closeConfigModal').addEventListener('click', hideConfigModal);
     document.getElementById('closeConfigModalBtn').addEventListener('click', hideConfigModal);
+    
+    // Download modal handlers
+    downloadModalBtn.addEventListener('click', showDownloadModal);
+    reportTypeSelect.addEventListener('change', handleReportTypeChange);
+    downloadConfirmBtn.addEventListener('click', downloadSelectedReport);
+    document.getElementById('cancelDownloadBtn').addEventListener('click', hideDownloadModal);
+    document.getElementById('closeDownloadModal').addEventListener('click', hideDownloadModal);
+    
+    // Format selection handlers
+    formatButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            formatButtons.forEach(b => b.classList.remove('selected'));
+            this.classList.add('selected');
+        });
+    });
+    
+    // Delete modal handlers
+    document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+    document.getElementById('cancelDeleteBtn').addEventListener('click', hideDeleteModal);
+    document.getElementById('closeDeleteModal').addEventListener('click', hideDeleteModal);
+    
+    deleteModal.addEventListener('click', function(e) {
+        if (e.target === deleteModal) hideDeleteModal();
+    });
+    
+    downloadModal.addEventListener('click', function(e) {
+        if (e.target === downloadModal) hideDownloadModal();
+    });
+}
+
+// Load configuration from server
+async function loadConfig() {
+    try {
+        const response = await fetch('/api/config');
+        config = await response.json();
+    } catch (error) {
+        console.error('Error loading config:', error);
+    }
+}
+
+async function saveConfiguration() {
+    if (!userRole.isSuperAdmin) {
+        alert('ليس لديك صلاحية لتعديل الإعدادات');
+        return;
+    }
+    
+    const configEditor = document.getElementById('configEditor');
+    const configText = configEditor.value;
+    
+    try {
+        // Validate JSON format
+        const configData = JSON.parse(configText);
+        
+        // Send to server
+        const response = await fetch('/api/admin/update-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+            },
+            body: JSON.stringify(configData)
+        });
+        
+        if (response.ok) {
+            alert('تم حفظ الإعدادات بنجاح');
+            hideConfigModal();
+            // Reload the page to apply new configuration
+            location.reload();
+        } else {
+            const error = await response.text();
+            alert('خطأ في حفظ الإعدادات: ' + error);
+        }
+    } catch (error) {
+        if (error instanceof SyntaxError) {
+            alert('خطأ في تنسيق JSON. تأكد من صحة التنسيق.');
+        } else {
+            console.error('Error saving config:', error);
+            alert('خطأ في حفظ الإعدادات');
+        }
+    }
+}
+
+// Configuration modal functions
+function showConfigModal() {
+    loadConfigContent();
+    setupConfigModalForUser();
+    configModal.classList.add('show');
+}
+
+function setupConfigModalForUser() {
+    const configEditor = document.getElementById('configEditor');
+    const configContent = document.getElementById('configContent');
+    const saveConfigBtn = document.getElementById('saveConfigBtn');
+    const superAdminNote = document.getElementById('superAdminNote');
+    const adminNote = document.getElementById('adminNote');
+    
+    if (userRole.isSuperAdmin) {
+        // Super admin can edit
+        configEditor.style.display = 'block';
+        configContent.style.display = 'none';
+        saveConfigBtn.style.display = 'inline-block';
+        superAdminNote.style.display = 'block';
+        adminNote.style.display = 'none';
+    } else {
+        // Regular admin can only view
+        configEditor.style.display = 'none';
+        configContent.style.display = 'block';
+        saveConfigBtn.style.display = 'none';
+        superAdminNote.style.display = 'none';
+        adminNote.style.display = 'block';
+    }
+}
+
+function hideConfigModal() {
+    configModal.classList.remove('show');
+}
     
     // Download modal handlers
     downloadModalBtn.addEventListener('click', showDownloadModal);
@@ -98,15 +217,14 @@ function setupEventListeners() {
     downloadModal.addEventListener('click', function(e) {
         if (e.target === downloadModal) hideDownloadModal();
     });
-}
-
-// Load configuration from server
-async function loadConfig() {
+// Load user role from server
+async function loadUserRole() {
     try {
-        const response = await fetch('/api/config');
-        config = await response.json();
+        const response = await fetch('/api/admin/user-role');
+        userRole = await response.json();
     } catch (error) {
-        console.error('Error loading config:', error);
+        console.error('Error loading user role:', error);
+        userRole = { isAdmin: false, isSuperAdmin: false };
     }
 }
 
@@ -650,7 +768,32 @@ function showMessage(message, type = 'info') {
 // Configuration modal functions
 function showConfigModal() {
     loadConfigContent();
+    setupConfigModalForUser();
     configModal.classList.add('show');
+}
+
+function setupConfigModalForUser() {
+    const configEditor = document.getElementById('configEditor');
+    const configContent = document.getElementById('configContent');
+    const saveConfigBtn = document.getElementById('saveConfigBtn');
+    const superAdminNote = document.getElementById('superAdminNote');
+    const adminNote = document.getElementById('adminNote');
+    
+    if (userRole.isSuperAdmin) {
+        // Super admin can edit
+        configEditor.style.display = 'block';
+        configContent.style.display = 'none';
+        saveConfigBtn.style.display = 'inline-block';
+        superAdminNote.style.display = 'block';
+        adminNote.style.display = 'none';
+    } else {
+        // Regular admin can only view
+        configEditor.style.display = 'none';
+        configContent.style.display = 'block';
+        saveConfigBtn.style.display = 'none';
+        superAdminNote.style.display = 'none';
+        adminNote.style.display = 'block';
+    }
 }
 
 function hideConfigModal() {
@@ -665,12 +808,19 @@ async function loadConfigContent() {
         // Remove sensitive information before displaying
         const displayConfig = { ...config };
         delete displayConfig.adminPassword;
+        delete displayConfig.superAdminPassword;
         
         // Format JSON with proper indentation
-        configContent.textContent = JSON.stringify(displayConfig, null, 2);
+        const configText = JSON.stringify(displayConfig, null, 2);
+        
+        // Update both the read-only and editable versions
+        configContent.textContent = configText;
+        document.getElementById('configEditor').value = configText;
     } catch (error) {
         console.error('Error loading config:', error);
-        configContent.textContent = 'خطأ في تحميل الإعدادات';
+        const errorText = 'خطأ في تحميل الإعدادات';
+        configContent.textContent = errorText;
+        document.getElementById('configEditor').value = errorText;
     }
 }
 

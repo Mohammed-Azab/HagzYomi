@@ -27,6 +27,7 @@ try {
     
     // Add admin password from environment or default
     config.adminPassword = process.env.ADMIN_PASSWORD;
+    config.superAdminPassword = process.env.SUPER_ADMIN_PASSWORD;
     
     console.log('✅ Configuration loaded from config.json');
 } catch (error) {
@@ -45,6 +46,7 @@ try {
         currency: "جنيه",
         pricePerHour: 50,
         adminPassword: process.env.ADMIN_PASSWORD,
+        superAdminPassword: process.env.SUPER_ADMIN_PASSWORD,
         contactInfo: {
             phone: "01234567890",
             address: "مركز شباب قرموط صهبرة",
@@ -323,9 +325,14 @@ app.get('/admin', (req, res) => {
 
 app.post('/admin/login', (req, res) => {
     const { password } = req.body;
-    if (password === config.adminPassword) {
+    if (password === config.superAdminPassword) {
         req.session.isAdmin = true;
-        res.json({ success: true });
+        req.session.isSuperAdmin = true;
+        res.json({ success: true, role: 'superadmin' });
+    } else if (password === config.adminPassword) {
+        req.session.isAdmin = true;
+        req.session.isSuperAdmin = false;
+        res.json({ success: true, role: 'admin' });
     } else {
         res.json({ success: false, message: 'كلمة مرور خاطئة' });
     }
@@ -333,6 +340,7 @@ app.post('/admin/login', (req, res) => {
 
 app.post('/admin/logout', (req, res) => {
     req.session.isAdmin = false;
+    req.session.isSuperAdmin = false;
     res.json({ success: true });
 });
 
@@ -452,8 +460,9 @@ app.post('/api/admin/reload-config', (req, res) => {
         const configFile = fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8');
         const newConfig = JSON.parse(configFile);
         
-        // Preserve admin password
+        // Preserve admin passwords
         newConfig.adminPassword = config.adminPassword;
+        newConfig.superAdminPassword = config.superAdminPassword;
         
         // Update global config
         config = newConfig;
@@ -464,6 +473,57 @@ app.post('/api/admin/reload-config', (req, res) => {
         console.error('❌ Error reloading config:', error.message);
         res.status(500).json({ success: false, message: 'خطأ في إعادة تحميل الإعدادات' });
     }
+});
+
+// Super Admin endpoint to update configuration
+app.post('/api/admin/update-config', (req, res) => {
+    if (!req.session.isAdmin || !req.session.isSuperAdmin) {
+        return res.status(401).json({ error: 'غير مصرح - يحتاج صلاحيات المدير الأعلى' });
+    }
+    
+    try {
+        const { configData } = req.body;
+        
+        if (!configData) {
+            return res.status(400).json({ success: false, message: 'بيانات الإعدادات مطلوبة' });
+        }
+        
+        // Parse the config to validate it's valid JSON
+        let newConfig;
+        try {
+            newConfig = typeof configData === 'string' ? JSON.parse(configData) : configData;
+        } catch (parseError) {
+            return res.status(400).json({ success: false, message: 'صيغة JSON غير صحيحة' });
+        }
+        
+        // Preserve admin passwords from environment or current config
+        newConfig.adminPassword = config.adminPassword;
+        newConfig.superAdminPassword = config.superAdminPassword;
+        
+        // Write to config file
+        fs.writeFileSync(path.join(__dirname, 'config.json'), JSON.stringify(newConfig, null, 2));
+        
+        // Update global config
+        config = newConfig;
+        
+        console.log('✅ Configuration updated by super admin');
+        res.json({ success: true, message: 'تم تحديث الإعدادات بنجاح' });
+    } catch (error) {
+        console.error('❌ Error updating config:', error.message);
+        res.status(500).json({ success: false, message: 'خطأ في تحديث الإعدادات' });
+    }
+});
+
+// Get current user role
+app.get('/api/admin/user-role', (req, res) => {
+    if (!req.session.isAdmin) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    res.json({ 
+        isAdmin: true,
+        isSuperAdmin: req.session.isSuperAdmin || false
+    });
 });
 
 app.get('/api/slots/:date', (req, res) => {
