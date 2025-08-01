@@ -272,7 +272,16 @@ app.get('/api/slots/:date', (req, res) => {
         .map(booking => booking.time);
     
     const allSlots = getTimeSlots();
-    const availableSlots = allSlots.filter(slot => !bookedSlots.includes(slot));
+    const now = new Date();
+    
+    // Filter out past times for today
+    const availableSlots = allSlots.filter(slot => {
+        if (bookedSlots.includes(slot)) return false;
+        
+        // Check if this time slot is in the past
+        const slotDateTime = new Date(`${date}T${slot}:00`);
+        return slotDateTime > now;
+    });
     
     res.json({
         available: true,
@@ -291,6 +300,14 @@ app.post('/api/book', (req, res) => {
     
     if (!isWorkingDay(date)) {
         return res.json({ success: false, message: 'لا يمكن الحجز في هذا اليوم' });
+    }
+    
+    // Check if booking time is in the past
+    const now = new Date();
+    const bookingDateTime = new Date(`${date}T${time}:00`);
+    
+    if (bookingDateTime <= now) {
+        return res.json({ success: false, message: 'لا يمكن الحجز في وقت سابق' });
     }
     
     const bookings = loadBookings();

@@ -132,6 +132,13 @@ async function loadTimeSlots(date) {
 }
 
 // Render time slots
+// Check if a time slot is in the past
+function isTimeSlotInPast(date, time) {
+    const now = new Date();
+    const slotDateTime = new Date(`${date}T${time}:00`);
+    return slotDateTime <= now;
+}
+
 function renderTimeSlots(availableSlots, bookedSlots) {
     timeSlotsContainer.innerHTML = '';
     
@@ -143,9 +150,15 @@ function renderTimeSlots(availableSlots, bookedSlots) {
         slotElement.className = 'time-slot';
         slotElement.textContent = time;
         
+        // Check if time slot is in the past
+        const isPastTime = isTimeSlotInPast(selectedDate, time);
+        
         if (bookedSlots.includes(time)) {
             slotElement.classList.add('booked');
             slotElement.title = 'محجوز';
+        } else if (isPastTime) {
+            slotElement.classList.add('booked');
+            slotElement.title = 'الوقت قد انتهى';
         } else if (availableSlots.includes(time)) {
             slotElement.addEventListener('click', () => selectTimeSlot(time, slotElement));
         } else {
