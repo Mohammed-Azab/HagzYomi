@@ -26,8 +26,18 @@ This branch is optimized for **Render.com** deployment - a reliable alternative 
    - **Node Version:** 18 (auto-detected via .nvmrc)
 
 3. **Environment Variables:**
-   - No additional environment variables needed
-   - All configuration is built-in
+   - Set `ADMIN_PASSWORD` in Render dashboard for security
+   - See `SECURITY_SETUP.md` for detailed instructions
+   - GitHub secrets integration available
+
+### 🔐 Security Setup (IMPORTANT):
+1. **Create GitHub Secret:**
+   - Go to repository Settings → Secrets → Actions
+   - Add secret: `ADMIN_PASSWORD` with your secure password
+2. **Configure Render:**
+   - In Render dashboard → Environment
+   - Add: `ADMIN_PASSWORD` = your secure password
+3. **See:** `SECURITY_SETUP.md` for complete guide
 
 ### 🌟 Why Render > Railway:
 - ✅ More stable deployment process
@@ -47,7 +57,8 @@ This branch is optimized for **Render.com** deployment - a reliable alternative 
 Your app will be available at: `https://your-app-name.onrender.com`
 
 Admin panel: `https://your-app-name.onrender.com/admin`
-Default admin password: `admin123`
+Admin password: Use your secure `ADMIN_PASSWORD` environment variable
+(Fallback: `admin123` if env var not set)
 
 ---
 **© 2025 Mohammed Azab. All rights reserved.**

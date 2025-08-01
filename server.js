@@ -31,7 +31,7 @@ const config = {
     slotDurationMinutes: 60,
     currency: "جنيه",
     pricePerHour: 50,
-    adminPassword: "admin123"
+    adminPassword: process.env.ADMIN_PASSWORD || "admin123"
 };
 
 // Initialize data files for Render persistent storage
