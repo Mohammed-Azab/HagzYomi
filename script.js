@@ -29,7 +29,7 @@ const errorMessage = document.getElementById('errorMessage');
 document.addEventListener('DOMContentLoaded', async function() {
     await loadConfig();
     setupEventListeners();
-    setMinDate();
+    setMinDate(); // Call after config is loaded
     updateInfoPanel();
 });
 
@@ -97,9 +97,10 @@ function setMinDate() {
     const formattedDate = today.toISOString().split('T')[0];
     dateInput.min = formattedDate;
     
-    // Set max date to 30 days from now
+    // Set max date based on config (default to 60 days if not specified)
+    const maxDaysAhead = config.maxBookingDaysAhead || 60;
     const maxDate = new Date();
-    maxDate.setDate(maxDate.getDate() + 30);
+    maxDate.setDate(maxDate.getDate() + maxDaysAhead);
     dateInput.max = maxDate.toISOString().split('T')[0];
 }
 

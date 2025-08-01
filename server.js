@@ -341,6 +341,7 @@ app.get('/api/config', (req, res) => {
         workingDays: config.workingDays,
         maxHoursPerPersonPerDay: config.maxHoursPerPersonPerDay,
         slotDurationMinutes: config.slotDurationMinutes,
+        maxBookingDaysAhead: config.maxBookingDaysAhead,
         currency: config.currency,
         pricePerHour: config.pricePerHour,
         contactInfo: config.contactInfo,
