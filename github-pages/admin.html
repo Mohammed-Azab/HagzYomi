@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الإدارة - HagzYomi</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 لوحة الإدارة</h1>
+            <p class="subtitle">إدارة حجوزات الملعب</p>
+            <div class="admin-header">
+                <button id="logoutBtn" class="logout-btn">🚪 تسجيل خروج</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Statistics Section -->
+            <section class="admin-stats">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>إجمالي الحجوزات</h3>
+                        <span id="totalBookings" class="stat-number">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>حجوزات اليوم</h3>
+                        <span id="todayBookings" class="stat-number">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>الإيرادات الكلية</h3>
+                        <span id="totalRevenue" class="stat-number">0 ريال</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>إيرادات اليوم</h3>
+                        <span id="todayRevenue" class="stat-number">0 ريال</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Export Section -->
+            <section class="export-section">
+                <h2>تصدير التقارير</h2>
+                <div class="export-controls">
+                    <div class="date-filters">
+                        <div class="form-group">
+                            <label for="startDate">من تاريخ:</label>
+                            <input type="date" id="startDate" name="startDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">إلى تاريخ:</label>
+                            <input type="date" id="endDate" name="endDate">
+                        </div>
+                    </div>
+                    
+                    <div class="format-selection">
+                        <h3>اختر تنسيق التقرير:</h3>
+                        <div class="format-buttons">
+                            <button class="format-btn" data-format="pdf">
+                                <span class="format-icon">📄</span>
+                                <span class="format-text">PDF</span>
+                            </button>
+                            <button class="format-btn" data-format="excel">
+                                <span class="format-icon">📊</span>
+                                <span class="format-text">Excel</span>
+                            </button>
+                            <button class="format-btn" data-format="csv">
+                                <span class="format-icon">📋</span>
+                                <span class="format-text">CSV</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button id="downloadBtn" class="download-btn" disabled>
+                        📥 تحميل التقرير
+                    </button>
+                </div>
+            </section>
+
+            <!-- Bookings List -->
+            <section class="bookings-section">
+                <h2>قائمة الحجوزات</h2>
+                <div class="bookings-filters">
+                    <div class="form-group">
+                        <label for="filterDate">تصفية حسب التاريخ:</label>
+                        <input type="date" id="filterDate" name="filterDate">
+                    </div>
+                    <button id="clearFilter" class="clear-btn">مسح التصفية</button>
+                </div>
+                
+                <div class="bookings-table-container">
+                    <table class="bookings-table">
+                        <thead>
+                            <tr>
+                                <th>رقم الحجز</th>
+                                <th>الاسم</th>
+                                <th>الهاتف</th>
+                                <th>التاريخ</th>
+                                <th>الوقت</th>
+                                <th>السعر</th>
+                                <th>تاريخ الحجز</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingsTableBody">
+                            <!-- Bookings will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="noBookings" class="no-bookings" style="display: none;">
+                    <p>لا توجد حجوزات حالياً</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-text">
+                <p>© 2025 HagzYomi - نظام حجز الملاعب</p>
+                <p class="attribution">
+                    Developed by <a href="https://github.com/github-copilot" target="_blank" rel="noopener">GitHub Copilot</a>
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content confirm">
+            <span class="modal-close">&times;</span>
+            <div class="modal-header">
+                <h2>⚠️ تأكيد الحذف</h2>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف هذا الحجز؟</p>
+                <div class="modal-actions">
+                    <button id="confirmDelete" class="delete-btn">حذف</button>
+                    <button id="cancelDelete" class="cancel-btn">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content success">
+            <span class="modal-close">&times;</span>
+            <div class="modal-header">
+                <h2>✅ تم بنجاح!</h2>
+            </div>
+            <div class="modal-body">
+                <p id="successMessage"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content error">
+            <span class="modal-close">&times;</span>
+            <div class="modal-header">
+                <h2>❌ خطأ</h2>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Generation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <!-- Excel Generation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

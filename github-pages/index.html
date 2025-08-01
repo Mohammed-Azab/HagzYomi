@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حجز ملعب كرة القدم - HagzYomi</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏟️ حجز ملعب كرة القدم</h1>
+            <p class="subtitle">احجز موعدك المفضل بسهولة</p>
+        </header>
+
+        <main>
+            <!-- Court Info Section -->
+            <section class="court-info">
+                <div class="info-card">
+                    <h3>معلومات الملعب</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="label">ساعات العمل:</span>
+                            <span class="value">8:00 ص - 10:00 م</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">مدة الحجز:</span>
+                            <span class="value">ساعة واحدة</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">السعر:</span>
+                            <span class="value">50 ريال/ساعة</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">الحد الأقصى:</span>
+                            <span class="value">3 ساعات يومياً</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Booking Form -->
+            <section class="booking-form">
+                <h2>احجز موعدك</h2>
+                <form id="bookingForm">
+                    <div class="form-group">
+                        <label for="customerName">الاسم:</label>
+                        <input type="text" id="customerName" name="customerName" required 
+                               placeholder="أدخل اسمك الكامل">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customerPhone">رقم الهاتف:</label>
+                        <input type="tel" id="customerPhone" name="customerPhone" required 
+                               placeholder="05xxxxxxxx" pattern="^05[0-9]{8}$">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bookingDate">التاريخ:</label>
+                        <input type="date" id="bookingDate" name="bookingDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="timeSlot">الوقت:</label>
+                        <select id="timeSlot" name="timeSlot" required>
+                            <option value="">اختر الوقت</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        <span class="btn-text">احجز الآن</span>
+                        <span class="btn-icon">⚽</span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Available Slots Display -->
+            <section class="slots-display" id="slotsDisplay" style="display: none;">
+                <h3>المواعيد المتاحة</h3>
+                <div id="availableSlots" class="slots-grid"></div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="admin-link">
+                <a href="admin-login.html" class="admin-btn">🔐 دخول الإدارة</a>
+            </div>
+            <div class="footer-text">
+                <p>© 2025 HagzYomi - نظام حجز الملاعب</p>
+                <p class="attribution">
+                    Developed by <a href="https://github.com/github-copilot" target="_blank" rel="noopener">GitHub Copilot</a>
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content success">
+            <span class="modal-close">&times;</span>
+            <div class="modal-header">
+                <h2>✅ تم الحجز بنجاح!</h2>
+            </div>
+            <div class="modal-body">
+                <p id="bookingDetails"></p>
+                <p class="note">سيتم التواصل معك قريباً لتأكيد الحجز</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content error">
+            <span class="modal-close">&times;</span>
+            <div class="modal-header">
+                <h2>❌ خطأ في الحجز</h2>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
