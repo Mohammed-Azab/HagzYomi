@@ -394,7 +394,17 @@ app.get('/api/slots/:date', (req, res) => {
         if (bookedSlots.includes(slot)) return false;
         
         // Check if this time slot is in the past
-        const slotDateTime = new Date(`${date}T${slot}:00`);
+        const [slotHour] = slot.split(':').map(Number);
+        const [startHour] = config.openingHours.start.split(':').map(Number);
+        const [endHour] = config.openingHours.end.split(':').map(Number);
+        
+        let slotDateTime = new Date(`${date}T${slot}:00`);
+        
+        // For overnight periods, times like 00:00-03:00 are considered next day
+        if (endHour <= startHour && slotHour < startHour) {
+            slotDateTime.setDate(slotDateTime.getDate() + 1);
+        }
+        
         return slotDateTime > now;
     });
     
@@ -424,7 +434,16 @@ app.post('/api/book', (req, res) => {
     
     // Check if booking time is in the past
     const now = new Date();
-    const bookingDateTime = new Date(`${date}T${time}:00`);
+    const [timeHour] = time.split(':').map(Number);
+    const [configStartHour] = config.openingHours.start.split(':').map(Number);
+    const [configEndHour] = config.openingHours.end.split(':').map(Number);
+    
+    let bookingDateTime = new Date(`${date}T${time}:00`);
+    
+    // For overnight periods, times like 00:00-03:00 are considered next day
+    if (configEndHour <= configStartHour && timeHour < configStartHour) {
+        bookingDateTime.setDate(bookingDateTime.getDate() + 1);
+    }
     
     if (bookingDateTime <= now) {
         return res.json({ success: false, message: 'لا يمكن الحجز في وقت سابق' });
