@@ -49,6 +49,18 @@ async function loadConfig() {
         document.getElementById('courtName').textContent = config.courtName;
         document.title = `${config.courtName} - حجز ملعب كرة القدم`;
         
+        // Update header title
+        const logoTitle = document.querySelector('.logo h1');
+        if (logoTitle) {
+            logoTitle.textContent = `⚽ ${config.ui?.headerTitle || config.courtName}`;
+        }
+        
+        // Update CSS variables if UI config is provided
+        updateCSSVariables();
+        
+        // Update hero section content
+        updateHeroContent();
+        
         // Update UI elements if available
         if (config.ui) {
             // Update header
@@ -101,6 +113,30 @@ async function loadConfig() {
     } catch (error) {
         console.error('Error loading config:', error);
         showError('خطأ في تحميل إعدادات الموقع');
+    }
+}
+
+// Update CSS variables based on config
+function updateCSSVariables() {
+    if (config.ui && config.ui.primaryColor) {
+        document.documentElement.style.setProperty('--primary-color', config.ui.primaryColor);
+        document.documentElement.style.setProperty('--accent-color', config.ui.primaryColor);
+    }
+}
+
+// Update hero section content
+function updateHeroContent() {
+    const heroTitle = document.getElementById('courtName');
+    const heroSubtitle = document.querySelector('.hero-subtitle');
+    
+    if (heroTitle && config.ui?.heroTitle) {
+        heroTitle.textContent = config.ui.heroTitle;
+    } else if (heroTitle && config.courtName) {
+        heroTitle.textContent = config.courtName;
+    }
+    
+    if (heroSubtitle && config.ui?.heroSubtitle) {
+        heroSubtitle.textContent = config.ui.heroSubtitle;
     }
 }
 

@@ -57,6 +57,44 @@
     </footer>
 
     <script>
+        let config = {};
+        
+        // Load configuration and update page
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                config = await response.json();
+                updatePageTitle();
+            } catch (error) {
+                console.error('Error loading config:', error);
+            }
+        }
+        
+        // Update page title and header with config
+        function updatePageTitle() {
+            if (config.courtName) {
+                // Update page title
+                document.title = `تسجيل الدخول - ${config.courtName}`;
+                
+                // Update header title
+                const logoTitle = document.querySelector('.logo h1');
+                if (logoTitle) {
+                    logoTitle.textContent = `⚽ ${config.ui?.headerTitle || config.courtName}`;
+                }
+                
+                // Update CSS variables if UI config is provided
+                if (config.ui && config.ui.primaryColor) {
+                    document.documentElement.style.setProperty('--primary-color', config.ui.primaryColor);
+                    document.documentElement.style.setProperty('--accent-color', config.ui.primaryColor);
+                }
+            }
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConfig();
+        });
+        
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
         const errorMsg = document.getElementById('errorMsg');

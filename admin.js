@@ -10,6 +10,7 @@
 // Global variables
 let bookings = [];
 let bookingToDelete = null;
+let config = {};
 
 // DOM elements
 const bookingsTable = document.getElementById('bookingsTable');
@@ -52,10 +53,12 @@ const avgDailyEl = document.getElementById('avgDaily');
 const lastBookingEl = document.getElementById('lastBooking');
 
 // Initialize the admin panel
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadConfig();
     setupEventListeners();
     setTodayDate();
     loadBookings();
+    updatePageTitle();
 });
 
 // Setup event listeners
@@ -95,6 +98,36 @@ function setupEventListeners() {
     downloadModal.addEventListener('click', function(e) {
         if (e.target === downloadModal) hideDownloadModal();
     });
+}
+
+// Load configuration from server
+async function loadConfig() {
+    try {
+        const response = await fetch('/api/config');
+        config = await response.json();
+    } catch (error) {
+        console.error('Error loading config:', error);
+    }
+}
+
+// Update page title and header with config
+function updatePageTitle() {
+    if (config.courtName) {
+        // Update page title
+        document.title = `لوحة الإدارة - ${config.courtName}`;
+        
+        // Update header title
+        const logoTitle = document.querySelector('.logo h1');
+        if (logoTitle) {
+            logoTitle.textContent = `⚽ ${config.ui?.headerTitle || config.courtName}`;
+        }
+        
+        // Update CSS variables if UI config is provided
+        if (config.ui && config.ui.primaryColor) {
+            document.documentElement.style.setProperty('--primary-color', config.ui.primaryColor);
+            document.documentElement.style.setProperty('--accent-color', config.ui.primaryColor);
+        }
+    }
 }
 
 // Set today's date as default for report

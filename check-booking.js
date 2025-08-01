@@ -14,6 +14,9 @@ const checkBtn = document.getElementById('checkBtn');
 const bookingResult = document.getElementById('bookingResult');
 const bookingDetails = document.getElementById('bookingDetails');
 
+// Configuration
+let config = {};
+
 // Modal elements
 const successModal = document.getElementById('successModal');
 const errorModal = document.getElementById('errorModal');
@@ -21,9 +24,41 @@ const successMessage = document.getElementById('successMessage');
 const errorMessage = document.getElementById('errorMessage');
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadConfig();
     setupEventListeners();
+    updatePageTitle();
 });
+
+// Load configuration from server
+async function loadConfig() {
+    try {
+        const response = await fetch('/api/config');
+        config = await response.json();
+    } catch (error) {
+        console.error('Error loading config:', error);
+    }
+}
+
+// Update page title and header with config
+function updatePageTitle() {
+    if (config.courtName) {
+        // Update page title
+        document.title = `فحص حالة الحجز - ${config.courtName}`;
+        
+        // Update header title
+        const logoTitle = document.querySelector('.logo h1');
+        if (logoTitle) {
+            logoTitle.textContent = `⚽ ${config.ui?.headerTitle || config.courtName}`;
+        }
+        
+        // Update CSS variables if UI config is provided
+        if (config.ui && config.ui.primaryColor) {
+            document.documentElement.style.setProperty('--primary-color', config.ui.primaryColor);
+            document.documentElement.style.setProperty('--accent-color', config.ui.primaryColor);
+        }
+    }
+}
 
 // Setup event listeners
 function setupEventListeners() {

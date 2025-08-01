@@ -1,6 +1,5 @@
 {
   "courtName": "ملعب مركز الشباب الرياضي",
-  "adminPassword": "admin123",
   "openingHours": {
     "start": "07:00",
     "end": "03:00"
@@ -48,3 +47,4 @@
     "theme": "light"
   }
 }
+ 
