@@ -1,9 +1,0 @@
-# HagzYomi Deployment Files
-node_modules/
-npm-debug.log*
-.env
-.DS_Store
-*.log
-test.pdf
-cookies.txt
-data/
