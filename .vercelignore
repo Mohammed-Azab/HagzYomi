@@ -6,3 +6,4 @@ npm-debug.log*
 *.log
 test.pdf
 cookies.txt
+data/

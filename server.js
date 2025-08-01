@@ -22,16 +22,21 @@ const PORT = process.env.PORT || 3000;
 // Load configuration
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
-// Initialize data files
+// Initialize data files (with Vercel serverless compatibility)
 const dataDir = './data';
-if (!fs.existsSync(dataDir)) {
+const bookingsFile = path.join(dataDir, 'bookings.json');
+
+// Create data directory and file if they don't exist (for local development)
+if (!process.env.VERCEL && !fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir);
 }
 
-const bookingsFile = path.join(dataDir, 'bookings.json');
-if (!fs.existsSync(bookingsFile)) {
+if (!process.env.VERCEL && !fs.existsSync(bookingsFile)) {
     fs.writeFileSync(bookingsFile, JSON.stringify([]));
 }
+
+// In-memory storage for Vercel serverless (temporary solution)
+let bookingsMemory = [];
 
 // Middleware
 app.use(bodyParser.json());
@@ -47,6 +52,12 @@ app.use(express.static('public'));
 
 // Helper functions
 function loadBookings() {
+    // Use in-memory storage for Vercel serverless
+    if (process.env.VERCEL) {
+        return bookingsMemory;
+    }
+    
+    // Use file storage for local development
     try {
         return JSON.parse(fs.readFileSync(bookingsFile, 'utf8'));
     } catch (error) {
@@ -55,6 +66,13 @@ function loadBookings() {
 }
 
 function saveBookings(bookings) {
+    // Use in-memory storage for Vercel serverless
+    if (process.env.VERCEL) {
+        bookingsMemory = bookings;
+        return;
+    }
+    
+    // Use file storage for local development
     fs.writeFileSync(bookingsFile, JSON.stringify(bookings, null, 2));
 }
 
@@ -540,3 +558,6 @@ app.listen(PORT, () => {
     console.log(`🔑 Admin password: ${config.adminPassword}`);
     console.log('═══════════════════════════════════════════════════════');
 });
+
+// Export the Express app for Vercel
+module.exports = app;
