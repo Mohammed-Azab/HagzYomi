@@ -1,167 +1,110 @@
-# 🏟️ HagzYomi - Football Court Booking System
+# � Railway.app Deployment - HagzYomi
 
-**Complete Arabic RTL football court booking system with admin panel**
+**Live hosting for Arabic football court booking system**
 
-> **Developer:** Mohammed Azab | **Email:** Mohammed@azab.io | **© 2025 All Rights Reserved**
+## ✨ Features
+- 🌍 **Live public hosting** on Railway.app
+- 📁 **Persistent file storage** (JSON files with 1GB free space)
+- 🔄 **Auto-deployment** from GitHub branch
+- 📊 **Server-side report generation** (PDF/Excel/CSV)
+- 🔒 **Session-based authentication**
+- 💰 **FREE hosting** ($5/month credit covers completely)
 
----
+## 🚀 Deployment Instructions
 
-## 🎯 About This Project
+### 1. Deploy to Railway
+1. Go to [railway.app](https://railway.app)
+2. Sign up/Login with GitHub
+3. Click **"New Project"**
+4. Select **"Deploy from GitHub repo"**
+5. Choose your **HagzYomi** repository
+6. **IMPORTANT:** Select the **`railway`** branch
+7. Click **"Deploy"**
 
-HagzYomi is a comprehensive Arabic football court booking system featuring:
-- ✅ **Arabic RTL interface** - Fully localized for Arabic users
-- ✅ **Real-time booking system** - Time slot management and validation
-- ✅ **Admin dashboard** - Complete booking management with analytics
-- ✅ **Multi-format exports** - PDF, Excel, and CSV reports
-- ✅ **Egyptian currency** - Prices displayed in جنيه
-- ✅ **Mobile responsive** - Works perfectly on all devices
-- ✅ **Multi-platform deployment** - Choose your preferred hosting
+### 2. Access Your Live Website
+- **Main site**: `https://your-app-name.up.railway.app`
+- **Admin panel**: `https://your-app-name.up.railway.app/admin`
+- **Password**: `admin123`
 
----
-
-## 🌟 Repository Structure
-
-This repository uses **Git Worktrees** to organize different deployment methods:
-
-```
-HagzYomi/                          # 📋 Main documentation & project info
-├── 🌐 github-pages-deploy/       # GitHub Pages + Firebase (RECOMMENDED)
-├── 💻 localhost-deploy/          # Local development environment  
-├── 🚂 railway-deploy/            # Railway.app hosting (FREE)
-├── ☁️ vercel-deploy/             # Vercel serverless deployment
-├── 📄 DEPLOYMENT_BRANCHES.md     # Detailed deployment guide
-└── 📄 README.md                  # This file
-```
-
-### 🔗 How Git Worktrees Work
-Each deployment directory is a **live link** to its respective branch:
-- Changes in directories automatically sync with their branches
-- Work on different platforms simultaneously
-- No file copying or manual synchronization needed
-
----
-
-## 🚀 Quick Start - Choose Your Platform
-
-### 🌐 **GitHub Pages + Firebase (RECOMMENDED)**
-**Best for:** Production use, multi-device access, your uncle's phone access
-```bash
-cd github-pages-deploy/
-# Follow setup in docs/FIREBASE_SETUP.md
-# Deploy: Enable GitHub Pages from /docs folder
-```
-**✅ FREE | ✅ Cloud Database | ✅ Multi-device | ✅ Zero maintenance**
-
-### 🚂 **Railway.app (EASIEST)**
-**Best for:** Quick live hosting with minimal setup
+### 3. Local Testing (Optional)
 ```bash
 cd railway-deploy/
-# Deploy: Connect to railway.app and select 'railway' branch
-```
-**✅ FREE ($5/month credit) | ✅ 5-minute setup | ✅ Auto-deployment**
-
-### 💻 **Local Development**
-**Best for:** Development and testing
-```bash
-cd localhost-deploy/
-npm install && npm start
+npm install
+npm start
 # Access: http://localhost:3000
 ```
-**✅ File-based database | ✅ Full Node.js environment | ✅ Hot reloading**
 
-### ☁️ **Vercel Serverless**
-**Best for:** Serverless architecture testing
-```bash
-cd vercel-deploy/
-# Deploy: Connect to vercel.com
+## 📁 Railway Configuration
 ```
-**✅ FREE | ✅ Serverless | ✅ Global edge functions**
-
----
-
-## 📋 Features Available in All Versions
-
-- 🏟️ **Football court booking system**
-- 📅 **Date and time slot management**
-- 👤 **User booking with validation**
-- 🔐 **Admin authentication** (password: admin123)
-- 📊 **Booking management** (view, delete, analytics)
-- 📄 **Export reports** (PDF, Excel, CSV formats)
-- 📱 **Mobile-responsive design**
-- 🕐 **Real-time availability checking**
-- 💰 **Egyptian currency support** (جنيه)
-- 🌍 **Arabic RTL interface**
-
----
-
-## 📚 Documentation
-
-- **[DEPLOYMENT_BRANCHES.md](DEPLOYMENT_BRANCHES.md)** - Detailed deployment guide for all platforms
-- **[GITHUB_PAGES_SETUP.md](GITHUB_PAGES_SETUP.md)** - Firebase configuration guide
-- **Platform-specific READMEs** - Available in each deployment directory
-
----
-
-## 🎮 Admin Panel
-
-Access the admin dashboard at `/admin` on any deployment:
-- **Username:** admin
-- **Password:** admin123
-- **Features:** View bookings, delete reservations, export reports, analytics
-
----
-
-## 🔧 Development Workflow
-
-### Working with Multiple Deployments
-```bash
-# Local development
-cd localhost-deploy/
-git checkout localhost
-# Make changes, test locally
-
-# Railway production  
-cd railway-deploy/
-git checkout railway
-# Make production changes
-
-# Each branch stays independent!
+railway-deploy/
+├── railway.json            # Railway deployment config
+├── package.json            # Dependencies & start command
+├── server.js               # Express.js backend optimized for Railway
+├── index.html              # Main booking page
+├── admin-login.html        # Admin login
+├── admin.html              # Admin dashboard
+├── script.js               # Frontend functionality
+├── admin.js                # Admin frontend
+├── styles.css              # All styling
+└── data/                   # Persistent data storage (1GB free)
+    └── bookings.json       # Bookings database
 ```
 
-### Branch Overview
-- **`main`** - Documentation and project overview
-- **`localhost`** - Local development environment
-- **`railway`** - Railway.app deployment
-- **`github-pages`** - GitHub Pages + Firebase
-- **`vercel`** - Vercel serverless deployment
+## 🎯 Railway Benefits
+✅ **FREE hosting** - $5/month credit covers app completely
+✅ **Auto-deployment** - Push to `railway` branch = auto deploy
+✅ **Persistent storage** - Data survives deployments
+✅ **Custom domains** - Free SSL and custom domain support
+✅ **No cold starts** - Always-on hosting
+✅ **1GB storage** - Plenty for booking data
+✅ **Hot reload** - Changes update instantly
 
----
+## 🔧 Configuration
+Edit `server.js` to change settings:
+```javascript
+const config = {
+    courtName: "ملعب كرة القدم",
+    openingHours: { start: "08:00", end: "22:00" },
+    maxHoursPerPersonPerDay: 3,
+    slotDurationMinutes: 60,
+    pricePerHour: 50,
+    adminPassword: "admin123"
+};
+```
 
-## 🌟 Why Choose HagzYomi?
+## 📊 Data Storage
+- **Location**: `data/bookings.json`
+- **Format**: JSON array of booking objects
+- **Persistence**: Data survives server restarts
+- **Backup**: Easy to backup/restore JSON file
 
-✅ **Complete Solution** - Everything you need for court booking  
-✅ **Arabic-First** - Built specifically for Arabic users  
-✅ **Multiple Deployment Options** - Choose what works for you  
-✅ **Production Ready** - Used in real football court businesses  
-✅ **Free Hosting Options** - No hosting costs required  
-✅ **Open Source** - MIT License, use freely  
+## 🛠️ Development Commands
+```bash
+# Start server
+npm start
 
----
+# Start with auto-reload (if nodemon installed)
+npx nodemon server.js
 
-## 📞 Contact & Support
+# Install additional packages
+npm install package-name
+```
 
-**Developer:** Mohammed Azab  
-**Email:** Mohammed@azab.io  
-**License:** MIT License  
-**Copyright:** © 2025 Mohammed Azab. All rights reserved.  
+## 📱 Perfect For
+- Local development and testing
+- Learning the codebase
+- Adding new features
+- Data persistence needed
+- Full backend development
+- API development and testing
 
----
-
-## 🎯 Quick Links
-
-- 🚀 [Deploy to Railway](railway-deploy/) - Fastest live hosting
-- 🌐 [Deploy to GitHub Pages](github-pages-deploy/) - Best for production  
-- 💻 [Local Development](localhost-deploy/) - Development environment
-- 📋 [Deployment Guide](DEPLOYMENT_BRANCHES.md) - Detailed instructions
-
-**Ready to book some football time? Choose your deployment method above! ⚽**
+## 🔧 API Endpoints
+- `GET /` - Main page
+- `GET /admin` - Admin panel
+- `POST /admin/login` - Admin login
+- `GET /api/config` - Court configuration
+- `GET /api/slots/:date` - Available slots
+- `POST /api/book` - Create booking
+- `GET /api/admin/bookings` - Get all bookings
+- `DELETE /api/admin/booking/:id` - Delete booking
+- `GET /api/admin/report` - Export reports
