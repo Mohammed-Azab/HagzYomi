@@ -31,11 +31,13 @@ const config = {
     slotDurationMinutes: 60,
     currency: "جنيه",
     pricePerHour: 50,
-    adminPassword: process.env.ADMIN_PASSWORD || "admin123"
+    adminPassword: process.env.ADMIN_PASSWORD
 };
 
 // Initialize data files for Render persistent storage
-const dataDir = './data';
+const dataDir = process.env.RENDER_PERSISTENT_DISK_PATH ? 
+    path.join(process.env.RENDER_PERSISTENT_DISK_PATH, 'data') : 
+    './data';
 const bookingsFile = path.join(dataDir, 'bookings.json');
 
 // Create data directory and file if they don't exist
