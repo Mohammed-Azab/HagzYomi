@@ -545,21 +545,19 @@ app.delete('/api/admin/booking/:id', (req, res) => {
     res.json({ success: true });
 });
 
-// Don't start the server in Vercel environment or when required as module
-if (!process.env.VERCEL && require.main === module) {
-    app.listen(PORT, () => {
-        console.log('═══════════════════════════════════════════════════════');
-        console.log('🚀 HagzYomi - Football Court Booking System');
-        console.log('💻 Developed by: Mohammed Azab');
-        console.log('📧 Contact: Mohammed@azab.io');
-        console.log('© 2025 Mohammed Azab. All rights reserved.');
-        console.log('═══════════════════════════════════════════════════════');
-        console.log(`🌐 Server running on http://localhost:${PORT}`);
-        console.log(`📊 Admin panel: http://localhost:${PORT}/admin`);
-        console.log(`🔑 Admin password: ${config.adminPassword}`);
-        console.log('═══════════════════════════════════════════════════════');
-    });
-}
+// Start the server for Railway deployment
+app.listen(PORT, () => {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🚀 HagzYomi - Football Court Booking System');
+    console.log('💻 Developed by: Mohammed Azab');
+    console.log('📧 Contact: Mohammed@azab.io');
+    console.log('© 2025 Mohammed Azab. All rights reserved.');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log(`🌐 Server running on http://localhost:${PORT}`);
+    console.log(`📊 Admin panel: http://localhost:${PORT}/admin`);
+    console.log(`🔑 Admin password: ${config.adminPassword}`);
+    console.log('═══════════════════════════════════════════════════════');
+});
 
-// Export the Express app for Vercel
+// Export the Express app for compatibility
 module.exports = app;
