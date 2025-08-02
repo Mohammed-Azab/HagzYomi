@@ -1,11 +1,5 @@
 /**
- * Ha// Global variables
-let config = {};
-let selectedDate = null;
-let selectedTime = null;
-let countdownInterval = null; // Add global countdown control
-
-// DOM elements - Football Court Booking System Frontend
+ * HagzYomi - Football Court Booking System Frontend
  * 
  * @author Mohammed Azab
  * @email Mohammed@azab.io
@@ -15,8 +9,9 @@ let countdownInterval = null; // Add global countdown control
 
 // Global variables
 let config = {};
-let selectedTime = null;
 let selectedDate = null;
+let selectedTime = null;
+let countdownInterval = null; // Add global countdown control
 
 // DOM elements
 const bookingForm = document.getElementById('bookingForm');
