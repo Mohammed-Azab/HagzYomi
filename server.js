@@ -402,8 +402,23 @@ app.post('/api/book', async (req, res) => {
         const now = new Date();
         let bookingDateTime = new Date(`${date}T${time}:00`);
         
-        if (bookingDateTime <= now) {
-            return res.json({ success: false, message: 'لا يمكن الحجز في وقت سابق' });
+        // Add debug logging to see what's happening
+        console.log('🕐 Time validation debug:', {
+            now: now.toISOString(),
+            nowLocal: now.toLocaleString('en-US', { timeZone: 'Africa/Cairo' }),
+            bookingDate: date,
+            bookingTime: time,
+            bookingDateTime: bookingDateTime.toISOString(),
+            bookingDateTimeLocal: bookingDateTime.toLocaleString('en-US', { timeZone: 'Africa/Cairo' }),
+            comparison: bookingDateTime <= now ? 'PAST' : 'FUTURE'
+        });
+        
+        // Allow booking if it's at least 30 minutes in the future
+        const thirtyMinutesFromNow = new Date(now.getTime() + (30 * 60 * 1000));
+        
+        if (bookingDateTime <= thirtyMinutesFromNow) {
+            console.log('❌ Booking time is too close or in the past');
+            return res.json({ success: false, message: 'يجب أن يكون موعد الحجز بعد 30 دقيقة على الأقل من الوقت الحالي' });
         }
         
         const bookings = await loadBookings();

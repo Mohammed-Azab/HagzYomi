@@ -180,7 +180,53 @@ function displayPaymentInfo() {
         instaPayBtn.onclick = () => {
             window.open(bookingData.paymentInfo.instaPayLink, '_blank');
         };
+        
+        // Start 10-second redirect countdown to InstaPay
+        startInstaPayRedirect(bookingData.paymentInfo.instaPayLink);
     }
+}
+
+// Start 10-second countdown to redirect to InstaPay
+function startInstaPayRedirect(instaPayLink) {
+    let redirectCountdown = 10;
+    let redirectInterval;
+    let hasAutoRedirected = false; // Flag to prevent multiple auto-redirects
+    const instaPayBtn = document.getElementById('instaPayBtn');
+    
+    console.log('🔄 Starting InstaPay redirect countdown...');
+    
+    // Set up permanent click handler that always works
+    instaPayBtn.onclick = () => {
+        console.log('👆 User clicked InstaPay button, redirecting');
+        window.open(instaPayLink, '_blank');
+    };
+    
+    // Update button text with countdown
+    const updateRedirectCountdown = () => {
+        if (hasAutoRedirected) {
+            clearInterval(redirectInterval);
+            return;
+        }
+        
+        instaPayBtn.textContent = `💳 سيتم التوجيه لإنستاباي خلال ${redirectCountdown} ثواني`;
+        
+        if (redirectCountdown <= 0) {
+            hasAutoRedirected = true;
+            console.log('🚀 Auto-redirecting to InstaPay:', instaPayLink);
+            window.open(instaPayLink, '_blank');
+            
+            // Reset button text but keep it clickable
+            instaPayBtn.textContent = '💳 رابط انستاباي';
+            clearInterval(redirectInterval);
+            return;
+        }
+        
+        redirectCountdown--;
+    };
+    
+    // Update immediately and then every second
+    updateRedirectCountdown();
+    redirectInterval = setInterval(updateRedirectCountdown, 1000);
 }
 
 // Start countdown timer
