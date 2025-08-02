@@ -552,27 +552,27 @@ body {
 }
 
 .payment-instructions {
-    background: rgba(76, 175, 80, 0.1);
+    background: #fff3cd;
     padding: 1rem;
     border-radius: var(--border-radius);
-    border-left: 4px solid var(--secondary-color);
+    border-left: 4px solid #ffc107;
     text-align: center;
 }
 
 .payment-instructions p {
-    color: var(--text-primary);
+    color: #856404;
     margin-bottom: 0.5rem;
     font-weight: 500;
 }
 
 .payment-instructions small {
-    color: var(--text-secondary);
+    color: #856404;
     font-size: 0.85rem;
     display: block;
 }
 
 .payment-instructions small span {
-    color: var(--danger-color);
+    color: #d4910c;
     font-weight: 600;
 }
 
@@ -1589,10 +1589,10 @@ body {
 .payment-instructions {
     margin-top: 15px;
     padding: 10px;
-    background: #dfdfdf;
+    background: #fff3cd;
     border-radius: 6px;
     font-style: italic;
-    color: #155724;
+    color: #856404;
 }
 
 .payment-link-section {
