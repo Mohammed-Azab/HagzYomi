@@ -180,6 +180,26 @@
             <div class="modal-body" id="successMessage">
                 تم حجز موعدك بنجاح. ستتلقى رسالة تأكيد قريباً.
             </div>
+            
+            <!-- Payment Section (Hidden by default) -->
+            <div class="payment-section" id="paymentSection" style="display: none;">
+                <div class="payment-timer">
+                    <p>سيتم توجيهك تلقائياً إلى صفحة الدفع خلال:</p>
+                    <div class="countdown-timer" id="countdownTimer">10</div>
+                    <p>ثانية</p>
+                </div>
+                
+                <div class="payment-buttons">
+                    <p>أو اختر طريقة الدفع الآن:</p>
+                    <button class="btn btn-payment instapay-btn" id="instaPayBtn">
+                        💳 دفع بـ InstaPay
+                    </button>
+                    <button class="btn btn-payment vodafone-btn" id="vodafoneBtn">
+                        📱 فودافون كاش: <span id="vodafoneNumber"></span>
+                    </button>
+                </div>
+            </div>
+            
             <div class="modal-footer">
                 <button class="btn btn-primary" id="closeModalBtn">حسناً</button>
             </div>

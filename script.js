@@ -584,7 +584,7 @@ ${result.booking.paymentInfo.instaPay ? `💳 إنستاباي: ${result.booking
             
             successMessage += `\n\n�📍 يرجى الوصول قبل الموعد بـ 10 دقائق`;
             
-            showSuccess(successMessage);
+            showSuccess(successMessage, result.booking);
             
             // Reset form
             bookingForm.reset();
@@ -607,9 +607,96 @@ ${result.booking.paymentInfo.instaPay ? `💳 إنستاباي: ${result.booking
 }
 
 // Show success modal
-function showSuccess(message) {
+function showSuccess(message, booking = null) {
     successMessage.textContent = message;
+    
+    // Check if payment is required and payment info is available
+    const paymentSection = document.getElementById('paymentSection');
+    const requiresPayment = booking && booking.status === 'pending' && 
+                           config.features && config.features.requirePaymentConfirmation;
+    
+    if (requiresPayment && config.paymentInfo) {
+        // Show payment section
+        paymentSection.style.display = 'block';
+        
+        // Update payment info
+        const vodafoneNumber = document.getElementById('vodafoneNumber');
+        if (vodafoneNumber && config.paymentInfo.vodafoneCash) {
+            vodafoneNumber.textContent = config.paymentInfo.vodafoneCash;
+        }
+        
+        // Start countdown timer
+        startPaymentCountdown();
+        
+        // Setup payment button handlers
+        setupPaymentButtons();
+    } else {
+        // Hide payment section for regular bookings
+        paymentSection.style.display = 'none';
+    }
+    
     successModal.classList.add('show');
+}
+
+// Start payment countdown timer
+function startPaymentCountdown() {
+    const countdownElement = document.getElementById('countdownTimer');
+    const timeoutSeconds = config.paymentInfo?.paymentTimeoutSeconds || 10;
+    let secondsLeft = timeoutSeconds;
+    
+    const updateCountdown = () => {
+        countdownElement.textContent = secondsLeft;
+        
+        if (secondsLeft <= 0) {
+            // Redirect to InstaPay link automatically
+            if (config.paymentInfo?.instaPayLink) {
+                window.open(config.paymentInfo.instaPayLink, '_blank');
+            }
+            return;
+        }
+        
+        secondsLeft--;
+        setTimeout(updateCountdown, 1000);
+    };
+    
+    updateCountdown();
+}
+
+// Setup payment buttons
+function setupPaymentButtons() {
+    const instaPayBtn = document.getElementById('instaPayBtn');
+    const vodafoneBtn = document.getElementById('vodafoneBtn');
+    
+    // InstaPay button handler
+    if (instaPayBtn) {
+        instaPayBtn.onclick = () => {
+            if (config.paymentInfo?.instaPayLink) {
+                window.open(config.paymentInfo.instaPayLink, '_blank');
+            }
+        };
+    }
+    
+    // Vodafone Cash button handler (copy number to clipboard)
+    if (vodafoneBtn) {
+        vodafoneBtn.onclick = () => {
+            if (config.paymentInfo?.vodafoneCash) {
+                navigator.clipboard.writeText(config.paymentInfo.vodafoneCash).then(() => {
+                    // Show temporary feedback
+                    const originalText = vodafoneBtn.innerHTML;
+                    vodafoneBtn.innerHTML = '✅ تم نسخ الرقم';
+                    vodafoneBtn.style.background = 'linear-gradient(135deg, #4CAF50, #66BB6A)';
+                    
+                    setTimeout(() => {
+                        vodafoneBtn.innerHTML = originalText;
+                        vodafoneBtn.style.background = 'linear-gradient(135deg, #e74c3c, #ff6b6b)';
+                    }, 2000);
+                }).catch(() => {
+                    // Fallback: show number in alert
+                    alert(`رقم فودافون كاش: ${config.paymentInfo.vodafoneCash}`);
+                });
+            }
+        };
+    }
 }
 
 // Show error modal
