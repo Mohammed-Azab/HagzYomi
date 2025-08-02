@@ -405,6 +405,7 @@ body {
     border: 1px solid rgba(33, 150, 243, 0.1);
     cursor: pointer;
     transition: var(--transition);
+    position: relative;
 }
 
 .payment-method:hover {
@@ -418,6 +419,7 @@ body {
 .payment-method.instapay-clickable {
     background: linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(162, 155, 254, 0.1));
     border: 2px solid rgba(108, 92, 231, 0.3);
+    overflow: hidden;
 }
 
 .payment-method.instapay-clickable:hover {
@@ -430,17 +432,23 @@ body {
 .payment-method.instapay-clickable::after {
     content: "👆 اضغط للدفع";
     position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.8rem;
-    color: #6c5ce7;
+    right: 10px;
+    top: 10px;
+    background: rgba(108, 92, 231, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
     font-weight: bold;
-    opacity: 0.7;
+    opacity: 0.9;
+    z-index: 2;
 }
 
-.payment-method {
-    position: relative;
+.payment-method.instapay-clickable:hover::after {
+    background: rgba(108, 92, 231, 1);
+    opacity: 1;
+    transform: scale(1.05);
+    transition: all 0.3s ease;
 }
 
 .payment-icon {
@@ -595,11 +603,29 @@ body {
 }
 
 .modal-close {
-    background: none;
+    background: #f44336;
+    color: white !important;
     border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
     font-size: 1.5rem;
+    font-weight: bold;
     cursor: pointer;
-    color: var(--text-secondary) !important;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 1000;
+}
+
+.modal-close:hover {
+    background: #d32f2f !important;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
 }
 
 .modal-body {
@@ -610,10 +636,31 @@ body {
 }
 
 .modal-footer {
-    padding: 1.5rem;
-    border-top: 1px solid var(--border-color);
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
     background: white !important;
+    border-top: 1px solid var(--border-color);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.modal-footer .btn-primary {
+    background: #4CAF50 !important;
+    color: white !important;
+    border: 2px solid #4CAF50 !important;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+}
+
+.modal-footer .btn-primary:hover {
+    background: #45a049 !important;
+    border-color: #45a049 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
 /* Additional color fixes for visibility */
@@ -873,6 +920,49 @@ body {
     background: linear-gradient(135deg, #c0392b, #e74c3c);
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+/* Skip timer button */
+.btn-skip {
+    margin-top: 15px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    background: #ff9800;
+    color: white !important;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-skip:hover {
+    background: #f57c00;
+    transform: translateY(-1px);
+}
+
+/* Payment actions */
+.payment-actions {
+    margin-top: 20px;
+    text-align: center;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #666 !important;
+    border: 2px solid #ddd;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.btn-outline:hover {
+    border-color: #999;
+    color: #333 !important;
+    background: #f5f5f5;
 }
 
 /* Responsive design for payment buttons */
