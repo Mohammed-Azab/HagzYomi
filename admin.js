@@ -104,25 +104,6 @@ function setupEventListeners() {
     downloadModal.addEventListener('click', function(e) {
         if (e.target === downloadModal) hideDownloadModal();
     });
-    
-    // Config tabs event listeners
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('config-tab')) {
-            // Remove active class from all tabs
-            document.querySelectorAll('.config-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.config-tab-content').forEach(content => content.style.display = 'none');
-            
-            // Add active class to clicked tab
-            e.target.classList.add('active');
-            document.getElementById(e.target.dataset.tab + '-tab').style.display = 'block';
-        }
-    });
-    
-    // Toggle JSON editor
-    const toggleJsonEditor = document.getElementById('toggleJsonEditor');
-    if (toggleJsonEditor) {
-        toggleJsonEditor.addEventListener('click', toggleConfigEditor);
-    }
 }
 
 // Load configuration from server
@@ -190,7 +171,53 @@ async function saveConfiguration() {
 function showConfigModal() {
     loadConfigContent();
     setupConfigModalForUser();
+    setupConfigTabListeners();
     configModal.classList.add('show');
+}
+
+// Setup config tab event listeners
+function setupConfigTabListeners() {
+    // Remove any existing listeners to prevent duplicates
+    const existingTabListener = document.querySelector('[data-tab-listener]');
+    if (existingTabListener) {
+        existingTabListener.removeAttribute('data-tab-listener');
+    }
+    
+    // Add tab click listeners
+    document.querySelectorAll('.config-tab').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.config-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.config-tab-content').forEach(content => content.style.display = 'none');
+            
+            // Add active class to clicked tab
+            e.target.classList.add('active');
+            const targetTab = document.getElementById(e.target.dataset.tab + '-tab');
+            if (targetTab) {
+                targetTab.style.display = 'block';
+            }
+        });
+    });
+    
+    // Mark that listeners have been added
+    document.body.setAttribute('data-tab-listener', 'true');
+    
+    // Show first tab by default
+    const firstTab = document.querySelector('.config-tab');
+    const firstTabContent = document.getElementById('basic-tab');
+    if (firstTab && firstTabContent) {
+        firstTab.classList.add('active');
+        firstTabContent.style.display = 'block';
+    }
+    
+    // Setup toggle JSON editor button
+    const toggleJsonEditor = document.getElementById('toggleJsonEditor');
+    if (toggleJsonEditor) {
+        // Remove existing listener if any
+        toggleJsonEditor.replaceWith(toggleJsonEditor.cloneNode(true));
+        const newToggleBtn = document.getElementById('toggleJsonEditor');
+        newToggleBtn.addEventListener('click', toggleConfigEditor);
+    }
 }
 
 function setupConfigModalForUser() {
@@ -305,48 +332,56 @@ async function loadConfigContent() {
 
 // Populate form fields with config data
 function populateConfigForm(config) {
-    // Basic settings
-    setValue('courtName', config.courtName);
-    setValue('pricePerHour', config.pricePerHour);
-    setValue('slotDurationMinutes', config.slotDurationMinutes);
-    setValue('maxHoursPerPersonPerDay', config.maxHoursPerPersonPerDay);
-    setValue('maxBookingDaysAhead', config.maxBookingDaysAhead);
+    console.log('Populating config form with:', config);
     
-    // Working hours
-    setValue('openingStart', config.openingHours?.start);
-    setValue('openingEnd', config.openingHours?.end);
-    
-    // Working days
-    const workingDayCheckboxes = document.querySelectorAll('.working-day');
-    workingDayCheckboxes.forEach(checkbox => {
-        checkbox.checked = config.workingDays?.includes(checkbox.value);
-    });
-    
-    // Features
-    setCheckbox('enableOnlineBooking', config.features?.enableOnlineBooking);
-    setCheckbox('requirePhoneVerification', config.features?.requirePhoneVerification);
-    setCheckbox('allowCancellation', config.features?.allowCancellation);
-    setValue('cancellationHours', config.features?.cancellationHours);
-    setCheckbox('enableRecurringBooking', config.features?.enableRecurringBooking);
-    setValue('maxRecurringWeeks', config.features?.maxRecurringWeeks);
-    setCheckbox('requirePaymentConfirmation', config.features?.requirePaymentConfirmation);
-    setValue('paymentTimeoutMinutes', config.features?.paymentTimeoutMinutes);
-    
-    // Payment info
-    setValue('vodafoneCash', config.paymentInfo?.vodafoneCash);
-    setValue('instaPay', config.paymentInfo?.instaPay);
-    setValue('paymentInstructions', config.paymentInfo?.instructions);
-    setValue('contactPhone', config.contactInfo?.phone);
-    setValue('contactAddress', config.contactInfo?.address);
-    setValue('contactEmail', config.contactInfo?.email);
-    
-    // UI settings
-    setValue('headerTitle', config.ui?.headerTitle);
-    setValue('headerSubtitle', config.ui?.headerSubtitle);
-    setValue('heroTitle', config.ui?.heroTitle);
-    setValue('heroSubtitle', config.ui?.heroSubtitle);
-    setValue('primaryColor', config.ui?.primaryColor);
-    setValue('theme', config.ui?.theme);
+    try {
+        // Basic settings
+        setValue('courtName', config.courtName);
+        setValue('pricePerHour', config.pricePerHour);
+        setValue('slotDurationMinutes', config.slotDurationMinutes);
+        setValue('maxHoursPerPersonPerDay', config.maxHoursPerPersonPerDay);
+        setValue('maxBookingDaysAhead', config.maxBookingDaysAhead);
+        
+        // Working hours
+        setValue('openingStart', config.openingHours?.start);
+        setValue('openingEnd', config.openingHours?.end);
+        
+        // Working days
+        const workingDayCheckboxes = document.querySelectorAll('.working-day');
+        workingDayCheckboxes.forEach(checkbox => {
+            checkbox.checked = config.workingDays?.includes(checkbox.value);
+        });
+        
+        // Features
+        setCheckbox('enableOnlineBooking', config.features?.enableOnlineBooking);
+        setCheckbox('requirePhoneVerification', config.features?.requirePhoneVerification);
+        setCheckbox('allowCancellation', config.features?.allowCancellation);
+        setValue('cancellationHours', config.features?.cancellationHours);
+        setCheckbox('enableRecurringBooking', config.features?.enableRecurringBooking);
+        setValue('maxRecurringWeeks', config.features?.maxRecurringWeeks);
+        setCheckbox('requirePaymentConfirmation', config.features?.requirePaymentConfirmation);
+        setValue('paymentTimeoutMinutes', config.features?.paymentTimeoutMinutes);
+        
+        // Payment info
+        setValue('vodafoneCash', config.paymentInfo?.vodafoneCash);
+        setValue('instaPay', config.paymentInfo?.instaPay);
+        setValue('paymentInstructions', config.paymentInfo?.instructions);
+        setValue('contactPhone', config.contactInfo?.phone);
+        setValue('contactAddress', config.contactInfo?.address);
+        setValue('contactEmail', config.contactInfo?.email);
+        
+        // UI settings
+        setValue('headerTitle', config.ui?.headerTitle);
+        setValue('headerSubtitle', config.ui?.headerSubtitle);
+        setValue('heroTitle', config.ui?.heroTitle);
+        setValue('heroSubtitle', config.ui?.heroSubtitle);
+        setValue('primaryColor', config.ui?.primaryColor);
+        setValue('theme', config.ui?.theme);
+        
+        console.log('Config form populated successfully');
+    } catch (error) {
+        console.error('Error populating config form:', error);
+    }
 }
 
 // Helper function to set input value
@@ -354,6 +389,9 @@ function setValue(id, value) {
     const element = document.getElementById(id);
     if (element && value !== undefined) {
         element.value = value;
+        console.log(`Set ${id} = ${value}`);
+    } else if (!element) {
+        console.warn(`Element not found: ${id}`);
     }
 }
 
@@ -362,6 +400,9 @@ function setCheckbox(id, value) {
     const element = document.getElementById(id);
     if (element && value !== undefined) {
         element.checked = value;
+        console.log(`Set checkbox ${id} = ${value}`);
+    } else if (!element) {
+        console.warn(`Checkbox element not found: ${id}`);
     }
 }
 
