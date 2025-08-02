@@ -361,11 +361,15 @@ app.get('/api/slots/:date', async (req, res) => {
             
             let slotDateTime = new Date(`${date}T${slot}:00`);
             
+            // Handle cross-midnight bookings
             if (endHour <= startHour && slotHour < startHour) {
                 slotDateTime.setDate(slotDateTime.getDate() + 1);
             }
             
-            return slotDateTime > now;
+            // Add 30-minute buffer for booking availability
+            const thirtyMinutesFromNow = new Date(now.getTime() + (30 * 60 * 1000));
+            
+            return slotDateTime > thirtyMinutesFromNow;
         });
         
         res.json({
@@ -398,19 +402,34 @@ app.post('/api/book', async (req, res) => {
             return res.json({ success: false, message: 'مدة الحجز غير صحيحة' });
         }
         
-        // Check if booking time is in the past
+        // Check if booking time is in the past with proper timezone handling
         const now = new Date();
+        
+        // Parse the booking date and time properly
         let bookingDateTime = new Date(`${date}T${time}:00`);
+        
+        // Handle cross-midnight bookings (when end hour is less than start hour)
+        const [startHour] = config.openingHours.start.split(':').map(Number);
+        const [endHour] = config.openingHours.end.split(':').map(Number);
+        const [bookingHour] = time.split(':').map(Number);
+        
+        // If venue operates past midnight and booking time is in the early morning hours
+        if (endHour <= startHour && bookingHour < startHour) {
+            // This booking is for the next day
+            bookingDateTime.setDate(bookingDateTime.getDate() + 1);
+        }
         
         // Add debug logging to see what's happening
         console.log('🕐 Time validation debug:', {
             now: now.toISOString(),
-            nowLocal: now.toLocaleString('en-US', { timeZone: 'Africa/Cairo' }),
+            nowLocal: now.toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }),
             bookingDate: date,
             bookingTime: time,
             bookingDateTime: bookingDateTime.toISOString(),
-            bookingDateTimeLocal: bookingDateTime.toLocaleString('en-US', { timeZone: 'Africa/Cairo' }),
-            comparison: bookingDateTime <= now ? 'PAST' : 'FUTURE'
+            bookingDateTimeLocal: bookingDateTime.toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }),
+            comparison: bookingDateTime <= now ? 'PAST' : 'FUTURE',
+            venueHours: `${config.openingHours.start} - ${config.openingHours.end}`,
+            crossesMidnight: endHour <= startHour
         });
         
         // Allow booking if it's at least 30 minutes in the future
@@ -418,7 +437,25 @@ app.post('/api/book', async (req, res) => {
         
         if (bookingDateTime <= thirtyMinutesFromNow) {
             console.log('❌ Booking time is too close or in the past');
-            return res.json({ success: false, message: 'يجب أن يكون موعد الحجز بعد 30 دقيقة على الأقل من الوقت الحالي' });
+            console.log('❌ Booking DateTime:', bookingDateTime.toISOString());
+            console.log('❌ Thirty Minutes From Now:', thirtyMinutesFromNow.toISOString());
+            
+            const currentTime = now.toLocaleString('ar-EG', { 
+                timeZone: 'Africa/Cairo',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const earliestBookingTime = thirtyMinutesFromNow.toLocaleString('ar-EG', { 
+                timeZone: 'Africa/Cairo',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            return res.json({ 
+                success: false, 
+                message: `الوقت الحالي ${currentTime}. يجب أن يكون موعد الحجز بعد الساعة ${earliestBookingTime} على الأقل (30 دقيقة من الآن)` 
+            });
         }
         
         const bookings = await loadBookings();
