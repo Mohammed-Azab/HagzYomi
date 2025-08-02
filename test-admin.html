@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Admin Buttons</title>
+</head>
+<body>
+    <h1>Test Admin Buttons</h1>
+    <div id="result"></div>
+
+    <script>
+        async function testAdminButtons() {
+            const tests = [
+                { name: 'Config API', url: '/api/config' },
+                { name: 'Admin Bookings', url: '/api/admin/bookings' },
+                { name: 'User Role', url: '/api/admin/user-role' }
+            ];
+            
+            let results = '<h2>API Test Results:</h2>';
+            
+            for (const test of tests) {
+                try {
+                    const response = await fetch(test.url);
+                    const status = response.status;
+                    results += `<p><strong>${test.name}:</strong> Status ${status} ${status === 200 ? '✅' : '❌'}</p>`;
+                } catch (error) {
+                    results += `<p><strong>${test.name}:</strong> Error ❌ ${error.message}</p>`;
+                }
+            }
+            
+            document.getElementById('result').innerHTML = results;
+        }
+        
+        // Run tests when page loads
+        testAdminButtons();
+    </script>
+</body>
+</html>

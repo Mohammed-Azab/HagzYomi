@@ -17,7 +17,7 @@
   "slotDurationMinutes": 30,
   "maxBookingDaysAhead": 240,
   "currency": "جنيه",
-  "pricePerHour": 50,
+  "pricePerHour": 200,
   "contactInfo": {
     "phone": "01157000063",
     "address": "مركز شباب قرموط صهبرة",

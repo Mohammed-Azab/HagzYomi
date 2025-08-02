@@ -632,12 +632,32 @@ ${result.booking.paymentInfo.instaPay ? `💳 إنستاباي: ${result.booking
 
 // Show success modal
 function showSuccess(message, booking = null) {
+    console.log('🔍 showSuccess called with:', { message, booking });
+    console.log('🔍 successMessage element:', successMessage);
+    console.log('🔍 successModal element:', successModal);
+    
+    if (!successMessage) {
+        console.error('❌ successMessage element not found!');
+        alert('Success: ' + message); // Fallback
+        return;
+    }
+    
+    if (!successModal) {
+        console.error('❌ successModal element not found!');
+        alert('Success: ' + message); // Fallback
+        return;
+    }
+    
     successMessage.textContent = message;
+    console.log('✅ Set success message text');
     
     // Check if payment is required and payment info is available
     const paymentSection = document.getElementById('paymentSection');
     const requiresPayment = booking && booking.status === 'pending' && 
                            config.features && config.features.requirePaymentConfirmation;
+    
+    console.log('🔍 Payment section:', paymentSection);
+    console.log('🔍 Requires payment:', requiresPayment);
     
     if (requiresPayment && config.paymentInfo) {
         // Show payment section
@@ -656,10 +676,14 @@ function showSuccess(message, booking = null) {
         setupPaymentButtons();
     } else {
         // Hide payment section for regular bookings
-        paymentSection.style.display = 'none';
+        if (paymentSection) {
+            paymentSection.style.display = 'none';
+        }
     }
     
+    console.log('🔍 About to show modal...');
     successModal.classList.add('show');
+    console.log('✅ Modal should be visible now');
 }
 
 // Start payment countdown timer

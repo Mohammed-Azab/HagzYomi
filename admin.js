@@ -87,8 +87,8 @@ function setupEventListeners() {
     // Format selection handlers
     formatButtons.forEach(btn => {
         btn.addEventListener('click', function() {
-            formatButtons.forEach(b => b.classList.remove('selected'));
-            this.classList.add('selected');
+            const format = this.getAttribute('data-format');
+            selectFormat(format);
         });
     });
     
@@ -97,12 +97,17 @@ function setupEventListeners() {
     document.getElementById('cancelDeleteBtn').addEventListener('click', hideDeleteModal);
     document.getElementById('closeDeleteModal').addEventListener('click', hideDeleteModal);
     
-    deleteModal.addEventListener('click', function(e) {
-        if (e.target === deleteModal) hideDeleteModal();
+    // Close on backdrop click
+    configModal.addEventListener('click', function(e) {
+        if (e.target === configModal) hideConfigModal();
     });
     
     downloadModal.addEventListener('click', function(e) {
         if (e.target === downloadModal) hideDownloadModal();
+    });
+    
+    deleteModal.addEventListener('click', function(e) {
+        if (e.target === deleteModal) hideDeleteModal();
     });
 }
 
@@ -165,6 +170,13 @@ async function saveConfiguration() {
             alert('خطأ في حفظ الإعدادات');
         }
     }
+}
+
+// Reload configuration from server
+async function reloadConfiguration() {
+    await loadConfig();
+    loadConfigContent();
+    showMessage('تم تحديث الإعدادات', 'success');
 }
 
 // Configuration modal functions
@@ -1101,3 +1113,8 @@ async function confirmBooking(bookingNumber, action) {
         showMessage(`حدث خطأ أثناء ${actionText} الحجز`, 'error');
     }
 }
+
+// Make functions globally accessible for inline HTML handlers
+window.showDeleteModal = showDeleteModal;
+window.confirmBooking = confirmBooking;
+window.selectFormat = selectFormat;
