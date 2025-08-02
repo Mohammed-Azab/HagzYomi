@@ -332,9 +332,14 @@ function showError() {
     document.querySelector('.success-card').innerHTML = `
         <div class="success-icon" style="color: #f44336;">❌</div>
         <h1 class="success-title" style="color: #d32f2f;">خطأ في تحميل البيانات</h1>
-        <p style="color: #666; margin: 20px 0;">لم يتم العثور على بيانات الحجز</p>
-        <div class="action-buttons">
-            <a href="/" class="btn-payment">العودة للرئيسية</a>
+        <p style="color: #666; margin: 20px 0;">لم يتم العثور على بيانات الحجز. قد يكون السبب تحديث الصفحة أو انتهاء صلاحية الرابط.</p>
+        <div class="error-options" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem;">
+            <p style="color: #888; font-size: 0.9rem; margin-bottom: 1rem;">يمكنك اختيار إحدى الخيارات التالية:</p>
+            <div class="action-buttons" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a href="/" class="btn-payment" style="background: var(--primary-color); text-decoration: none;">🏠 العودة للرئيسية</a>
+                <a href="/html/check-booking.html" class="btn-payment" style="background: #17a2b8; text-decoration: none;">🔍 التحقق من حالة الحجز</a>
+                <button onclick="window.location.reload()" class="btn-payment" style="background: #6c757d; border: none; cursor: pointer;">🔄 إعادة تحميل الصفحة</button>
+            </div>
         </div>
     `;
 }
