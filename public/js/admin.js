@@ -588,7 +588,7 @@ function renderBookings() {
     if (bookings.length === 0) {
         bookingsTable.innerHTML = `
             <tr>
-                <td colspan="9" style="text-align: center; padding: 2rem;">
+                <td colspan="10" style="text-align: center; padding: 2rem;">
                     لا توجد حجوزات حتى الآن
                 </td>
             </tr>
@@ -614,6 +614,7 @@ function renderBookings() {
             </td>
             <td>${formatDate(booking.date)}</td>
             <td>${booking.time}</td>
+            <td>${formatDuration(booking.duration)}</td>
             <td>${booking.price} جنيه</td>
             <td>
                 <span class="status-badge status-${booking.status || 'confirmed'}">
@@ -1034,6 +1035,24 @@ function formatDateTime(dateTimeString) {
     const timeStr = date.toLocaleTimeString('ar-EG', timeOptions);
     
     return `${dateStr} ${timeStr}`;
+}
+
+function formatDuration(durationInMinutes) {
+    if (!durationInMinutes) return '30 دقيقة'; // Default fallback
+    
+    const minutes = parseInt(durationInMinutes);
+    if (minutes >= 60) {
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        
+        if (remainingMinutes === 0) {
+            return `${hours} ساعة`;
+        } else {
+            return `${hours} ساعة و ${remainingMinutes} دقيقة`;
+        }
+    } else {
+        return `${minutes} دقيقة`;
+    }
 }
 
 function showMessage(message, type = 'info') {
