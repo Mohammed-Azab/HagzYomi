@@ -1,0 +1,1510 @@
+/**
+ * HagzYomi - Football Court Booking System Styles
+ * 
+ * @author Mohammed Azab
+ * @email Mohammed@azab.io
+ * @copyright 2025 Mohammed Azab. All rights reserved.
+ * @description Responsive Arabic RTL styling for football court booking system
+ */
+
+:root {
+    --primary-color: #2196F3;
+    --primary-dark: #1976D2;
+    --secondary-color: #4CAF50;
+    --accent-color: #2196F3;
+    --danger-color: #f44336;
+    --background-color: #f5f5f5;
+    --card-background: #ffffff;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --border-color: #e0e0e0;
+    --shadow: 0 2px 10px rgba(0,0,0,0.1);
+    --shadow-hover: 0 4px 20px rgba(0,0,0,0.15);
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Cairo', sans-serif;
+    direction: rtl;
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header */
+.header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 1rem 0;
+    box-shadow: var(--shadow);
+}
+
+.header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.logo h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.logo p {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.nav {
+    display: flex;
+    gap: 1rem;
+}
+
+.nav-link {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    font-weight: 500;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Main Content */
+.main {
+    padding: 2rem 0;
+}
+
+/* Hero Section */
+.hero {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Booking Section */
+.booking-section {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.booking-form-container {
+    background: var(--card-background);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+.section-title {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.booking-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.form-group input,
+.form-group select {
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: var(--transition);
+    font-family: inherit;
+    width: 100%;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+/* Time Slots */
+.time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.time-slot {
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 500;
+    background: white !important;
+    color: #333333 !important;
+    font-size: 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.time-slot:hover {
+    border-color: var(--primary-color);
+    background-color: rgba(33, 150, 243, 0.05);
+}
+
+.time-slot.selected {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+    font-weight: bold;
+}
+
+.time-slot.selected-group {
+    background-color: rgba(33, 150, 243, 0.7) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+    font-weight: 500;
+}
+
+.duration-indicator {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    margin-right: 0.25rem;
+}
+
+.time-slot.booked {
+    background-color: var(--border-color) !important;
+    color: var(--text-secondary) !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.loading {
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Recurring booking styles */
+#recurringSection {
+    margin-bottom: 1rem;
+}
+
+#recurringSection > label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+#recurringSection input[type="checkbox"] {
+    margin: 0;
+    width: 1.2rem;
+    height: 1.2rem;
+    cursor: pointer;
+}
+
+#recurringOptions {
+    background: rgba(33, 150, 243, 0.05);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(33, 150, 243, 0.2);
+    margin-top: 0.5rem;
+}
+
+#recurringOptions label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+#recurringOptions select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.help-text {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Buttons */
+.btn {
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: inherit;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.btn-secondary {
+    background-color: var(--text-secondary);
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: var(--text-primary);
+}
+
+.btn-success {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Info Panel */
+.info-panel {
+    background: var(--card-background);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    height: fit-content;
+}
+
+.info-panel h4 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.info-list {
+    list-style: none;
+}
+
+.info-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-list li:last-child {
+    border-bottom: none;
+}
+
+.info-list span {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* Payment Details Section */
+.payment-details-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border-color);
+}
+
+.payment-details-section h4 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.payment-method {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: rgba(33, 150, 243, 0.05);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(33, 150, 243, 0.1);
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+
+.payment-method:hover {
+    background: rgba(33, 150, 243, 0.1);
+    border-color: rgba(33, 150, 243, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+/* Specific styling for InstaPay to make it stand out */
+.payment-method.instapay-clickable {
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(162, 155, 254, 0.1));
+    border: 2px solid rgba(108, 92, 231, 0.3);
+    overflow: hidden;
+}
+
+.payment-method.instapay-clickable:hover {
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(162, 155, 254, 0.2));
+    border-color: rgba(108, 92, 231, 0.5);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(108, 92, 231, 0.3);
+}
+
+.payment-method.instapay-clickable::after {
+    content: "👆 اضغط للدفع";
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    background: rgba(108, 92, 231, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    opacity: 0.9;
+    z-index: 2;
+}
+
+.payment-method.instapay-clickable:hover::after {
+    background: rgba(108, 92, 231, 1);
+    opacity: 1;
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+}
+
+.payment-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color);
+    color: #2196F3;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.payment-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.payment-info strong {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.payment-info span {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1rem;
+    direction: ltr;
+    text-align: right;
+}
+
+.payment-instructions {
+    background: rgba(76, 175, 80, 0.1);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--secondary-color);
+    text-align: center;
+}
+
+.payment-instructions p {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.payment-instructions small {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    display: block;
+}
+
+.payment-instructions small span {
+    color: var(--danger-color);
+    font-weight: 600;
+}
+
+/* Features Section */
+.features {
+    margin-top: 3rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.feature-card {
+    background: var(--card-background);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    text-align: center;
+    transition: var(--transition);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.feature-card h4 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.feature-card p {
+    color: var(--text-secondary);
+}
+
+/* Footer */
+.footer {
+    background-color: var(--text-primary);
+    color: white;
+    text-align: center;
+    padding: 2rem 0;
+    margin-top: 3rem;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white !important;
+    border-radius: var(--border-radius);
+    max-width: 500px;
+    width: 90%;
+    box-shadow: var(--shadow-hover);
+    animation: slideIn 0.3s ease;
+    color: var(--text-primary) !important;
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white !important;
+    color: var(--text-primary) !important;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-primary) !important;
+}
+
+.modal-close {
+    background: #f44336;
+    color: white !important;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 1000;
+}
+
+.modal-close:hover {
+    background: #d32f2f !important;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    background: white !important;
+    color: var(--text-primary) !important;
+    font-weight: 500;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: white !important;
+    border-top: 1px solid var(--border-color);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.modal-footer .btn-primary {
+    background: #4CAF50 !important;
+    color: white !important;
+    border: 2px solid #4CAF50 !important;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+}
+
+.modal-footer .btn-primary:hover {
+    background: #45a049 !important;
+    border-color: #45a049 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+/* Additional color fixes for visibility */
+#successMessage, #errorMessage {
+    color: #333333 !important;
+    background: white !important;
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-weight: normal !important;
+    text-align: right !important;
+    white-space: pre-line !important;
+}
+
+#successModal .modal-content,
+#errorModal .modal-content {
+    background: white !important;
+    color: #333333 !important;
+}
+
+#successModal .modal-header h3,
+#errorModal .modal-header h3 {
+    color: #333333 !important;
+}
+
+#successModal .modal-body,
+#errorModal .modal-body {
+    color: #333333 !important;
+    background: white !important;
+    font-size: 1rem !important;
+    padding: 1.5rem !important;
+}
+
+/* Force visibility for modal text content */
+.modal-body * {
+    color: #333333 !important;
+    background: transparent !important;
+}
+
+/* Confirmation Dialog Specific Styles */
+.modal-content {
+    background: white !important;
+    color: #333333 !important;
+}
+
+.modal-content * {
+    color: #333333 !important;
+}
+
+.modal-content h3,
+.modal-content h4,
+.modal-content p,
+.modal-content span,
+.modal-content div {
+    color: #333333 !important;
+    background: transparent !important;
+}
+
+/* Delete confirmation modal specific styling */
+#deleteModal .modal-content,
+#confirmModal .modal-content {
+    background: white !important;
+    color: #333333 !important;
+}
+
+#deleteModal .modal-header,
+#confirmModal .modal-header {
+    background: white !important;
+    color: #333333 !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+}
+
+#deleteModal .modal-header h3,
+#confirmModal .modal-header h3 {
+    color: #333333 !important;
+    background: transparent !important;
+}
+
+#deleteModal .modal-body,
+#confirmModal .modal-body {
+    background: white !important;
+    color: #333333 !important;
+    font-size: 1rem !important;
+}
+
+#deleteModal .modal-body *,
+#confirmModal .modal-body * {
+    color: #333333 !important;
+    background: transparent !important;
+}
+
+#deleteModal .modal-footer,
+#confirmModal .modal-footer {
+    background: white !important;
+    border-top: 1px solid #e0e0e0 !important;
+}
+
+/* Additional specific fixes for delete modal visibility */
+#deleteModal,
+#confirmModal {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+#deleteModal .modal-content *,
+#confirmModal .modal-content * {
+    color: #333333 !important;
+    text-shadow: none !important;
+}
+
+/* Ensure buttons in delete modal are visible */
+#deleteModal .btn,
+#confirmModal .btn {
+    color: white !important;
+}
+
+#deleteModal .btn-secondary,
+#confirmModal .btn-secondary {
+    background-color: #666666 !important;
+    color: white !important;
+    border: 1px solid #666666 !important;
+}
+
+#deleteModal .btn-danger,
+#confirmModal .btn-danger {
+    background-color: #f44336 !important;
+    color: white !important;
+    border: 1px solid #f44336 !important;
+}
+
+/* Ensure all confirmation dialogs are visible */
+.swal2-container,
+.swal2-popup,
+.confirm-dialog {
+    background: white !important;
+    color: #333333 !important;
+}
+
+.swal2-popup *,
+.confirm-dialog * {
+    color: #333333 !important;
+    background: transparent !important;
+}
+
+/* Ensure all text in time slots is visible */
+.time-slots .time-slot {
+    color: #333333 !important;
+    background: white !important;
+    border: 2px solid #e0e0e0 !important;
+}
+
+.time-slots .time-slot:hover {
+    color: #333333 !important;
+    border-color: var(--primary-color) !important;
+    background-color: rgba(33, 150, 243, 0.05) !important;
+}
+
+.time-slots .time-slot.selected {
+    color: white !important;
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.time-slots .time-slot.booked {
+    color: #999 !important;
+    background-color: #f0f0f0 !important;
+    border-color: #ddd !important;
+}
+
+/* Payment Section Styles */
+.payment-section {
+    margin-top: 20px;
+    padding: 20px;
+    border-top: 2px solid #e0e0e0;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+
+.payment-timer {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.payment-timer p {
+    margin: 5px 0;
+    color: #333 !important;
+    font-size: 1rem;
+}
+
+.countdown-timer {
+    display: inline-block;
+    font-size: 3rem;
+    font-weight: bold;
+    color: #f44336 !important;
+    background: #fff;
+    border: 3px solid #f44336;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    line-height: 74px;
+    margin: 10px;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.payment-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+.payment-buttons p {
+    color: #333 !important;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.btn-payment {
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.instapay-btn {
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    color: white !important;
+}
+
+.instapay-btn:hover {
+    background: linear-gradient(135deg, #5a4fcf, #8b83e6);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+}
+
+.vodafone-btn {
+    background: linear-gradient(135deg, #e74c3c, #ff6b6b);
+    color: white !important;
+}
+
+.vodafone-btn:hover {
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+/* Skip timer button */
+.btn-skip {
+    margin-top: 15px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    background: #ff9800;
+    color: white !important;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-skip:hover {
+    background: #f57c00;
+    transform: translateY(-1px);
+}
+
+/* Payment actions */
+.payment-actions {
+    margin-top: 20px;
+    text-align: center;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #666 !important;
+    border: 2px solid #ddd;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.btn-outline:hover {
+    border-color: #999;
+    color: #333 !important;
+    background: #f5f5f5;
+}
+
+/* Responsive design for payment buttons */
+@media (max-width: 480px) {
+    .payment-buttons {
+        width: 100%;
+    }
+    
+    .btn-payment {
+        min-width: 100%;
+        font-size: 1rem;
+        padding: 12px 20px;
+    }
+    
+    .countdown-timer {
+        font-size: 2.5rem;
+        width: 70px;
+        height: 70px;
+        line-height: 64px;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .booking-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .header .container {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .time-slots {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .booking-form-container,
+    .info-panel {
+        padding: 1.5rem;
+    }
+    
+    .payment-method {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .payment-info {
+        align-items: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 15px;
+    }
+    
+    .hero-title {
+        font-size: 1.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .time-slots {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .time-slot {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Admin Styles */
+.admin-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 20px;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.admin-header h2 {
+    color: var(--primary-color);
+    font-size: 2rem;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.table-container {
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 1rem;
+    text-align: right;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table th {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(33, 150, 243, 0.05);
+}
+
+.login-container {
+    max-width: 400px;
+    margin: 5rem auto;
+    background: var(--card-background);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+.login-container h2 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-confirmed {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: var(--secondary-color);
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-color: #121212;
+        --card-background: #1e1e1e;
+        --text-primary: #ffffff;
+        --text-secondary: #b0b0b0;
+        --border-color: #333333;
+    }
+}
+
+/* Download Modal Styles */
+.download-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.format-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 600;
+    position: relative;
+}
+
+.btn-outline:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+.btn-outline.selected {
+    background: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-outline.selected::after {
+    content: '✓';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--secondary-color);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.form-control {
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-family: inherit;
+    background: white;
+    transition: var(--transition);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+/* Booking status check page styles */
+.check-booking-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.check-form {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.check-form h2 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 30px;
+    font-size: 28px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+    color: #2196F3;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.check-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.check-btn:hover {
+    background: var(--primary-dark);
+}
+
+.check-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.booking-result {
+    display: none;
+}
+
+.booking-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.booking-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.booking-header h4 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-confirmed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-declined {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-expired {
+    background: #f5f5f5;
+    color: #6c757d;
+}
+
+.booking-info {
+    padding: 25px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-row .label {
+    font-weight: 600;
+    color: #555;
+}
+
+.info-row .value {
+    color: #333;
+    font-weight: 500;
+}
+
+.recurring-info {
+    margin-top: 20px;
+    padding: 15px;
+    background: #be0202;
+    border-radius: 8px;
+    border-left: 4px solid #2196f3;
+}
+
+.time-remaining {
+    margin-top: 15px;
+    padding: 12px;
+    background: #fff3cd;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+    font-weight: 600;
+    color: #856404;
+    text-align: center;
+}
+
+.payment-info {
+    margin-top: 20px;
+    padding: 20px;
+    background: #0e78e2;
+    border-radius: 8px;
+    border: 2px dashed #28a745;
+}
+
+.payment-info h4 {
+    margin-top: 0;
+    color: #28a745;
+    font-size: 18px;
+}
+
+.payment-info p {
+    margin: 8px 0;
+    font-weight: 500;
+}
+
+.payment-instructions {
+    margin-top: 15px;
+    padding: 10px;
+    background: #dfdfdf;
+    border-radius: 6px;
+    font-style: italic;
+    color: #155724;
+}
+
+@media (max-width: 768px) {
+    .check-booking-container {
+        padding: 15px;
+    }
+    
+    .check-form {
+        padding: 20px;
+    }
+    
+    .check-form h2 {
+        font-size: 24px;
+    }
+    
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+}
+
+/* Admin panel styles */
+.action-buttons {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.btn-small {
+    padding: 5px 10px;
+    font-size: 12px;
+    min-width: auto;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-confirmed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-declined {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-expired {
+    background: #f5f5f5;
+    color: #6c757d;
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Booking</title>
+</head>
+<body>
+    <h1>Test Booking</h1>
+    <button onclick="testBooking()">Test Booking</button>
+    <div id="result"></div>
+
+    <script>
+        async function testBooking() {
+            try {
+                const response = await fetch('/api/book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: "Test EndTime Fix",
+                        phone: "01234567890",
+                        date: "2025-08-05",
+                        time: "15:00",
+                        duration: 60
+                    })
+                });
+                
+                const result = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+                console.log('Booking result:', result);
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

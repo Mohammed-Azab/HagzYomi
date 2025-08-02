@@ -18,7 +18,7 @@ const XLSX = require('xlsx');
 const { jsPDF } = require('jspdf');
 require('jspdf-autotable');
 // Database
-const SupabaseDatabase = require('./src/database/supabase-database');
+const SupabaseDatabase = require('./supabase-database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,7 +29,7 @@ const db = new SupabaseDatabase();
 // Load configuration from config.json
 let config;
 try {
-    const configFile = fs.readFileSync(path.join(__dirname, 'src/config/config.json'), 'utf8');
+    const configFile = fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8');
     config = JSON.parse(configFile);
     
     // Add admin passwords from environment
@@ -66,27 +66,7 @@ app.use(session({
 }));
 
 // Serve static files
-app.use(express.static('public'));
-
-// Serve main pages
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.get('/admin', (req, res) => {
-    if (!req.session.isAdmin) {
-        return res.redirect('/admin-login');
-    }
-    res.sendFile(path.join(__dirname, 'public/html/admin.html'));
-});
-
-app.get('/admin-login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/html/admin-login.html'));
-});
-
-app.get('/check-booking', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/html/check-booking.html'));
-});
+app.use(express.static(__dirname));
 
 // Helper functions
 async function loadBookings() {
@@ -374,11 +354,6 @@ app.post('/api/book', async (req, res) => {
         
         // Create all booking entries
         let bookingIndex = 0;
-        const totalBookings = allBookingDates.length * timeSlots.length;
-        const pricePerBooking = Math.round((totalPrice * allBookingDates.length) / totalBookings * 100) / 100; // Round to 2 decimal places
-        
-        console.log(`💰 Price distribution: Total=${totalPrice * allBookingDates.length}, Bookings=${totalBookings}, Per booking=${pricePerBooking}`);
-        
         for (const bookingDate of allBookingDates) {
             for (let slotIndex = 0; slotIndex < timeSlots.length; slotIndex++) {
                 // Calculate the actual end time by adding duration to start time
@@ -402,7 +377,7 @@ app.post('/api/book', async (req, res) => {
                     startTime: time,
                     endTime: calculatedEndTime,
                     createdAt: new Date().toISOString(),
-                    price: pricePerBooking,
+                    price: (bookingIndex === 0 && slotIndex === 0) ? totalPrice * allBookingDates.length : 0,
                     status: status,
                     expiresAt: requirePaymentConfirmation ? 
                         new Date(Date.now() + (config.features && config.features.paymentTimeoutMinutes || 60) * 60 * 1000).toISOString() : 

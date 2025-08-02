@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل دخول الإدارة - مركز شباب قرموط صهبرة</title>
+
+    <!-- Author & Copyright Information -->
+    <meta name="author" content="Mohammed Azab">
+    <meta name="contact" content="Mohammed@azab.io">
+    <meta name="copyright" content="© 2025 Mohammed Azab. All rights reserved.">
+    <meta name="description" content="صفحة تسجيل دخول الإدارة - تطوير Mohammed Azab">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>⚽ مركز شباب قرموط صهبرة</h1>
+                <p>لوحة إدارة النظام</p>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-link">الرئيسية</a>
+                <a href="/admin" class="nav-link active">لوحة الإدارة</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="login-container">
+            <h2>🔐 تسجيل دخول الإدارة</h2>
+            
+            <form id="loginForm" class="booking-form">
+                <div class="form-group">
+                    <label for="password">كلمة المرور</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    تسجيل الدخول
+                </button>
+            </form>
+            
+            <div id="errorMsg" style="color: var(--danger-color); margin-top: 1rem; text-align: center; display: none;"></div>
+        </div>
+    </main>
+
+    <footer class="footer" style="position: fixed; bottom: 0; width: 100%; padding: 1rem 0; background-color: var(--card-background); border-top: 1px solid var(--border-color);">
+        <div class="container">
+            <p style="text-align: center; font-size: 0.9rem; color: #666; margin: 0;">
+                &copy; 2025 حجز يومي. جميع الحقوق محفوظة. | 
+                تطوير: <a href="mailto:Mohammed@azab.io" style="color: #2196F3; text-decoration: none;">Mohammed Azab</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        let config = {};
+        
+        // Load configuration and update page
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                config = await response.json();
+                updatePageTitle();
+            } catch (error) {
+                console.error('Error loading config:', error);
+            }
+        }
+        
+        // Update page title and header with config
+        function updatePageTitle() {
+            if (config.courtName) {
+                // Update page title
+                document.title = `تسجيل الدخول - ${config.courtName}`;
+                
+                // Update header title
+                const logoTitle = document.querySelector('.logo h1');
+                if (logoTitle) {
+                    logoTitle.textContent = `⚽ ${config.ui?.headerTitle || config.courtName}`;
+                }
+                
+                // Update CSS variables if UI config is provided
+                if (config.ui && config.ui.primaryColor) {
+                    document.documentElement.style.setProperty('--primary-color', config.ui.primaryColor);
+                    document.documentElement.style.setProperty('--accent-color', config.ui.primaryColor);
+                }
+            }
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConfig();
+        });
+        
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMsg = document.getElementById('errorMsg');
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            
+            if (!password) {
+                showError('يرجى إدخال كلمة المرور');
+                return;
+            }
+            
+            try {
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'جاري تسجيل الدخول...';
+                
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.href = '/admin';
+                } else {
+                    showError(result.message || 'كلمة مرور خاطئة');
+                }
+                
+            } catch (error) {
+                showError('حدث خطأ في الاتصال');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'تسجيل الدخول';
+            }
+        });
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            setTimeout(() => {
+                errorMsg.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
