@@ -375,9 +375,9 @@ app.post('/api/book', async (req, res) => {
         // Create all booking entries
         let bookingIndex = 0;
         const totalBookings = allBookingDates.length * timeSlots.length;
-        const pricePerBooking = Math.round((totalPrice * allBookingDates.length) / totalBookings * 100) / 100; // Round to 2 decimal places
+        const pricePerBooking = Math.round((totalPrice) / timeSlots.length * 100) / 100; // Round to 2 decimal places
         
-        console.log(`💰 Price distribution: Total=${totalPrice * allBookingDates.length}, Bookings=${totalBookings}, Per booking=${pricePerBooking}`);
+        console.log(`💰 Price distribution: Total=${totalPrice}, Duration=${duration}min, Slots=${timeSlots.length}, Weeks=${allBookingDates.length}, Per booking=${pricePerBooking}`);
         
         for (const bookingDate of allBookingDates) {
             for (let slotIndex = 0; slotIndex < timeSlots.length; slotIndex++) {
@@ -481,7 +481,50 @@ app.get('/api/admin/bookings', async (req, res) => {
     
     try {
         const bookings = await loadBookings();
-        res.json(bookings);
+        
+        // Group bookings by booking number and calculate totals
+        const groupedBookings = {};
+        
+        bookings.forEach(booking => {
+            const bookingNumber = booking.bookingNumber;
+            
+            if (!groupedBookings[bookingNumber]) {
+                // First booking in this group - use it as the base
+                groupedBookings[bookingNumber] = {
+                    ...booking,
+                    totalPrice: 0,
+                    allSlots: [],
+                    allDates: new Set()
+                };
+            }
+            
+            // Add to totals
+            groupedBookings[bookingNumber].totalPrice += (booking.price || 0);
+            groupedBookings[bookingNumber].allSlots.push(booking.time);
+            groupedBookings[bookingNumber].allDates.add(booking.date);
+        });
+        
+        // Convert to array and format the results
+        const result = Object.values(groupedBookings).map(group => ({
+            id: group.id,
+            bookingNumber: group.bookingNumber,
+            name: group.name,
+            phone: group.phone,
+            date: group.date, // First date
+            time: group.time, // First time slot
+            duration: group.duration || 30,
+            price: group.totalPrice, // Total price for all slots
+            status: group.status,
+            createdAt: group.createdAt,
+            expiresAt: group.expiresAt,
+            isRecurring: group.isRecurring || false,
+            recurringWeeks: group.recurringWeeks || 1,
+            // Additional info for display
+            allDates: [...group.allDates].sort(),
+            totalSlots: group.allSlots.length
+        }));
+        
+        res.json(result);
     } catch (error) {
         console.error('Error fetching bookings:', error);
         res.status(500).json({ error: 'خطأ في قاعدة البيانات' });
