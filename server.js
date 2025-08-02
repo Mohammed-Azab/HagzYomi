@@ -204,6 +204,58 @@ async function generateBookingNumber() {
     return bookingNumber;
 }
 
+// Function to automatically expire unpaid bookings after 1 hour
+async function expireOldBookings() {
+    try {
+        const bookings = await loadBookings();
+        const now = new Date();
+        let expiredCount = 0;
+        
+        for (const booking of bookings) {
+            // Only check pending bookings that have a creation time
+            if (booking.status === 'pending' && booking.createdAt) {
+                const createdTime = new Date(booking.createdAt);
+                const hoursSinceCreated = (now - createdTime) / (1000 * 60 * 60); // Convert to hours
+                
+                // If more than 1 hour has passed, mark as expired
+                if (hoursSinceCreated >= 1) {
+                    await db.updateBooking(booking.id, { 
+                        status: 'expired',
+                        expiredAt: now.toISOString()
+                    });
+                    expiredCount++;
+                }
+            }
+        }
+        
+        if (expiredCount > 0) {
+            console.log(`⏰ Expired ${expiredCount} unpaid bookings older than 1 hour`);
+        }
+        
+        return expiredCount;
+    } catch (error) {
+        console.error('Error expiring old bookings:', error);
+        return 0;
+    }
+}
+
+// Function to get available slots (excluding expired bookings)
+async function getAvailableSlots(date) {
+    await expireOldBookings(); // Clean up expired bookings first
+    
+    const bookings = await loadBookings();
+    // Only consider confirmed and pending bookings as "booked"
+    // Expired and declined bookings free up the slots
+    const bookedSlots = bookings
+        .filter(booking => 
+            booking.date === date && 
+            (booking.status === 'confirmed' || booking.status === 'pending')
+        )
+        .map(booking => booking.time);
+    
+    return bookedSlots;
+}
+
 // Routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
@@ -286,10 +338,8 @@ app.get('/api/slots/:date', async (req, res) => {
     }
     
     try {
-        const bookings = await loadBookings();
-        const bookedSlots = bookings
-            .filter(booking => booking.date === date)
-            .map(booking => booking.time);
+        // Get booked slots (excluding expired bookings)
+        const bookedSlots = await getAvailableSlots(date);
         
         const allSlots = getTimeSlots();
         const now = new Date();
@@ -350,6 +400,12 @@ app.post('/api/book', async (req, res) => {
         
         const bookings = await loadBookings();
         
+        // Expire old bookings first
+        await expireOldBookings();
+        
+        // Get fresh bookings after expiration
+        const currentBookings = await loadBookings();
+        
         // Generate time slots needed
         const timeSlots = [];
         const allSlots = getTimeSlots();
@@ -369,10 +425,12 @@ app.post('/api/book', async (req, res) => {
             timeSlots.push(allSlots[startIndex + i]);
         }
         
-        // Check if slots are available
+        // Check if slots are available (only confirmed and pending bookings count)
         for (const slot of timeSlots) {
-            const existingBooking = bookings.find(booking => 
-                booking.date === date && booking.time === slot
+            const existingBooking = currentBookings.find(booking => 
+                booking.date === date && 
+                booking.time === slot &&
+                (booking.status === 'confirmed' || booking.status === 'pending')
             );
             
             if (existingBooking) {
@@ -727,6 +785,25 @@ app.post('/api/admin/logout', (req, res) => {
     });
 });
 
+// Manual cleanup of expired bookings (admin only)
+app.post('/api/admin/cleanup-expired', async (req, res) => {
+    if (!req.session.isAdmin) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    try {
+        const expiredCount = await expireOldBookings();
+        res.json({ 
+            success: true, 
+            message: `تم انتهاء صلاحية ${expiredCount} حجز غير مدفوع`,
+            expiredCount: expiredCount
+        });
+    } catch (error) {
+        console.error('Error in manual cleanup:', error);
+        res.status(500).json({ error: 'خطأ في تنظيف الحجوزات المنتهية الصلاحية' });
+    }
+});
+
 // Debug endpoint to check bookings (remove in production)
 app.get('/api/debug/bookings', async (req, res) => {
     try {
@@ -985,6 +1062,15 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log('🎯 Render deployment ready! 🌟');
     console.log('🗄️ Using Supabase cloud database for data persistence');
     console.log('═══════════════════════════════════════════════════════');
+    
+    // Start automatic booking expiration cleanup (runs every 30 minutes)
+    console.log('⏰ Starting automatic booking expiration cleanup...');
+    setInterval(async () => {
+        await expireOldBookings();
+    }, 30 * 60 * 1000); // 30 minutes
+    
+    // Run initial cleanup
+    expireOldBookings();
 });
 
 // Graceful shutdown
