@@ -15,7 +15,7 @@
   ],
   "maxHoursPerPersonPerDay": 2,
   "slotDurationMinutes": 30,
-  "maxBookingDaysAhead": 120,
+  "maxBookingDaysAhead": 240,
   "currency": "جنيه",
   "pricePerHour": 50,
   "contactInfo": {
