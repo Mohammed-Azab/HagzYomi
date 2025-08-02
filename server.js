@@ -578,12 +578,14 @@ app.post('/api/check-booking', async (req, res) => {
         const { bookingNumber, name } = req.body;
         
         if (!bookingNumber || !name) {
-            return res.json({ success: false, message: 'رقم الحجز والاسم مطلوبان' });
+            return res.json({ success: false, message: 'رقم الحجز/رقم الهاتف والاسم مطلوبان' });
         }
         
         const bookings = await loadBookings();
+        
+        // Search by either booking number OR phone number
         const booking = bookings.find(b => 
-            b.bookingNumber === bookingNumber && 
+            (b.bookingNumber === bookingNumber || b.phone === bookingNumber) && 
             b.name.toLowerCase() === name.toLowerCase()
         );
         

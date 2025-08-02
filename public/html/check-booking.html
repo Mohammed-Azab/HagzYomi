@@ -33,7 +33,7 @@
         <div class="container">
             <section class="hero">
                 <h2 class="hero-title">فحص حالة الحجز</h2>
-                <p class="hero-subtitle">أدخل رقم الحجز والاسم للتحقق من حالة حجزك</p>
+                <p class="hero-subtitle">أدخل رقم الحجز أو رقم الهاتف مع الاسم للتحقق من حالة حجزك</p>
             </section>
 
             <section class="booking-section">
@@ -42,9 +42,9 @@
                     
                     <form class="booking-form" id="checkBookingForm">
                         <div class="form-group">
-                            <label for="bookingNumber">رقم الحجز</label>
+                            <label for="bookingNumber">رقم الحجز أو رقم الهاتف</label>
                             <input type="text" id="bookingNumber" name="bookingNumber" required 
-                                   placeholder="أدخل رقم الحجز (مثال: BK2025080112345)">
+                                   placeholder="أدخل رقم الحجز (مثال: BK2025080112345) أو رقم الهاتف">
                         </div>
                         
                         <div class="form-group">
@@ -56,6 +56,14 @@
                         <button type="submit" class="btn btn-primary" id="checkBtn">
                             فحص الحجز
                         </button>
+                        
+                        <div class="search-note">
+                            <p><strong>💡 يمكنك البحث بإحدى الطرق التالية:</strong></p>
+                            <ul>
+                                <li>رقم الحجز مع الاسم</li>
+                                <li>رقم الهاتف مع الاسم</li>
+                            </ul>
+                        </div>
                     </form>
                 </div>
 

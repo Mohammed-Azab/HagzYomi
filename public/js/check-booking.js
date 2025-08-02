@@ -8,7 +8,7 @@
 
 // DOM elements
 const checkBookingForm = document.getElementById('checkBookingForm');
-const bookingNumberInput = document.getElementById('bookingNumber');
+const bookingNumberInput = document.getElementById('bookingNumber'); // Can be booking number or phone number
 const customerNameInput = document.getElementById('customerName');
 const checkBtn = document.getElementById('checkBtn');
 const bookingResult = document.getElementById('bookingResult');
@@ -74,7 +74,7 @@ async function handleFormSubmit(event) {
     const customerName = customerNameInput.value.trim();
     
     if (!bookingNumber || !customerName) {
-        showError('يرجى إدخال رقم الحجز والاسم');
+        showError('يرجى إدخال رقم الحجز/رقم الهاتف والاسم');
         return;
     }
     
@@ -125,12 +125,22 @@ function displayBookingDetails(booking) {
     
     let paymentInfo = '';
     if (booking.status === 'pending' && booking.paymentInfo) {
+        const paymentLinkButton = booking.paymentInfo.instaPayLink 
+            ? `<div class="payment-link-section">
+                 <button class="payment-link-btn" onclick="window.open('${booking.paymentInfo.instaPayLink}', '_blank')">
+                   🔗 يرجى إرسال قيمة الحجز لتأكيد حجزك
+                 </button>
+               </div>` 
+            : '';
+            
         paymentInfo = `
             <div class="payment-info">
                 <h4>معلومات الدفع:</h4>
                 <p><strong>فودافون كاش:</strong> ${booking.paymentInfo.vodafoneCash}</p>
                 <p><strong>إنستاباي:</strong> ${booking.paymentInfo.instaPay}</p>
+                ${booking.paymentInfo.instaPayLink ? `<p><strong>رابط الدفع:</strong> ${booking.paymentInfo.instaPayLink}</p>` : ''}
                 <p class="payment-instructions">${booking.paymentInfo.instructions}</p>
+                ${paymentLinkButton}
             </div>
         `;
     }
