@@ -1,5 +1,11 @@
 /**
- * HagzYomi - Football Court Booking System Frontend
+ * Ha// Global variables
+let config = {};
+let selectedDate = null;
+let selectedTime = null;
+let countdownInterval = null; // Add global countdown control
+
+// DOM elements - Football Court Booking System Frontend
  * 
  * @author Mohammed Azab
  * @email Mohammed@azab.io
@@ -662,10 +668,19 @@ function startPaymentCountdown() {
     const timeoutSeconds = config.paymentInfo?.paymentTimeoutSeconds || 10;
     let secondsLeft = timeoutSeconds;
     
+    // Clear any existing countdown
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+    }
+    
     const updateCountdown = () => {
         countdownElement.textContent = secondsLeft;
         
         if (secondsLeft <= 0) {
+            // Clear the interval
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+            
             // Redirect to InstaPay link automatically
             if (config.paymentInfo?.instaPayLink) {
                 window.open(config.paymentInfo.instaPayLink, '_blank');
@@ -674,22 +689,65 @@ function startPaymentCountdown() {
         }
         
         secondsLeft--;
-        setTimeout(updateCountdown, 1000);
     };
     
-    updateCountdown();
+    // Start the countdown
+    updateCountdown(); // Initial call
+    countdownInterval = setInterval(updateCountdown, 1000);
 }
 
 // Setup payment buttons
 function setupPaymentButtons() {
     const instaPayBtn = document.getElementById('instaPayBtn');
     const vodafoneBtn = document.getElementById('vodafoneBtn');
+    const skipTimerBtn = document.getElementById('skipTimerBtn');
+    const hidePaymentBtn = document.getElementById('hidePaymentBtn');
     
     // InstaPay button handler
     if (instaPayBtn) {
         instaPayBtn.onclick = () => {
             if (config.paymentInfo?.instaPayLink) {
                 window.open(config.paymentInfo.instaPayLink, '_blank');
+            }
+        };
+    }
+    
+    // Skip timer button handler
+    if (skipTimerBtn) {
+        skipTimerBtn.onclick = () => {
+            // Stop the countdown
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            
+            // Open InstaPay immediately
+            if (config.paymentInfo?.instaPayLink) {
+                window.open(config.paymentInfo.instaPayLink, '_blank');
+            }
+            
+            // Update UI to show timer was skipped
+            const countdownElement = document.getElementById('countdownTimer');
+            countdownElement.textContent = '✓';
+            countdownElement.style.background = '#4CAF50';
+            countdownElement.style.borderColor = '#4CAF50';
+            
+            skipTimerBtn.textContent = 'تم فتح صفحة الدفع ✓';
+            skipTimerBtn.style.background = '#4CAF50';
+            skipTimerBtn.disabled = true;
+        };
+    }
+    
+    // Hide payment section button handler
+    if (hidePaymentBtn) {
+        hidePaymentBtn.onclick = () => {
+            const paymentSection = document.getElementById('paymentSection');
+            paymentSection.style.display = 'none';
+            
+            // Stop countdown if running
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
             }
         };
     }
@@ -752,6 +810,12 @@ function setupModalHandlers() {
 }
 
 function hideSuccessModal() {
+    // Stop countdown timer if running
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
+    
     successModal.classList.remove('show');
 }
 
