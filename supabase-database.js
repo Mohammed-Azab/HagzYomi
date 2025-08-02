@@ -39,19 +39,48 @@ class SupabaseDatabase {
         }
     }
 
+    // Convert database row (lowercase) to application format (camelCase)
+    transformBookingFromDb(dbBooking) {
+        if (!dbBooking) return null;
+        
+        return {
+            id: dbBooking.id,
+            groupId: dbBooking.groupid,
+            bookingNumber: dbBooking.bookingnumber,
+            name: dbBooking.name,
+            phone: dbBooking.phone,
+            date: dbBooking.date,
+            time: dbBooking.time,
+            duration: dbBooking.duration,
+            totalSlots: dbBooking.totalslots,
+            slotIndex: dbBooking.slotindex,
+            startTime: dbBooking.starttime,
+            endTime: dbBooking.endtime,
+            createdAt: dbBooking.createdat,
+            price: dbBooking.price,
+            status: dbBooking.status,
+            expiresAt: dbBooking.expiresat,
+            isRecurring: dbBooking.isrecurring,
+            recurringWeeks: dbBooking.recurringweeks,
+            bookingDates: dbBooking.bookingdates ? JSON.parse(dbBooking.bookingdates) : null,
+            paymentInfo: dbBooking.paymentinfo ? JSON.parse(dbBooking.paymentinfo) : null
+        };
+    }
+
     async getAllBookings() {
         try {
             const { data, error } = await this.supabase
                 .from('bookings')
                 .select('*')
-                .order('createdAt', { ascending: false });
+                .order('createdat', { ascending: false });
 
             if (error) {
                 console.error('Supabase error:', error);
                 return [];
             }
 
-            return data || [];
+            // Transform all bookings from database format to application format
+            return (data || []).map(booking => this.transformBookingFromDb(booking));
         } catch (error) {
             console.error('Database error:', error);
             return [];
@@ -60,9 +89,41 @@ class SupabaseDatabase {
 
     async createBooking(booking) {
         try {
+            // Convert camelCase properties to lowercase for PostgreSQL
+            // Only include columns that actually exist in the table
+            const dbBooking = {
+                id: booking.id,
+                groupid: booking.groupId,
+                bookingnumber: booking.bookingNumber,
+                name: booking.name,
+                phone: booking.phone,
+                date: booking.date,
+                time: booking.time,
+                duration: booking.duration || 30,
+                totalslots: booking.totalSlots,
+                slotindex: booking.slotIndex,
+                starttime: booking.startTime,
+                endtime: booking.endTime,
+                createdat: booking.createdAt || new Date().toISOString(),
+                price: booking.price || 0,
+                status: booking.status || 'confirmed',
+                expiresat: booking.expiresAt,
+                isrecurring: booking.isRecurring || false,
+                recurringweeks: booking.recurringWeeks || 1,
+                bookingdates: booking.bookingDates ? JSON.stringify(booking.bookingDates) : null,
+                paymentinfo: booking.paymentInfo ? JSON.stringify(booking.paymentInfo) : null
+            };
+
+            // Remove undefined/null values to avoid issues
+            Object.keys(dbBooking).forEach(key => {
+                if (dbBooking[key] === undefined) {
+                    delete dbBooking[key];
+                }
+            });
+
             const { data, error } = await this.supabase
                 .from('bookings')
-                .insert([booking])
+                .insert([dbBooking])
                 .select();
 
             if (error) {
@@ -70,7 +131,8 @@ class SupabaseDatabase {
                 throw error;
             }
 
-            return data[0];
+            // Transform back to camelCase format
+            return this.transformBookingFromDb(data[0]);
         } catch (error) {
             console.error('Error creating booking in Supabase:', error);
             throw error;
@@ -79,9 +141,18 @@ class SupabaseDatabase {
 
     async updateBooking(id, updates) {
         try {
+            // Convert camelCase updates to lowercase for PostgreSQL
+            // Only include columns that actually exist
+            const dbUpdates = {};
+            
+            if (updates.status !== undefined) dbUpdates.status = updates.status;
+            if (updates.expiresAt !== undefined) dbUpdates.expiresat = updates.expiresAt;
+            if (updates.price !== undefined) dbUpdates.price = updates.price;
+            // Note: confirmedAt and declinedAt columns don't exist in current table
+            
             const { data, error } = await this.supabase
                 .from('bookings')
-                .update(updates)
+                .update(dbUpdates)
                 .eq('id', id)
                 .select();
 
@@ -90,7 +161,7 @@ class SupabaseDatabase {
                 throw error;
             }
 
-            return data[0];
+            return this.transformBookingFromDb(data[0]);
         } catch (error) {
             console.error('Error updating booking in Supabase:', error);
             throw error;

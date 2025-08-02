@@ -14,6 +14,9 @@
     "setup-supabase": "node setup-supabase.js",
     "setup-db": "node setup-supabase.js",
     "test-env": "node test-env.js",
+    "test-db": "node test-database.js",
+    "test-booking": "node test-booking.js",
+    "debug-bookings": "node debug-bookings.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
