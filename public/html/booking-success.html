@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تم الحجز بنجاح - مركز شباب قرموط صهبرة</title>
+
+    <!-- Author & Copyright Information -->
+    <meta name="author" content="Mohammed Azab">
+    <meta name="contact" content="Mohammed@azab.io">
+    <meta name="copyright" content="© 2025 Mohammed Azab. All rights reserved.">
+    <meta name="description" content="صفحة تأكيد الحجز - تطوير Mohammed Azab">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    
+    <style>
+        .success-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .success-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .success-icon {
+            font-size: 4rem;
+            color: #4CAF50;
+            margin-bottom: 20px;
+            animation: bounce 1s ease-in-out;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        .success-title {
+            color: #2E7D32;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .booking-number {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 20px 0;
+            letter-spacing: 2px;
+        }
+        
+        .booking-details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: right;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .detail-value {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .payment-section {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .payment-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .payment-info {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .payment-method {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .payment-method span {
+            color: white;
+        }
+        
+        .payment-method span:last-child {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+        
+        .timer-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .timer-text {
+            color: #856404;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .countdown {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #d4910c;
+            margin-top: 10px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-payment {
+            flex: 1;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            min-width: 120px;
+        }
+        
+        .btn-payment:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+        }
+        
+        .btn-instapay {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        }
+        
+        .btn-instapay:hover {
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+        }
+        
+        .instructions {
+            background: #e8f5e8;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #2e7d32;
+            text-align: right;
+        }
+        
+        @media (max-width: 768px) {
+            .success-card {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .success-title {
+                font-size: 1.5rem;
+            }
+            
+            .booking-number {
+                font-size: 1.3rem;
+                padding: 12px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn-payment {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-card">
+            <div class="success-icon">✅</div>
+            <h1 class="success-title">تم الحجز بنجاح!</h1>
+            
+            <div class="booking-number" id="bookingNumber">
+                رقم الحجز: <span id="confirmationCode">------</span>
+            </div>
+            
+            <div class="booking-details" id="bookingDetails">
+                <!-- Booking details will be populated here -->
+            </div>
+            
+            <div class="timer-section" id="timerSection" style="display: none;">
+                <div class="timer-text">⏰ الوقت المتبقي للدفع</div>
+                <div class="countdown" id="countdown">60:00</div>
+            </div>
+            
+            <div class="payment-section" id="paymentSection" style="display: none;">
+                <h3 class="payment-title">💳 معلومات الدفع</h3>
+                
+                <div class="payment-info">
+                    <div class="payment-method">
+                        <span>📱 فودافون كاش:</span>
+                        <span id="vodafoneNumber">----------</span>
+                    </div>
+                    <div class="payment-method">
+                        <span>💳 إنستاباي:</span>
+                        <span id="instaPayName">----------</span>
+                    </div>
+                </div>
+                
+                <div class="instructions" id="paymentInstructions">
+                    يرجى إرسال قيمة الحجز خلال ساعة واحدة لتأكيد الحجز
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn-payment btn-instapay" id="instaPayBtn" style="display: none;">
+                    💳 رابط انستاباي
+                </button>
+                <a href="/check-booking.html" class="btn-payment btn-secondary">
+                    🔍 فحص الحجز
+                </a>
+                <a href="/" class="btn-payment">
+                    🏠 العودة للرئيسية
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/booking-success.js"></script>
+</body>
+</html>

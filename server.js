@@ -277,6 +277,14 @@ app.get('/check-booking.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/html/check-booking.html'));
 });
 
+app.get('/booking-success', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/html/booking-success.html'));
+});
+
+app.get('/booking-success.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/html/booking-success.html'));
+});
+
 // API Routes
 app.get('/api/config', (req, res) => {
     const publicConfig = { ...config };

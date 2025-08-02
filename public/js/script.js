@@ -628,57 +628,24 @@ ${result.booking.paymentInfo.instaPay ? `💳 إنستاباي: ${result.booking
 // Show success modal
 function showSuccess(message, booking = null) {
     console.log('🔍 showSuccess called with:', { message, booking });
-    console.log('🔍 successMessage element:', successMessage);
-    console.log('🔍 successModal element:', successModal);
     
-    if (!successMessage) {
-        console.error('❌ successMessage element not found!');
-        alert('Success: ' + message); // Fallback
-        return;
-    }
-    
-    if (!successModal) {
-        console.error('❌ successModal element not found!');
-        alert('Success: ' + message); // Fallback
-        return;
-    }
-    
-    successMessage.textContent = message;
-    console.log('✅ Set success message text');
-    
-    // Check if payment is required and payment info is available
-    const paymentSection = document.getElementById('paymentSection');
-    const requiresPayment = booking && booking.status === 'pending' && 
-                           config.features && config.features.requirePaymentConfirmation;
-    
-    console.log('🔍 Payment section:', paymentSection);
-    console.log('🔍 Requires payment:', requiresPayment);
-    
-    if (requiresPayment && config.paymentInfo) {
-        // Show payment section
-        paymentSection.style.display = 'block';
+    if (booking) {
+        // Store booking data in sessionStorage for the success page
+        const sessionKey = `booking_${booking.id}`;
+        const bookingData = {
+            ...booking,
+            createdAt: new Date().toISOString(), // Add creation time for countdown
+            message: message
+        };
         
-        // Update payment info
-        const vodafoneNumber = document.getElementById('vodafoneNumber');
-        if (vodafoneNumber && config.paymentInfo.vodafoneCash) {
-            vodafoneNumber.textContent = config.paymentInfo.vodafoneCash;
-        }
+        sessionStorage.setItem(sessionKey, JSON.stringify(bookingData));
         
-        // Start countdown timer
-        startPaymentCountdown();
-        
-        // Setup payment button handlers
-        setupPaymentButtons();
+        // Redirect to success page
+        window.location.href = `/booking-success.html?booking=${booking.id}`;
     } else {
-        // Hide payment section for regular bookings
-        if (paymentSection) {
-            paymentSection.style.display = 'none';
-        }
+        // Fallback for bookings without data
+        alert(message);
     }
-    
-    console.log('🔍 About to show modal...');
-    successModal.classList.add('show');
-    console.log('✅ Modal should be visible now');
 }
 
 // Start payment countdown timer
