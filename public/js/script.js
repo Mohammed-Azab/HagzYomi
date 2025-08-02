@@ -759,25 +759,21 @@ function setupPaymentButtons() {
         };
     }
     
-    // Vodafone Cash button handler (copy number to clipboard)
+    // Vodafone Cash button handler (redirect to USSD code)
     if (vodafoneBtn) {
         vodafoneBtn.onclick = () => {
-            if (config.paymentInfo?.vodafoneCash) {
-                navigator.clipboard.writeText(config.paymentInfo.vodafoneCash).then(() => {
-                    // Show temporary feedback
-                    const originalText = vodafoneBtn.innerHTML;
-                    vodafoneBtn.innerHTML = '✅ تم نسخ الرقم';
-                    vodafoneBtn.style.background = 'linear-gradient(135deg, #4CAF50, #66BB6A)';
-                    
-                    setTimeout(() => {
-                        vodafoneBtn.innerHTML = originalText;
-                        vodafoneBtn.style.background = 'linear-gradient(135deg, #e74c3c, #ff6b6b)';
-                    }, 2000);
-                }).catch(() => {
-                    // Fallback: show number in alert
-                    alert(`رقم فودافون كاش: ${config.paymentInfo.vodafoneCash}`);
-                });
-            }
+            // First try to open the USSD code
+            window.open('tel:*9*7*01157000063*200#', '_self');
+            
+            // Also show feedback that we're redirecting
+            const originalText = vodafoneBtn.innerHTML;
+            vodafoneBtn.innerHTML = '📱 جاري فتح فودافون كاش...';
+            vodafoneBtn.style.background = 'linear-gradient(135deg, #4CAF50, #66BB6A)';
+            
+            setTimeout(() => {
+                vodafoneBtn.innerHTML = originalText;
+                vodafoneBtn.style.background = 'linear-gradient(135deg, #e74c3c, #ff6b6b)';
+            }, 3000);
         };
     }
 }
