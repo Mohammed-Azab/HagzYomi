@@ -431,7 +431,6 @@ app.post('/api/book', async (req, res) => {
         
         res.json(response);
     } catch (error) {
-        console.error('Error creating booking:', error);
         res.status(500).json({ success: false, message: 'خطأ في قاعدة البيانات' });
     }
 });
