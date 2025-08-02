@@ -10,29 +10,29 @@ const { createClient } = require('@supabase/supabase-js');
 
 class SupabaseDatabase {
     constructor() {
-        // You'll need to set these environment variables or add them to config
-        this.supabaseUrl = process.env.SUPABASE_URL || 'YOUR_SUPABASE_URL';
-        this.supabaseKey = process.env.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+        // Get Supabase credentials from environment variables
+        this.supabaseUrl = process.env.SUPABASE_URL;
+        this.supabaseKey = process.env.SUPABASE_ANON_KEY;
         
-        if (this.supabaseUrl === 'YOUR_SUPABASE_URL' || this.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
-            console.log('⚠️  Supabase not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to environment variables.');
-            console.log('📋 For now, using SQLite as fallback...');
-            this.useSupabase = false;
-            // Fall back to SQLite
-            const Database = require('./database');
-            this.fallbackDb = new Database();
-        } else {
+        if (!this.supabaseUrl || !this.supabaseKey) {
+            console.error('❌ SUPABASE_URL and SUPABASE_ANON_KEY environment variables are required');
+            console.error('📋 Please set up Supabase first:');
+            console.error('   1. Run: npm run setup-supabase');
+            console.error('   2. Or read: SUPABASE_SETUP.md');
+            console.error('   3. Restart server after configuration');
+            process.exit(1);
+        }
+        
+        try {
             this.supabase = createClient(this.supabaseUrl, this.supabaseKey);
-            this.useSupabase = true;
             console.log('✅ Connected to Supabase cloud database');
+        } catch (error) {
+            console.error('❌ Failed to connect to Supabase:', error.message);
+            process.exit(1);
         }
     }
 
     async getAllBookings() {
-        if (!this.useSupabase) {
-            return this.fallbackDb.getAllBookings();
-        }
-
         try {
             const { data, error } = await this.supabase
                 .from('bookings')
@@ -46,16 +46,12 @@ class SupabaseDatabase {
 
             return data || [];
         } catch (error) {
-            console.error('Error fetching bookings from Supabase:', error);
+            console.error('Database error:', error);
             return [];
         }
     }
 
     async createBooking(booking) {
-        if (!this.useSupabase) {
-            return this.fallbackDb.createBooking(booking);
-        }
-
         try {
             const { data, error } = await this.supabase
                 .from('bookings')
@@ -75,10 +71,6 @@ class SupabaseDatabase {
     }
 
     async updateBooking(id, updates) {
-        if (!this.useSupabase) {
-            return this.fallbackDb.updateBooking(id, updates);
-        }
-
         try {
             const { data, error } = await this.supabase
                 .from('bookings')
@@ -99,10 +91,6 @@ class SupabaseDatabase {
     }
 
     async deleteBooking(id) {
-        if (!this.useSupabase) {
-            return this.fallbackDb.deleteBooking(id);
-        }
-
         try {
             const { error } = await this.supabase
                 .from('bookings')
@@ -122,19 +110,12 @@ class SupabaseDatabase {
     }
 
     close() {
-        if (!this.useSupabase && this.fallbackDb) {
-            this.fallbackDb.close();
-        }
         // Supabase doesn't need explicit closing
+        console.log('ℹ️  Supabase connection closed');
     }
 
     // Setup method to create the bookings table in Supabase
     async setupTable() {
-        if (!this.useSupabase) {
-            console.log('Using SQLite, no table setup needed.');
-            return;
-        }
-
         console.log(`
 📋 Supabase Table Setup Instructions:
 
