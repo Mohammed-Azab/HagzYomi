@@ -397,6 +397,11 @@ app.post('/api/book', async (req, res) => {
             }
         }
         
+        // Calculate end time
+        const startTime = new Date(`2000-01-01T${time}:00`);
+        const endTime = new Date(startTime.getTime() + duration * 60000);
+        const endTimeString = endTime.toTimeString().slice(0, 5);
+        
         const response = { 
             success: true, 
             booking: {
@@ -406,6 +411,7 @@ app.post('/api/book', async (req, res) => {
                 phone,
                 date,
                 startTime: time,
+                endTime: endTimeString,
                 duration,
                 price: totalPrice * allBookingDates.length,
                 status: status,

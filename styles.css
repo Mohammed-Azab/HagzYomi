@@ -403,6 +403,44 @@ body {
     background: rgba(33, 150, 243, 0.05);
     border-radius: var(--border-radius);
     border: 1px solid rgba(33, 150, 243, 0.1);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.payment-method:hover {
+    background: rgba(33, 150, 243, 0.1);
+    border-color: rgba(33, 150, 243, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+/* Specific styling for InstaPay to make it stand out */
+.payment-method.instapay-clickable {
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(162, 155, 254, 0.1));
+    border: 2px solid rgba(108, 92, 231, 0.3);
+}
+
+.payment-method.instapay-clickable:hover {
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(162, 155, 254, 0.2));
+    border-color: rgba(108, 92, 231, 0.5);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(108, 92, 231, 0.3);
+}
+
+.payment-method.instapay-clickable::after {
+    content: "👆 اضغط للدفع";
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    color: #6c5ce7;
+    font-weight: bold;
+    opacity: 0.7;
+}
+
+.payment-method {
+    position: relative;
 }
 
 .payment-icon {

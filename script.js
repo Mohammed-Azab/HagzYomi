@@ -156,6 +156,24 @@ function setupEventListeners() {
     
     // Modal close handlers
     setupModalHandlers();
+    
+    // InstaPay click handler for main page
+    setupInstaPayHandler();
+}
+
+// Setup InstaPay click handler for main page
+function setupInstaPayHandler() {
+    const instaPayMethod = document.getElementById('instaPayMethod');
+    if (instaPayMethod) {
+        instaPayMethod.addEventListener('click', function() {
+            if (config.paymentInfo?.instaPayLink) {
+                window.open(config.paymentInfo.instaPayLink, '_blank');
+            } else {
+                // Fallback if link is not available
+                alert('سيتم توجيهك لصفحة الدفع قريباً');
+            }
+        });
+    }
 }
 
 // Handle recurring booking toggle
@@ -544,7 +562,7 @@ async function handleFormSubmit(event) {
             let successMessage = '';
             
             // Handle payment confirmation scenario
-            if (result.booking.paymentRequired) {
+            if (result.booking.status === 'pending' && result.booking.paymentInfo) {
                 successMessage = `✅ تم إنشاء حجزك بنجاح!
 
 🔢 رقم الحجز: ${result.booking.bookingNumber}
