@@ -6,6 +6,9 @@
  * @description Server-side application for football court booking system using Supabase
  */
 
+// Load environment variables from .env file (for local development)
+require('dotenv').config();
+
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');

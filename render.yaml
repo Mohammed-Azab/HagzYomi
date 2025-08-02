@@ -3,7 +3,7 @@ services:
     name: hagz-yomi
     runtime: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm install && npm run setup-supabase
     startCommand: npm start
     envVars:
       - key: NODE_VERSION

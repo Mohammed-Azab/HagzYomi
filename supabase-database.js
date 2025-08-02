@@ -20,6 +20,13 @@ class SupabaseDatabase {
             console.error('   1. Run: npm run setup-supabase');
             console.error('   2. Or read: SUPABASE_SETUP.md');
             console.error('   3. Restart server after configuration');
+            console.error('');
+            console.error('🚀 FOR RENDER.COM DEPLOYMENT:');
+            console.error('   1. Go to your Render service dashboard');
+            console.error('   2. Click "Environment" tab');
+            console.error('   3. Add SUPABASE_URL and SUPABASE_ANON_KEY');
+            console.error('   4. Click "Manual Deploy" to restart');
+            console.error('   📖 See: RENDER_ENVIRONMENT_SETUP.md');
             process.exit(1);
         }
         
