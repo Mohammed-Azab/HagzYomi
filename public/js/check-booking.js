@@ -116,10 +116,15 @@ function displayBookingDetails(booking) {
     const statusClass = getStatusClass(booking.status);
     
     let timeRemaining = '';
-    if (booking.status === 'pending' && booking.expiresAt) {
-        const remaining = calculateTimeRemaining(booking.expiresAt);
+    if (booking.status === 'pending' && booking.createdAt) {
+        // Calculate 1 hour from booking creation time
+        const createdTime = new Date(booking.createdAt);
+        const expirationTime = new Date(createdTime.getTime() + (60 * 60 * 1000)); // Add 1 hour
+        const remaining = calculateTimeRemaining(expirationTime.toISOString());
         if (remaining > 0) {
             timeRemaining = `<div class="time-remaining">⏰ الوقت المتبقي للدفع: ${formatTime(remaining)}</div>`;
+        } else {
+            timeRemaining = `<div class="time-expired">⏰ انتهت مهلة الدفع</div>`;
         }
     }
     
@@ -128,7 +133,7 @@ function displayBookingDetails(booking) {
         const paymentLinkButton = booking.paymentInfo.instaPayLink 
             ? `<div class="payment-link-section">
                  <button class="payment-link-btn" onclick="window.open('${booking.paymentInfo.instaPayLink}', '_blank')">
-                   🔗 يرجى إرسال قيمة الحجز لتأكيد حجزك
+                   💳 رابط انستاباي
                  </button>
                </div>` 
             : '';
@@ -138,7 +143,6 @@ function displayBookingDetails(booking) {
                 <h4>معلومات الدفع:</h4>
                 <p><strong>فودافون كاش:</strong> ${booking.paymentInfo.vodafoneCash}</p>
                 <p><strong>إنستاباي:</strong> ${booking.paymentInfo.instaPay}</p>
-                ${booking.paymentInfo.instaPayLink ? `<p><strong>رابط الدفع:</strong> ${booking.paymentInfo.instaPayLink}</p>` : ''}
                 <p class="payment-instructions">${booking.paymentInfo.instructions}</p>
                 ${paymentLinkButton}
             </div>

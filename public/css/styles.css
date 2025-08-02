@@ -1428,6 +1428,17 @@ body {
     text-align: center;
 }
 
+.time-expired {
+    margin-top: 15px;
+    padding: 12px;
+    background: #f8d7da;
+    border-radius: 8px;
+    border-left: 4px solid #dc3545;
+    font-weight: 600;
+    color: #721c24;
+    text-align: center;
+}
+
 .payment-info {
     margin-top: 20px;
     padding: 20px;
