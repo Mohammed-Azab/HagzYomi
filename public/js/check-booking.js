@@ -148,7 +148,40 @@ function displayBookingDetails(booking) {
             </div>
         `;
     }
-    
+
+    // Add contact information section
+    let contactInfo = '';
+    if (config && config.contactInfo) {
+        console.log('📋 Adding contact info section:', config.contactInfo);
+        contactInfo = `
+            <div class="contact-info">
+                <h4>📋 معلومات الاتصال</h4>
+                <div class="contact-details">
+                    ${config.contactInfo.phone ? `<p><strong>📞 للاستفسار:</strong> <a href="tel:${config.contactInfo.phone}">${config.contactInfo.phone}</a></p>` : ''}
+                    ${config.contactInfo.address ? `<p><strong>📍 العنوان:</strong> ${config.contactInfo.address}</p>` : ''}
+                    ${config.contactInfo.email ? `<p><strong>✉️ البريد الإلكتروني:</strong> <a href="mailto:${config.contactInfo.email}">${config.contactInfo.email}</a></p>` : ''}
+                    ${config.openingHours ? `<p><strong>🕐 مواعيد العمل:</strong> من ${config.openingHours.start} إلى ${config.openingHours.end}</p>` : ''}
+                </div>
+            </div>
+        `;
+    } else {
+        console.log('⚠️ No contact info available in config:', config);
+    }
+
+    // Add important guidelines section
+    let importantGuidelines = `
+        <div class="important-guidelines">
+            <h4>⚠️ تعليمات مهمة</h4>
+            <div class="important-notes">
+                <p><strong>📅 الوصول:</strong> يرجى الوصول قبل موعد الحجز بـ 10 دقائق على الأقل</p>
+                <p><strong>⏰ التأخير:</strong> في حالة التأخير أكثر من 15 دقيقة، قد يتم إلغاء الحجز</p>
+                <p><strong>🆔 الهوية:</strong> يرجى إحضار بطاقة هوية سارية</p>
+                <p><strong>⚽ المعدات:</strong> الكرة متوفرة أو يمكنك إحضار كرتك الخاصة</p>
+                <p><strong>💧 الخدمات:</strong> مياه الشرب متوفرة مجاناً</p>
+            </div>
+        </div>
+    `;
+
     let recurringInfo = '';
     if (booking.isRecurring && booking.recurringWeeks > 1) {
         recurringInfo = `
@@ -198,6 +231,8 @@ function displayBookingDetails(booking) {
             ${recurringInfo}
             ${timeRemaining}
             ${paymentInfo}
+            ${contactInfo}
+            ${importantGuidelines}
         </div>
     `;
     

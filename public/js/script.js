@@ -306,6 +306,27 @@ function updateInfoPanel() {
             paymentTimeoutElement.textContent = config.paymentTimeoutMinutes;
         }
     }
+    
+    // Update contact information if available
+    if (config.contactInfo) {
+        const contactPhoneElement = document.getElementById('contactPhone');
+        const contactAddressElement = document.getElementById('contactAddress');
+        const contactEmailElement = document.getElementById('contactEmail');
+        
+        if (contactPhoneElement && config.contactInfo.phone) {
+            contactPhoneElement.textContent = config.contactInfo.phone;
+            contactPhoneElement.href = `tel:${config.contactInfo.phone}`;
+        }
+        
+        if (contactAddressElement && config.contactInfo.address) {
+            contactAddressElement.textContent = config.contactInfo.address;
+        }
+        
+        if (contactEmailElement && config.contactInfo.email) {
+            contactEmailElement.textContent = config.contactInfo.email;
+            contactEmailElement.href = `mailto:${config.contactInfo.email}`;
+        }
+    }
 }
 
 // Handle date change
