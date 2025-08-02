@@ -483,6 +483,42 @@ body {
     transition: all 0.3s ease;
 }
 
+/* Vodafone Cash clickable styling */
+.payment-method.vodafone-clickable {
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: pointer !important;
+}
+
+.payment-method.vodafone-clickable:hover {
+    background: rgba(231, 76, 60, 0.1);
+    border-color: #e74c3c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
+}
+
+.payment-method.vodafone-clickable::after {
+    content: "انقر للدفع";
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: rgba(231, 76, 60, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    opacity: 0.9;
+    z-index: 2;
+}
+
+.payment-method.vodafone-clickable:hover::after {
+    background: rgba(231, 76, 60, 1);
+    opacity: 1;
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+}
+
 .payment-icon {
     font-size: 1.5rem;
     width: 40px;
@@ -583,11 +619,79 @@ body {
 
 /* Footer */
 .footer {
-    background-color: var(--text-primary);
+    background-color: #1a1a1a;
     color: white;
     text-align: center;
     padding: 2rem 0;
     margin-top: 3rem;
+}
+
+.footer p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+    color: white;
+}
+
+.footer p:first-child {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.footer p:last-child {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 0.5rem;
+}
+
+.footer a {
+    color: #64B5F6 !important;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: #90CAF9 !important;
+    text-decoration: underline;
+}
+
+/* Force footer visibility */
+.footer * {
+    color: inherit;
+}
+
+.footer a,
+.footer a:visited,
+.footer a:link {
+    color: #64B5F6 !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+    transition: color 0.3s ease !important;
+}
+
+.footer a:hover,
+.footer a:focus {
+    color: #90CAF9 !important;
+    text-decoration: underline !important;
+}
+
+/* Footer responsive */
+@media (max-width: 768px) {
+    .footer {
+        padding: 1.5rem 0;
+    }
+    
+    .footer p:first-child {
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .footer p:last-child {
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
 }
 
 /* Modal */
