@@ -104,6 +104,25 @@ function setupEventListeners() {
     downloadModal.addEventListener('click', function(e) {
         if (e.target === downloadModal) hideDownloadModal();
     });
+    
+    // Config tabs event listeners
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('config-tab')) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.config-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.config-tab-content').forEach(content => content.style.display = 'none');
+            
+            // Add active class to clicked tab
+            e.target.classList.add('active');
+            document.getElementById(e.target.dataset.tab + '-tab').style.display = 'block';
+        }
+    });
+    
+    // Toggle JSON editor
+    const toggleJsonEditor = document.getElementById('toggleJsonEditor');
+    if (toggleJsonEditor) {
+        toggleJsonEditor.addEventListener('click', toggleConfigEditor);
+    }
 }
 
 // Load configuration from server
@@ -122,12 +141,22 @@ async function saveConfiguration() {
         return;
     }
     
-    const configEditor = document.getElementById('configEditor');
-    const configText = configEditor.value;
+    let configData;
     
     try {
-        // Validate JSON format
-        const configData = JSON.parse(configText);
+        // Check which editor is active
+        const formEditor = document.getElementById('configFormEditor');
+        const jsonEditor = document.getElementById('configJsonEditor');
+        
+        if (formEditor.style.display !== 'none') {
+            // Form editor is active - collect form data
+            configData = collectConfigFormData();
+        } else {
+            // JSON editor is active - parse JSON
+            const configEditor = document.getElementById('configEditor');
+            const configText = configEditor.value;
+            configData = JSON.parse(configText);
+        }
         
         // Send to server
         const response = await fetch('/api/admin/update-config', {
@@ -149,7 +178,7 @@ async function saveConfiguration() {
         }
     } catch (error) {
         if (error instanceof SyntaxError) {
-            alert('خطأ في تنسيق JSON. تأكد من صحة التنسيق.');
+            alert('خطأ في تنسيق البيانات. تأكد من صحة القيم المدخلة.');
         } else {
             console.error('Error saving config:', error);
             alert('خطأ في حفظ الإعدادات');
@@ -165,24 +194,30 @@ function showConfigModal() {
 }
 
 function setupConfigModalForUser() {
-    const configEditor = document.getElementById('configEditor');
-    const configContent = document.getElementById('configContent');
+    const configFormEditor = document.getElementById('configFormEditor');
+    const configJsonEditor = document.getElementById('configJsonEditor');
+    const configReadOnly = document.getElementById('configReadOnly');
     const saveConfigBtn = document.getElementById('saveConfigBtn');
+    const toggleJsonEditor = document.getElementById('toggleJsonEditor');
     const superAdminNote = document.getElementById('superAdminNote');
     const adminNote = document.getElementById('adminNote');
     
     if (userRole.isSuperAdmin) {
-        // Super admin can edit
-        configEditor.style.display = 'block';
-        configContent.style.display = 'none';
+        // Super admin can edit with form interface
+        configFormEditor.style.display = 'block';
+        configJsonEditor.style.display = 'none';
+        configReadOnly.style.display = 'none';
         saveConfigBtn.style.display = 'inline-block';
+        toggleJsonEditor.style.display = 'inline-block';
         superAdminNote.style.display = 'block';
         adminNote.style.display = 'none';
     } else {
         // Regular admin can only view
-        configEditor.style.display = 'none';
-        configContent.style.display = 'block';
+        configFormEditor.style.display = 'none';
+        configJsonEditor.style.display = 'none';
+        configReadOnly.style.display = 'block';
         saveConfigBtn.style.display = 'none';
+        toggleJsonEditor.style.display = 'none';
         superAdminNote.style.display = 'none';
         adminNote.style.display = 'block';
     }
@@ -222,6 +257,213 @@ function setupUIPermissions() {
         configBtn.style.display = 'none';
     } else {
         configBtn.style.display = 'inline-block';
+    }
+}
+
+// Load configuration content and populate form
+async function loadConfigContent() {
+    try {
+        const response = await fetch('/api/config');
+        const config = await response.json();
+        
+        // Remove sensitive information before displaying
+        const displayConfig = { ...config };
+        delete displayConfig.adminPassword;
+        delete displayConfig.superAdminPassword;
+        
+        // Format JSON with proper indentation
+        const configText = JSON.stringify(displayConfig, null, 2);
+        
+        // Update read-only display
+        const configContent = document.getElementById('configContent');
+        if (configContent) {
+            configContent.textContent = configText;
+        }
+        
+        // Update JSON editor
+        const configEditor = document.getElementById('configEditor');
+        if (configEditor) {
+            configEditor.value = configText;
+        }
+        
+        // Populate form fields
+        populateConfigForm(displayConfig);
+        
+    } catch (error) {
+        console.error('Error loading config:', error);
+        const errorText = 'خطأ في تحميل الإعدادات';
+        const configContent = document.getElementById('configContent');
+        if (configContent) {
+            configContent.textContent = errorText;
+        }
+        const configEditor = document.getElementById('configEditor');
+        if (configEditor) {
+            configEditor.value = errorText;
+        }
+    }
+}
+
+// Populate form fields with config data
+function populateConfigForm(config) {
+    // Basic settings
+    setValue('courtName', config.courtName);
+    setValue('pricePerHour', config.pricePerHour);
+    setValue('slotDurationMinutes', config.slotDurationMinutes);
+    setValue('maxHoursPerPersonPerDay', config.maxHoursPerPersonPerDay);
+    setValue('maxBookingDaysAhead', config.maxBookingDaysAhead);
+    
+    // Working hours
+    setValue('openingStart', config.openingHours?.start);
+    setValue('openingEnd', config.openingHours?.end);
+    
+    // Working days
+    const workingDayCheckboxes = document.querySelectorAll('.working-day');
+    workingDayCheckboxes.forEach(checkbox => {
+        checkbox.checked = config.workingDays?.includes(checkbox.value);
+    });
+    
+    // Features
+    setCheckbox('enableOnlineBooking', config.features?.enableOnlineBooking);
+    setCheckbox('requirePhoneVerification', config.features?.requirePhoneVerification);
+    setCheckbox('allowCancellation', config.features?.allowCancellation);
+    setValue('cancellationHours', config.features?.cancellationHours);
+    setCheckbox('enableRecurringBooking', config.features?.enableRecurringBooking);
+    setValue('maxRecurringWeeks', config.features?.maxRecurringWeeks);
+    setCheckbox('requirePaymentConfirmation', config.features?.requirePaymentConfirmation);
+    setValue('paymentTimeoutMinutes', config.features?.paymentTimeoutMinutes);
+    
+    // Payment info
+    setValue('vodafoneCash', config.paymentInfo?.vodafoneCash);
+    setValue('instaPay', config.paymentInfo?.instaPay);
+    setValue('paymentInstructions', config.paymentInfo?.instructions);
+    setValue('contactPhone', config.contactInfo?.phone);
+    setValue('contactAddress', config.contactInfo?.address);
+    setValue('contactEmail', config.contactInfo?.email);
+    
+    // UI settings
+    setValue('headerTitle', config.ui?.headerTitle);
+    setValue('headerSubtitle', config.ui?.headerSubtitle);
+    setValue('heroTitle', config.ui?.heroTitle);
+    setValue('heroSubtitle', config.ui?.heroSubtitle);
+    setValue('primaryColor', config.ui?.primaryColor);
+    setValue('theme', config.ui?.theme);
+}
+
+// Helper function to set input value
+function setValue(id, value) {
+    const element = document.getElementById(id);
+    if (element && value !== undefined) {
+        element.value = value;
+    }
+}
+
+// Helper function to set checkbox value
+function setCheckbox(id, value) {
+    const element = document.getElementById(id);
+    if (element && value !== undefined) {
+        element.checked = value;
+    }
+}
+
+// Collect form data into config object
+function collectConfigFormData() {
+    const config = {};
+    
+    // Basic settings
+    config.courtName = getValue('courtName');
+    config.pricePerHour = parseInt(getValue('pricePerHour'));
+    config.slotDurationMinutes = parseInt(getValue('slotDurationMinutes'));
+    config.maxHoursPerPersonPerDay = parseInt(getValue('maxHoursPerPersonPerDay'));
+    config.maxBookingDaysAhead = parseInt(getValue('maxBookingDaysAhead'));
+    config.currency = "جنيه";
+    
+    // Working hours
+    config.openingHours = {
+        start: getValue('openingStart'),
+        end: getValue('openingEnd')
+    };
+    
+    // Working days
+    const workingDays = [];
+    document.querySelectorAll('.working-day:checked').forEach(checkbox => {
+        workingDays.push(checkbox.value);
+    });
+    config.workingDays = workingDays;
+    
+    // Features
+    config.features = {
+        enableOnlineBooking: getCheckboxValue('enableOnlineBooking'),
+        requirePhoneVerification: getCheckboxValue('requirePhoneVerification'),
+        allowCancellation: getCheckboxValue('allowCancellation'),
+        cancellationHours: parseInt(getValue('cancellationHours')),
+        enableRecurringBooking: getCheckboxValue('enableRecurringBooking'),
+        maxRecurringWeeks: parseInt(getValue('maxRecurringWeeks')),
+        requirePaymentConfirmation: getCheckboxValue('requirePaymentConfirmation'),
+        paymentTimeoutMinutes: parseInt(getValue('paymentTimeoutMinutes'))
+    };
+    
+    // Payment info
+    config.paymentInfo = {
+        vodafoneCash: getValue('vodafoneCash'),
+        instaPay: getValue('instaPay'),
+        instructions: getValue('paymentInstructions')
+    };
+    
+    // Contact info
+    config.contactInfo = {
+        phone: getValue('contactPhone'),
+        address: getValue('contactAddress'),
+        email: getValue('contactEmail')
+    };
+    
+    // UI settings
+    config.ui = {
+        headerTitle: getValue('headerTitle'),
+        headerSubtitle: getValue('headerSubtitle'),
+        heroTitle: getValue('heroTitle'),
+        heroSubtitle: getValue('heroSubtitle'),
+        primaryColor: getValue('primaryColor'),
+        theme: getValue('theme')
+    };
+    
+    return config;
+}
+
+// Helper function to get input value
+function getValue(id) {
+    const element = document.getElementById(id);
+    return element ? element.value : '';
+}
+
+// Helper function to get checkbox value
+function getCheckboxValue(id) {
+    const element = document.getElementById(id);
+    return element ? element.checked : false;
+}
+
+// Toggle between form and JSON editor
+function toggleConfigEditor() {
+    const formEditor = document.getElementById('configFormEditor');
+    const jsonEditor = document.getElementById('configJsonEditor');
+    const toggleBtn = document.getElementById('toggleJsonEditor');
+    
+    if (formEditor.style.display === 'none') {
+        // Switch to form editor
+        formEditor.style.display = 'block';
+        jsonEditor.style.display = 'none';
+        toggleBtn.textContent = '📝 التبديل للمحرر المتقدم';
+    } else {
+        // Switch to JSON editor
+        formEditor.style.display = 'none';
+        jsonEditor.style.display = 'block';
+        toggleBtn.textContent = '📋 التبديل للمحرر المبسط';
+        
+        // Update JSON editor with current form data
+        const configData = collectConfigFormData();
+        const configEditor = document.getElementById('configEditor');
+        if (configEditor) {
+            configEditor.value = JSON.stringify(configData, null, 2);
+        }
     }
 }
 
