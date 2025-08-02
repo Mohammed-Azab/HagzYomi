@@ -550,8 +550,12 @@ async function loadBookings() {
         const response = await fetch('/api/admin/bookings');
         
         if (response.status === 401) {
-            window.location.href = '/admin';
+            window.location.href = '/admin-login';
             return;
+        }
+        
+        if (!response.ok) {
+            throw new Error('فشل في تحميل الحجوزات');
         }
         
         bookings = await response.json();
@@ -810,7 +814,7 @@ async function downloadSelectedReport() {
         const response = await fetch(`/api/admin/report?${params}`);
         
         if (response.status === 401) {
-            window.location.href = '/admin';
+            window.location.href = '/admin-login';
             return;
         }
         
@@ -907,7 +911,7 @@ async function downloadReport() {
         const response = await fetch(`/api/admin/report/${selectedDate}`);
         
         if (response.status === 401) {
-            window.location.href = '/admin';
+            window.location.href = '/admin-login';
             return;
         }
         
@@ -958,7 +962,7 @@ async function confirmDelete() {
         });
         
         if (response.status === 401) {
-            window.location.href = '/admin';
+            window.location.href = '/admin-login';
             return;
         }
         
