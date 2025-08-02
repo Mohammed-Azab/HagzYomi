@@ -15,13 +15,15 @@ const path = require('path');
 const XLSX = require('xlsx');
 const { jsPDF } = require('jspdf');
 require('jspdf-autotable');
-const Database = require('./database');
+
+// Use Supabase database (with SQLite fallback)
+const SupabaseDatabase = require('./supabase-database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize database
-const db = new Database();
+// Initialize database (Supabase with SQLite fallback)
+const db = new SupabaseDatabase();
 
 // Load configuration from config.json
 let config;
@@ -581,7 +583,15 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log('📊 Admin panel available at /admin');
     console.log(`🔑 Admin password: ${config.adminPassword || 'Not set'}`);
     console.log('🎯 Render deployment ready! 🌟');
-    console.log('🗄️ Using SQLite database for data persistence');
+    
+    if (db.useSupabase) {
+        console.log('☁️  Using Supabase cloud database (FREE tier)');
+        console.log('� Run db.setupTable() if this is first time setup');
+    } else {
+        console.log('�🗄️  Using SQLite database (local fallback)');
+        console.log('💡 Set SUPABASE_URL and SUPABASE_ANON_KEY to use cloud database');
+    }
+    
     console.log('═══════════════════════════════════════════════════════');
 });
 
