@@ -19,7 +19,7 @@
   "currency": "جنيه",
   "pricePerHour": 50,
   "contactInfo": {
-    "phone": "01234567890",
+    "phone": "01157000063",
     "address": "مركز شباب قرموط صهبرة",
     "email": "info@example.com"
   },
@@ -34,8 +34,8 @@
     "paymentTimeoutMinutes": 60
   },
   "paymentInfo": {
-    "vodafoneCash": "01234567890",
-    "instaPay": "محمد عزب",
+    "vodafoneCash": "01157000063",
+    "instaPay": "mazab10@instapay",
     "instructions": "يرجى إرسال قيمة الحجز لتأكيد حجزك"
   },
   "ui": {
