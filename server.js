@@ -155,11 +155,53 @@ async function getUserBookingHours(phone, date) {
     return Array.from(uniqueBookings.values()).reduce((total, hours) => total + hours, 0);
 }
 
-function generateBookingNumber() {
-    const prefix = 'HY';
-    const timestamp = Date.now().toString().slice(-6);
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return prefix + timestamp + random;
+async function generateBookingNumber() {
+    let bookingNumber;
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    while (!isUnique && attempts < maxAttempts) {
+        // Generate a simpler 6-digit number: DDHHNN
+        // DD = day of month (01-31)
+        // HH = hour (00-23) 
+        // NN = random number (00-99)
+        
+        const now = new Date();
+        const day = now.getDate().toString().padStart(2, '0');
+        const hour = now.getHours().toString().padStart(2, '0');
+        const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+        
+        bookingNumber = day + hour + random;
+        
+        // Check if this booking number already exists
+        try {
+            const existingBookings = await loadBookings();
+            const exists = existingBookings.some(booking => booking.bookingNumber === bookingNumber);
+            
+            if (!exists) {
+                isUnique = true;
+            } else {
+                attempts++;
+                // Wait a moment before retry to avoid same timestamp
+                await new Promise(resolve => setTimeout(resolve, 10));
+            }
+        } catch (error) {
+            console.error('Error checking booking number uniqueness:', error);
+            // Fallback to timestamp-based generation if database check fails
+            const timestamp = Date.now().toString().slice(-6);
+            bookingNumber = timestamp;
+            isUnique = true;
+        }
+    }
+    
+    // Fallback if we couldn't generate unique number
+    if (!isUnique) {
+        const timestamp = Date.now().toString().slice(-6);
+        bookingNumber = timestamp;
+    }
+    
+    return bookingNumber;
 }
 
 // Routes
@@ -351,7 +393,7 @@ app.post('/api/book', async (req, res) => {
         
         // Create booking
         const bookingId = Date.now().toString();
-        const bookingNumber = generateBookingNumber();
+        const bookingNumber = await generateBookingNumber();
         const requirePaymentConfirmation = config.features && config.features.requirePaymentConfirmation || false;
         const status = requirePaymentConfirmation ? 'pending' : 'confirmed';
         const totalPrice = config.pricePerHour * bookingHours;
