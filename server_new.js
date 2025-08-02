@@ -145,10 +145,6 @@ app.get('/', (req, res) => {
 });
 
 app.get('/admin', (req, res) => {
-    // Check if user is authenticated
-    if (!req.session.isAdmin) {
-        return res.redirect('/admin-login');
-    }
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
@@ -158,15 +154,6 @@ app.get('/admin-login', (req, res) => {
 
 // API Routes
 app.get('/api/config', (req, res) => {
-    // Check if this is being accessed from admin panel
-    const userAgent = req.get('User-Agent') || '';
-    const referer = req.get('Referer') || '';
-    
-    // If accessed from admin routes, require authentication
-    if (referer.includes('/admin') && !req.session.isAdmin) {
-        return res.status(401).json({ error: 'غير مصرح' });
-    }
-    
     const publicConfig = { ...config };
     delete publicConfig.adminPassword;
     delete publicConfig.superAdminPassword;
@@ -211,11 +198,9 @@ app.get('/api/admin/user-role', (req, res) => {
         return res.status(401).json({ error: 'غير مصرح' });
     }
     
-    const role = req.session.adminRole || 'admin';
     res.json({ 
-        isAdmin: true,
-        isSuperAdmin: role === 'superAdmin',
-        role: role
+        role: req.session.adminRole || 'admin',
+        isSuperAdmin: req.session.adminRole === 'superAdmin'
     });
 });
 
@@ -336,7 +321,7 @@ app.post('/api/book', async (req, res) => {
         // Create booking
         const bookingId = Date.now().toString();
         const bookingNumber = generateBookingNumber();
-        const requirePaymentConfirmation = (config.features && config.features.requirePaymentConfirmation) || false;
+        const requirePaymentConfirmation = config.features?.requirePaymentConfirmation || false;
         const status = requirePaymentConfirmation ? 'pending' : 'confirmed';
         const totalPrice = config.pricePerHour * bookingHours;
         
@@ -344,7 +329,7 @@ app.post('/api/book', async (req, res) => {
         
         // Handle recurring bookings
         if (isRecurring && recurringWeeks > 1) {
-            const maxRecurringWeeks = (config.features && config.features.maxRecurringWeeks) || 8;
+            const maxRecurringWeeks = config.features?.maxRecurringWeeks || 8;
             if (recurringWeeks > maxRecurringWeeks) {
                 return res.json({ 
                     success: false, 
@@ -381,7 +366,7 @@ app.post('/api/book', async (req, res) => {
                     price: (bookingIndex === 0 && slotIndex === 0) ? totalPrice * allBookingDates.length : 0,
                     status: status,
                     expiresAt: requirePaymentConfirmation ? 
-                        new Date(Date.now() + ((config.features && config.features.paymentTimeoutMinutes) || 60) * 60 * 1000).toISOString() : 
+                        new Date(Date.now() + (config.features?.paymentTimeoutMinutes || 60) * 60 * 1000).toISOString() : 
                         null,
                     isRecurring: isRecurring,
                     recurringWeeks: recurringWeeks,
@@ -418,7 +403,7 @@ app.post('/api/book', async (req, res) => {
         
         if (requirePaymentConfirmation) {
             response.booking.paymentInfo = config.paymentInfo;
-            response.message = `تم إنشاء الحجز برقم ${bookingNumber}. يرجى الدفع خلال ${(config.features && config.features.paymentTimeoutMinutes) || 60} دقيقة لتأكيد الحجز.`;
+            response.message = `تم إنشاء الحجز برقم ${bookingNumber}. يرجى الدفع خلال ${config.features?.paymentTimeoutMinutes || 60} دقيقة لتأكيد الحجز.`;
         } else {
             response.message = `تم تأكيد الحجز برقم ${bookingNumber} بنجاح!`;
         }
@@ -526,31 +511,6 @@ app.post('/api/admin/update-config', async (req, res) => {
     } catch (error) {
         console.error('Error updating config:', error);
         res.status(500).json({ error: 'خطأ في حفظ الإعدادات' });
-    }
-});
-
-// Reload configuration from file
-app.post('/api/admin/reload-config', async (req, res) => {
-    if (!req.session.isAdmin) {
-        return res.status(401).json({ error: 'غير مصرح' });
-    }
-    
-    try {
-        // Reload config from file
-        const configFile = fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8');
-        const newConfig = JSON.parse(configFile);
-        
-        // Add admin passwords from environment
-        newConfig.adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-        newConfig.superAdminPassword = process.env.SUPER_ADMIN_PASSWORD;
-        
-        // Update in-memory config
-        Object.assign(config, newConfig);
-        
-        res.json({ success: true, message: 'تم إعادة تحميل الإعدادات بنجاح' });
-    } catch (error) {
-        console.error('Error reloading config:', error);
-        res.status(500).json({ error: 'خطأ في إعادة تحميل الإعدادات' });
     }
 });
 

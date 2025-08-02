@@ -23,6 +23,7 @@ const deleteModal = document.getElementById('deleteModal');
 const configBtn = document.getElementById('configBtn');
 const configModal = document.getElementById('configModal');
 const reloadConfigBtn = document.getElementById('reloadConfigBtn');
+const saveConfigBtn = document.getElementById('saveConfigBtn');
 const configContent = document.getElementById('configContent');
 
 // Download modal elements
@@ -57,6 +58,7 @@ const lastBookingEl = document.getElementById('lastBooking');
 document.addEventListener('DOMContentLoaded', async function() {
     await loadConfig();
     await loadUserRole();
+    setupUIPermissions();
     setupEventListeners();
     setTodayDate();
     loadBookings();
@@ -131,8 +133,7 @@ async function saveConfiguration() {
         const response = await fetch('/api/admin/update-config', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(configData)
         });
@@ -190,33 +191,7 @@ function setupConfigModalForUser() {
 function hideConfigModal() {
     configModal.classList.remove('show');
 }
-    
-    // Download modal handlers
-    downloadModalBtn.addEventListener('click', showDownloadModal);
-    reportTypeSelect.addEventListener('change', handleReportTypeChange);
-    downloadConfirmBtn.addEventListener('click', downloadSelectedReport);
-    document.getElementById('cancelDownloadBtn').addEventListener('click', hideDownloadModal);
-    document.getElementById('closeDownloadModal').addEventListener('click', hideDownloadModal);
-    
-    // Format selection handlers
-    formatButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            selectFormat(this.getAttribute('data-format'));
-        });
-    });
-    
-    // Delete modal handlers
-    document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
-    document.getElementById('cancelDeleteBtn').addEventListener('click', hideDeleteModal);
-    document.getElementById('closeDeleteModal').addEventListener('click', hideDeleteModal);
-    
-    deleteModal.addEventListener('click', function(e) {
-        if (e.target === deleteModal) hideDeleteModal();
-    });
-    
-    downloadModal.addEventListener('click', function(e) {
-        if (e.target === downloadModal) hideDownloadModal();
-    });
+
 // Load user role from server
 async function loadUserRole() {
     try {
@@ -225,6 +200,28 @@ async function loadUserRole() {
     } catch (error) {
         console.error('Error loading user role:', error);
         userRole = { isAdmin: false, isSuperAdmin: false };
+    }
+}
+
+// Setup UI permissions based on user role
+function setupUIPermissions() {
+    const configBtn = document.getElementById('configBtn');
+    const userRoleIndicator = document.getElementById('userRoleIndicator');
+    
+    // Update role indicator
+    if (userRole.isSuperAdmin) {
+        userRoleIndicator.innerHTML = '👑 <strong>مدير أعلى</strong> - صلاحيات كاملة';
+        userRoleIndicator.style.color = '#d4af37';
+    } else if (userRole.isAdmin) {
+        userRoleIndicator.innerHTML = '👤 <strong>مدير</strong> - إدارة الحجوزات';
+        userRoleIndicator.style.color = '#2196F3';
+    }
+    
+    // Hide config button for regular admins
+    if (!userRole.isSuperAdmin) {
+        configBtn.style.display = 'none';
+    } else {
+        configBtn.style.display = 'inline-block';
     }
 }
 
@@ -702,11 +699,11 @@ async function confirmDelete() {
 // Logout
 async function logout() {
     try {
-        await fetch('/admin/logout', { method: 'POST' });
-        window.location.href = '/';
+        await fetch('/api/admin/logout', { method: 'POST' });
+        window.location.href = '/admin-login';
     } catch (error) {
         console.error('Logout error:', error);
-        window.location.href = '/';
+        window.location.href = '/admin-login';
     }
 }
 
@@ -763,101 +760,6 @@ function showMessage(message, type = 'info') {
     setTimeout(() => {
         messageEl.remove();
     }, 3000);
-}
-
-// Configuration modal functions
-function showConfigModal() {
-    loadConfigContent();
-    setupConfigModalForUser();
-    configModal.classList.add('show');
-}
-
-function setupConfigModalForUser() {
-    const configEditor = document.getElementById('configEditor');
-    const configContent = document.getElementById('configContent');
-    const saveConfigBtn = document.getElementById('saveConfigBtn');
-    const superAdminNote = document.getElementById('superAdminNote');
-    const adminNote = document.getElementById('adminNote');
-    
-    if (userRole.isSuperAdmin) {
-        // Super admin can edit
-        configEditor.style.display = 'block';
-        configContent.style.display = 'none';
-        saveConfigBtn.style.display = 'inline-block';
-        superAdminNote.style.display = 'block';
-        adminNote.style.display = 'none';
-    } else {
-        // Regular admin can only view
-        configEditor.style.display = 'none';
-        configContent.style.display = 'block';
-        saveConfigBtn.style.display = 'none';
-        superAdminNote.style.display = 'none';
-        adminNote.style.display = 'block';
-    }
-}
-
-function hideConfigModal() {
-    configModal.classList.remove('show');
-}
-
-async function loadConfigContent() {
-    try {
-        const response = await fetch('/api/config');
-        const config = await response.json();
-        
-        // Remove sensitive information before displaying
-        const displayConfig = { ...config };
-        delete displayConfig.adminPassword;
-        delete displayConfig.superAdminPassword;
-        
-        // Format JSON with proper indentation
-        const configText = JSON.stringify(displayConfig, null, 2);
-        
-        // Update both the read-only and editable versions
-        configContent.textContent = configText;
-        document.getElementById('configEditor').value = configText;
-    } catch (error) {
-        console.error('Error loading config:', error);
-        const errorText = 'خطأ في تحميل الإعدادات';
-        configContent.textContent = errorText;
-        document.getElementById('configEditor').value = errorText;
-    }
-}
-
-async function reloadConfiguration() {
-    try {
-        reloadConfigBtn.disabled = true;
-        reloadConfigBtn.textContent = 'جاري إعادة التحميل...';
-        
-        const response = await fetch('/api/admin/reload-config', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showMessage('تم إعادة تحميل الإعدادات بنجاح', 'success');
-            
-            // Reload the config content in the modal
-            await loadConfigContent();
-            
-            // Optionally reload the page to reflect changes
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            showMessage(result.message || 'فشل في إعادة تحميل الإعدادات', 'error');
-        }
-    } catch (error) {
-        console.error('Error reloading config:', error);
-        showMessage('خطأ في الاتصال بالخادم', 'error');
-    } finally {
-        reloadConfigBtn.disabled = false;
-        reloadConfigBtn.textContent = '🔄 إعادة تحميل الإعدادات';
-    }
 }
 
 // Auto-refresh bookings every 30 seconds
