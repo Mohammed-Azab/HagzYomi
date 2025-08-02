@@ -596,8 +596,28 @@ function renderBookings() {
         return;
     }
     
-    // Sort bookings by date and time (newest first)
+    // Sort bookings by status priority first, then by date and time (newest first)
     const sortedBookings = [...bookings].sort((a, b) => {
+        // Define status priority: pending (1), confirmed (2), declined (3), expired (4)
+        const getStatusPriority = (status) => {
+            switch(status) {
+                case 'pending': return 1;
+                case 'confirmed': return 2;
+                case 'declined': return 3;
+                case 'expired': return 4;
+                default: return 4;
+            }
+        };
+        
+        const statusA = getStatusPriority(a.status || 'confirmed');
+        const statusB = getStatusPriority(b.status || 'confirmed');
+        
+        // First sort by status priority
+        if (statusA !== statusB) {
+            return statusA - statusB;
+        }
+        
+        // If same status, sort by date and time (newest first)
         const dateA = new Date(`${a.date} ${a.time}`);
         const dateB = new Date(`${b.date} ${b.time}`);
         return dateB - dateA;

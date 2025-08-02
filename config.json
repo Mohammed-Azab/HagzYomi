@@ -1,0 +1,51 @@
+{
+  "courtName": "ملعب مركز الشباب الرياضي",
+  "pricePerHour": 200,
+  "slotDurationMinutes": 30,
+  "maxHoursPerPersonPerDay": 2,
+  "maxBookingDaysAhead": 240,
+  "currency": "جنيه",
+  "openingHours": {
+    "start": "07:00",
+    "end": "03:00"
+  },
+  "workingDays": [
+    "الأحد",
+    "الاثنين",
+    "الثلاثاء",
+    "الأربعاء",
+    "الخميس",
+    "الجمعة",
+    "السبت"
+  ],
+  "features": {
+    "enableOnlineBooking": true,
+    "requirePhoneVerification": false,
+    "allowCancellation": true,
+    "cancellationHours": 2,
+    "enableRecurringBooking": true,
+    "maxRecurringWeeks": 12,
+    "requirePaymentConfirmation": true,
+    "paymentTimeoutMinutes": 60
+  },
+  "paymentInfo": {
+    "vodafoneCash": "01157000063",
+    "instaPay": "mazab10@instapay",
+    "instructions": "يرجى إرسال قيمة الحجز لتأكيد حجزك"
+  },
+  "contactInfo": {
+    "phone": "01157000063",
+    "address": "مركز شباب قرموط صهبرة",
+    "email": "info@example.com"
+  },
+  "ui": {
+    "headerTitle": "مركز شباب قرموط صهبرة",
+    "headerSubtitle": "احجز ملعبك بسهولة",
+    "heroTitle": "ملعب مركز الشباب الرياضي",
+    "heroSubtitle": "احجز موعدك الآن واستمتع بلعب كرة القدم",
+    "primaryColor": "#4caf50",
+    "theme": "light"
+  },
+  "adminPassword": "admin123",
+  "superAdminPassword": "superadmin456"
+}
