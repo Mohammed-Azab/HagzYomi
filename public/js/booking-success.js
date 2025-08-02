@@ -164,6 +164,7 @@ function displayPaymentInfo() {
     const paymentSection = document.getElementById('paymentSection');
     const timerSection = document.getElementById('timerSection');
     const instaPayBtn = document.getElementById('instaPayBtn');
+    const instaPayMethod = document.getElementById('instaPayMethod');
     
     // Show payment section
     paymentSection.style.display = 'block';
@@ -173,6 +174,23 @@ function displayPaymentInfo() {
     document.getElementById('vodafoneNumber').textContent = bookingData.paymentInfo.vodafoneCash;
     document.getElementById('instaPayName').textContent = bookingData.paymentInfo.instaPay;
     document.getElementById('paymentInstructions').textContent = bookingData.paymentInfo.instructions;
+    
+    // Setup InstaPay method click handler
+    if (bookingData.paymentInfo.instaPayLink) {
+        instaPayMethod.onclick = () => {
+            console.log('👆 User clicked InstaPay method, redirecting');
+            window.open(bookingData.paymentInfo.instaPayLink, '_blank');
+        };
+        
+        // Add the clickable class to show the tooltip
+        instaPayMethod.classList.add('instapay-clickable');
+    } else {
+        // Remove clickable functionality if no link is available
+        instaPayMethod.onclick = null;
+        instaPayMethod.classList.remove('instapay-clickable');
+        instaPayMethod.style.cursor = 'default';
+        console.log('⚠️ No InstaPay link available');
+    }
     
     // Setup InstaPay button if link is available
     if (bookingData.paymentInfo.instaPayLink) {

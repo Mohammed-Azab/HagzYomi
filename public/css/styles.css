@@ -425,6 +425,8 @@ body {
     flex-direction: column;
     gap: 1rem;
     margin-bottom: 1rem;
+    position: relative;
+    padding-top: 15px;
 }
 
 .payment-method {
@@ -451,7 +453,9 @@ body {
 .payment-method.instapay-clickable {
     background: linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(162, 155, 254, 0.1));
     border: 2px solid rgba(108, 92, 231, 0.3);
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
+    margin-top: 15px;
 }
 
 .payment-method.instapay-clickable:hover {
@@ -464,8 +468,8 @@ body {
 .payment-method.instapay-clickable::after {
     content: "👆 اضغط للدفع";
     position: absolute;
-    right: 10px;
-    top: 10px;
+    right: 8px;
+    top: -12px;
     background: rgba(108, 92, 231, 0.9);
     color: white;
     padding: 4px 8px;
@@ -473,7 +477,8 @@ body {
     font-size: 0.7rem;
     font-weight: bold;
     opacity: 0.9;
-    z-index: 2;
+    z-index: 10;
+    white-space: nowrap;
 }
 
 .payment-method.instapay-clickable:hover::after {
@@ -481,6 +486,7 @@ body {
     opacity: 1;
     transform: scale(1.05);
     transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(108, 92, 231, 0.4);
 }
 
 /* Vodafone Cash clickable styling */
