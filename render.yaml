@@ -3,11 +3,15 @@ services:
     name: hagz-yomi
     runtime: node
     plan: free
-    buildCommand: npm run setup-supabase && npm install
+    buildCommand: npm install
     startCommand: npm start
     envVars:
       - key: NODE_VERSION
         value: 18
       - key: ADMIN_PASSWORD
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
         sync: false
     healthCheckPath: /
