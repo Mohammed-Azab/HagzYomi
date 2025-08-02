@@ -683,15 +683,24 @@ app.post('/api/check-booking', async (req, res) => {
         
         const bookings = await loadBookings();
         
+        console.log(`🔍 Check booking search: "${bookingNumber}" + "${name}" (${bookings.length} total bookings)`);
+        
         // Search by either booking number OR phone number
-        const booking = bookings.find(b => 
-            (b.bookingNumber === bookingNumber || b.phone === bookingNumber) && 
-            b.name.toLowerCase() === name.toLowerCase()
-        );
+        // Convert both to strings to ensure proper comparison
+        const booking = bookings.find(b => {
+            const bookingNumberMatch = String(b.bookingNumber) === String(bookingNumber);
+            const phoneMatch = String(b.phone) === String(bookingNumber);
+            const nameMatch = b.name.toLowerCase() === name.toLowerCase();
+            
+            return (bookingNumberMatch || phoneMatch) && nameMatch;
+        });
         
         if (!booking) {
+            console.log(`❌ No booking found for: "${bookingNumber}" + "${name}"`);
             return res.json({ success: false, message: 'لم يتم العثور على الحجز أو الاسم غير مطابق' });
         }
+        
+        console.log(`✅ Found booking: ${booking.bookingNumber} for ${booking.name}`);
         
         // Get all bookings for this group to calculate total price and get booking dates
         const groupBookings = bookings.filter(b => b.groupId === booking.groupId);
@@ -810,7 +819,15 @@ app.get('/api/debug/bookings', async (req, res) => {
         const bookings = await loadBookings();
         res.json({
             total: bookings.length,
-            sample: bookings.slice(0, 5),
+            sample: bookings.slice(0, 5).map(b => ({
+                id: b.id,
+                bookingNumber: b.bookingNumber,
+                name: b.name,
+                phone: b.phone,
+                phoneType: typeof b.phone,
+                date: b.date,
+                status: b.status
+            })),
             dates: [...new Set(bookings.map(b => b.date))].sort()
         });
     } catch (error) {
