@@ -176,7 +176,11 @@ app.get('/admin-login', (req, res) => {
 });
 
 app.get('/check-booking', (req, res) => {
-    res.sendFile(path.join(__dirname, 'check-booking.html'));
+    res.sendFile(path.join(__dirname, 'public/html/check-booking.html'));
+});
+
+app.get('/check-booking.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/html/check-booking.html'));
 });
 
 // API Routes
