@@ -246,12 +246,23 @@ async function getAvailableSlots(date) {
     const bookings = await loadBookings();
     // Only consider confirmed and pending bookings as "booked"
     // Expired and declined bookings free up the slots
-    const bookedSlots = bookings
-        .filter(booking => 
-            booking.date === date && 
-            (booking.status === 'confirmed' || booking.status === 'pending')
-        )
-        .map(booking => booking.time);
+    const activeBookings = bookings.filter(booking => 
+        booking.date === date && 
+        (booking.status === 'confirmed' || booking.status === 'pending')
+    );
+    
+    // Extract all booked slots from active bookings
+    const bookedSlots = [];
+    activeBookings.forEach(booking => {
+        if (booking.bookedSlots) {
+            // New format: slots stored as comma-separated string
+            const slots = booking.bookedSlots.split(',');
+            bookedSlots.push(...slots);
+        } else {
+            // Legacy format: single slot in time field
+            bookedSlots.push(booking.time);
+        }
+    });
     
     return bookedSlots;
 }
@@ -486,14 +497,27 @@ app.post('/api/book', async (req, res) => {
         }
         
         // Check if slots are available (only confirmed and pending bookings count)
+        const activeBookings = currentBookings.filter(booking => 
+            booking.date === date && 
+            (booking.status === 'confirmed' || booking.status === 'pending')
+        );
+        
+        // Get all booked slots for this date
+        const bookedSlots = [];
+        activeBookings.forEach(booking => {
+            if (booking.bookedSlots) {
+                // New format: slots stored as comma-separated string
+                const slots = booking.bookedSlots.split(',');
+                bookedSlots.push(...slots);
+            } else {
+                // Legacy format: single slot in time field
+                bookedSlots.push(booking.time);
+            }
+        });
+        
+        // Check if any of our needed slots are already booked
         for (const slot of timeSlots) {
-            const existingBooking = currentBookings.find(booking => 
-                booking.date === date && 
-                booking.time === slot &&
-                (booking.status === 'confirmed' || booking.status === 'pending')
-            );
-            
-            if (existingBooking) {
+            if (bookedSlots.includes(slot)) {
                 return res.json({ success: false, message: `الموعد ${slot} محجوز بالفعل` });
             }
         }
@@ -536,53 +560,50 @@ app.post('/api/book', async (req, res) => {
             }
         }
         
-        // Create all booking entries
+        // Create all booking entries - EFFICIENT VERSION: One entry per date instead of per slot
         let bookingIndex = 0;
-        const totalBookings = allBookingDates.length * timeSlots.length;
-        const pricePerBooking = Math.round((totalPrice) / timeSlots.length * 100) / 100; // Round to 2 decimal places
+        const pricePerDate = totalPrice; // Total price for all dates
         
-        console.log(`💰 Price distribution: Total=${totalPrice}, Duration=${duration}min, Slots=${timeSlots.length}, Weeks=${allBookingDates.length}, Per booking=${pricePerBooking}`);
+        console.log(`💰 Price distribution: Total=${totalPrice}, Duration=${duration}min, Slots=${timeSlots.length}, Weeks=${allBookingDates.length}, Per date=${pricePerDate}`);
         
         for (const bookingDate of allBookingDates) {
-            for (let slotIndex = 0; slotIndex < timeSlots.length; slotIndex++) {
-                // Calculate the actual end time by adding duration to start time
-                const startTimeMinutes = parseInt(time.split(':')[0]) * 60 + parseInt(time.split(':')[1]);
-                const endTimeMinutes = startTimeMinutes + duration;
-                const endHours = Math.floor(endTimeMinutes / 60) % 24;
-                const endMins = endTimeMinutes % 60;
-                const calculatedEndTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
-                
-                const booking = {
-                    id: `${bookingId}-${bookingIndex}`,
-                    groupId: bookingId,
-                    bookingNumber: bookingNumber,
-                    name,
-                    phone,
-                    date: bookingDate,
-                    time: timeSlots[slotIndex],
-                    duration: duration,
-                    totalSlots: timeSlots.length,
-                    slotIndex: slotIndex,
-                    startTime: time,
-                    endTime: calculatedEndTime,
-                    createdAt: new Date().toISOString(),
-                    price: pricePerBooking,
-                    status: status,
-                    expiresAt: requirePaymentConfirmation ? 
-                        new Date(Date.now() + (config.features && config.features.paymentTimeoutMinutes || 60) * 60 * 1000).toISOString() : 
-                        null,
-                    isRecurring: isRecurring,
-                    recurringWeeks: recurringWeeks,
-                    bookingDates: allBookingDates
-                };
-                
-                if (requirePaymentConfirmation) {
-                    booking.paymentInfo = config.paymentInfo;
-                }
-                
-                await db.createBooking(booking);
-                bookingIndex++;
+            // Calculate the actual end time by adding duration to start time
+            const startTimeMinutes = parseInt(time.split(':')[0]) * 60 + parseInt(time.split(':')[1]);
+            const endTimeMinutes = startTimeMinutes + duration;
+            const endHours = Math.floor(endTimeMinutes / 60) % 24;
+            const endMins = endTimeMinutes % 60;
+            const calculatedEndTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+            
+            const booking = {
+                id: `${bookingId}-${bookingIndex}`,
+                groupId: bookingId,
+                bookingNumber: bookingNumber,
+                name,
+                phone,
+                date: bookingDate,
+                time: time, // Start time
+                duration: duration,
+                totalSlots: timeSlots.length,
+                startTime: time,
+                endTime: calculatedEndTime,
+                bookedSlots: timeSlots.join(','), // Store all booked slots as comma-separated string
+                createdAt: new Date().toISOString(),
+                price: pricePerDate,
+                status: status,
+                expiresAt: requirePaymentConfirmation ? 
+                    new Date(Date.now() + (config.features && config.features.paymentTimeoutMinutes || 60) * 60 * 1000).toISOString() : 
+                    null,
+                isRecurring: isRecurring,
+                recurringWeeks: recurringWeeks,
+                bookingDates: allBookingDates
+            };
+            
+            if (requirePaymentConfirmation) {
+                booking.paymentInfo = config.paymentInfo;
             }
+            
+            await db.createBooking(booking);
+            bookingIndex++;
         }
         
         // Calculate the actual end time for the response
@@ -664,29 +685,49 @@ app.get('/api/admin/bookings', async (req, res) => {
             
             // Add to totals
             groupedBookings[bookingNumber].totalPrice += (booking.price || 0);
-            groupedBookings[bookingNumber].allSlots.push(booking.time);
+            
+            // Handle different slot storage formats
+            if (booking.bookedSlots) {
+                // New format: slots stored as comma-separated string
+                const slots = booking.bookedSlots.split(',');
+                groupedBookings[bookingNumber].allSlots.push(...slots);
+            } else {
+                // Legacy format: single slot in time field
+                groupedBookings[bookingNumber].allSlots.push(booking.time);
+            }
+            
             groupedBookings[bookingNumber].allDates.add(booking.date);
         });
         
         // Convert to array and format the results
-        const result = Object.values(groupedBookings).map(group => ({
-            id: group.id,
-            bookingNumber: group.bookingNumber,
-            name: group.name,
-            phone: group.phone,
-            date: group.date, // First date
-            time: group.time, // First time slot
-            duration: group.duration || 30,
-            price: group.totalPrice, // Total price for all slots
-            status: group.status,
-            createdAt: group.createdAt,
-            expiresAt: group.expiresAt,
-            isRecurring: group.isRecurring || false,
-            recurringWeeks: group.recurringWeeks || 1,
-            // Additional info for display
-            allDates: [...group.allDates].sort(),
-            totalSlots: group.allSlots.length
-        }));
+        const result = Object.values(groupedBookings).map(group => {
+            // Calculate proper time display
+            let timeDisplay = group.startTime || group.time;
+            if (group.endTime && group.endTime !== group.startTime) {
+                timeDisplay = `${group.startTime || group.time} - ${group.endTime}`;
+            }
+            
+            return {
+                id: group.id,
+                bookingNumber: group.bookingNumber,
+                name: group.name,
+                phone: group.phone,
+                date: group.date, // First date
+                time: timeDisplay, // Show proper time range
+                startTime: group.startTime || group.time,
+                endTime: group.endTime,
+                duration: group.duration || 30,
+                price: group.totalPrice, // Total price for all slots
+                status: group.status,
+                createdAt: group.createdAt,
+                expiresAt: group.expiresAt,
+                isRecurring: group.isRecurring || false,
+                recurringWeeks: group.recurringWeeks || 1,
+                // Additional info for display
+                allDates: [...group.allDates].sort(),
+                totalSlots: group.allSlots.length
+            };
+        });
         
         res.json(result);
     } catch (error) {
