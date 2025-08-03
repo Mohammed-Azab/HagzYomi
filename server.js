@@ -646,7 +646,8 @@ app.post('/api/book', async (req, res) => {
                 startTime: time,
                 endTime: responseEndTime,
                 duration,
-                price: totalPrice * allBookingDates.length,
+                price: totalPrice, // Show price per week for user (not total for all weeks)
+                totalPrice: totalPrice * allBookingDates.length, // Keep total for internal use
                 status: status,
                 slots: timeSlots,
                 isRecurring: isRecurring,
@@ -879,6 +880,8 @@ app.post('/api/check-booking', async (req, res) => {
         })).sort((a, b) => a.weekNumber - b.weekNumber);
         
         // Prepare response
+        const pricePerWeek = allRelatedBookings.length > 0 ? allRelatedBookings[0].price || 0 : 0;
+        
         const bookingDetails = {
             id: booking.id,
             groupId: booking.groupId,
@@ -890,7 +893,8 @@ app.post('/api/check-booking', async (req, res) => {
             startTime: booking.startTime || booking.time,
             endTime: booking.endTime || booking.time,
             duration: booking.duration || 30,
-            price: totalPrice,
+            price: pricePerWeek, // Show price per week for consistency with booking success
+            totalPrice: totalPrice, // Show total price separately for recurring bookings
             status: booking.status,
             createdAt: booking.createdAt,
             expiresAt: booking.expiresAt,

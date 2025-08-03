@@ -125,6 +125,15 @@ function displayBookingDetails() {
         return bookingData.date;
     };
     
+    // Format price display for recurring vs single bookings
+    const formatPriceDisplay = () => {
+        if (bookingData.isRecurring && bookingData.recurringWeeks > 1) {
+            return `${bookingData.price} جنيه (لكل أسبوع)`;
+        } else {
+            return `${bookingData.price} جنيه`;
+        }
+    };
+    
     detailsContainer.innerHTML = `
         <div class="detail-row">
             <span class="detail-label">الاسم:</span>
@@ -148,7 +157,7 @@ function displayBookingDetails() {
         </div>
         <div class="detail-row">
             <span class="detail-label">السعر:</span>
-            <span class="detail-value">${bookingData.price} جنيه</span>
+            <span class="detail-value">${formatPriceDisplay()}</span>
         </div>
         ${bookingData.isRecurring ? `
         <div class="detail-row">
@@ -251,20 +260,27 @@ function startInstaPayRedirect(instaPayLink) {
 function startCountdown() {
     console.log('⏰ Starting countdown timer...');
     console.log('📅 Booking created at:', bookingData.createdAt);
+    console.log('📅 Booking expires at:', bookingData.expiresAt);
     
-    if (!bookingData.createdAt) {
-        console.error('❌ No createdAt timestamp available for countdown');
-        // Use current time as fallback
-        bookingData.createdAt = new Date().toISOString();
-        console.log('⚠️ Using current time as fallback:', bookingData.createdAt);
+    if (!bookingData.expiresAt && !bookingData.createdAt) {
+        console.error('❌ No expiration or creation timestamp available for countdown');
+        return;
     }
     
-    // Calculate time remaining (1 hour from creation)
-    const createdAt = new Date(bookingData.createdAt);
-    const expiresAt = new Date(createdAt.getTime() + (60 * 60 * 1000)); // Add 1 hour
+    // Use expiresAt if available, otherwise calculate from createdAt
+    let expiresAt;
+    if (bookingData.expiresAt) {
+        expiresAt = new Date(bookingData.expiresAt);
+        console.log('✅ Using expiresAt from server:', bookingData.expiresAt);
+    } else {
+        // Fallback: calculate expiration from creation time
+        const createdAt = new Date(bookingData.createdAt);
+        expiresAt = new Date(createdAt.getTime() + (60 * 60 * 1000)); // Add 1 hour
+        console.log('⚠️ Calculating expiration from createdAt:', bookingData.createdAt);
+    }
     
     console.log('⏰ Timer details:', {
-        createdAt: createdAt.toISOString(),
+        createdAt: bookingData.createdAt,
         expiresAt: expiresAt.toISOString(),
         now: new Date().toISOString()
     });
