@@ -204,7 +204,7 @@ async function generateBookingNumber() {
     return bookingNumber;
 }
 
-// Function to automatically expire unpaid bookings after 1 hour
+// Function to automatically expire unpaid bookings after configured timeout
 async function expireOldBookings() {
     try {
         const bookings = await loadBookings();
@@ -212,16 +212,32 @@ async function expireOldBookings() {
         let expiredCount = 0;
         
         for (const booking of bookings) {
-            // Only check pending bookings that have a creation time
-            if (booking.status === 'pending' && booking.createdAt) {
-                const createdTime = new Date(booking.createdAt);
-                const hoursSinceCreated = (now - createdTime) / (1000 * 60 * 60); // Convert to hours
+            // Only check pending bookings that have an expiration time
+            if (booking.status === 'pending' && booking.expiresAt) {
+                const expirationTime = new Date(booking.expiresAt);
                 
-                // If more than 1 hour has passed, mark as expired
-                if (hoursSinceCreated >= 1) {
+                // If current time is past the expiration time, mark as expired
+                if (now > expirationTime) {
+                    console.log(`⏰ Expiring booking ${booking.bookingNumber} (created: ${booking.createdAt}, expires: ${booking.expiresAt})`);
                     await db.updateBooking(booking.id, { 
                         status: 'expired',
                         expiredAt: now.toISOString()
+                    });
+                    expiredCount++;
+                }
+            } else if (booking.status === 'pending' && booking.createdAt && !booking.expiresAt) {
+                // Fallback for bookings without expiresAt field (legacy bookings)
+                const createdTime = new Date(booking.createdAt);
+                const paymentTimeoutMinutes = config.features && config.features.paymentTimeoutMinutes || 60;
+                const hoursSinceCreated = (now - createdTime) / (1000 * 60 * 60); // Convert to hours
+                
+                // If more than configured timeout has passed, mark as expired
+                if (hoursSinceCreated >= (paymentTimeoutMinutes / 60)) {
+                    console.log(`⏰ Expiring legacy booking ${booking.bookingNumber} (created: ${booking.createdAt}, timeout: ${paymentTimeoutMinutes}min)`);
+                    await db.updateBooking(booking.id, { 
+                        status: 'expired',
+                        expiredAt: now.toISOString(),
+                        expiresAt: new Date(new Date(booking.createdAt).getTime() + (paymentTimeoutMinutes * 60 * 1000)).toISOString()
                     });
                     expiredCount++;
                 }
@@ -229,7 +245,7 @@ async function expireOldBookings() {
         }
         
         if (expiredCount > 0) {
-            console.log(`⏰ Expired ${expiredCount} unpaid bookings older than 1 hour`);
+            console.log(`⏰ Expired ${expiredCount} unpaid bookings past their timeout`);
         }
         
         return expiredCount;
