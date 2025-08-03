@@ -223,12 +223,6 @@ function displayBookingDetails(booking) {
                     <span class="label">السعر:</span>
                     <span class="value">${booking.isRecurring && booking.recurringWeeks > 1 ? `${booking.price} جنيه (لكل أسبوع)` : `${booking.price} جنيه`}</span>
                 </div>
-                ${booking.isRecurring && booking.totalPrice && booking.totalPrice !== booking.price ? `
-                <div class="info-row">
-                    <span class="label">إجمالي السعر:</span>
-                    <span class="value">${booking.totalPrice} جنيه</span>
-                </div>
-                ` : ''}
                 <div class="info-row">
                     <span class="label">تاريخ الحجز:</span>
                     <span class="value">${new Date(booking.createdAt).toLocaleString('ar-EG')}</span>
