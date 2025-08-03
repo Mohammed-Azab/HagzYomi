@@ -625,8 +625,8 @@ function renderBookings() {
     
     bookingsTable.innerHTML = sortedBookings.map(booking => `
         <tr>
-            <td style="font-weight: 600; color: var(--primary-color);">${booking.bookingNumber || booking.id}</td>
-            <td>${booking.name}</td>
+            <td style="font-weight: 600; color: var(--primary-color);">${booking.displayBookingNumber || booking.bookingNumber || booking.id}</td>
+            <td>${booking.displayName || booking.name}</td>
             <td>
                 <a href="tel:${booking.phone}" style="color: var(--primary-color); text-decoration: none;">
                     ${booking.phone}
@@ -645,11 +645,11 @@ function renderBookings() {
             <td>
                 <div class="action-buttons">
                     ${booking.status === 'pending' ? `
-                        <button class="btn btn-success btn-small" onclick="confirmBooking('${booking.bookingNumber}', 'confirm')" title="تأكيد الحجز">
-                            ✅ تأكيد
+                        <button class="btn btn-success btn-small" onclick="confirmBooking('${booking.bookingNumber}', 'confirm')" title="${booking.isRecurring ? `تأكيد جميع الأسابيع (${booking.totalWeeks})` : 'تأكيد الحجز'}">
+                            ✅ تأكيد${booking.isRecurring ? ` جميع الأسابيع` : ''}
                         </button>
-                        <button class="btn btn-warning btn-small" onclick="confirmBooking('${booking.bookingNumber}', 'decline')" title="رفض الحجز">
-                            ❌ رفض
+                        <button class="btn btn-warning btn-small" onclick="confirmBooking('${booking.bookingNumber}', 'decline', '${booking.id}')" title="${booking.isRecurring ? `رفض الأسبوع ${booking.weekNumber}/${booking.totalWeeks}` : 'رفض الحجز'}">
+                            ❌ رفض${booking.isRecurring ? ` (${booking.weekNumber}/${booking.totalWeeks})` : ''}
                         </button>
                     ` : ''}
                     <button class="btn btn-danger btn-small" onclick="showDeleteModal('${booking.id}')" title="حذف الحجز">
@@ -1119,23 +1119,42 @@ function getStatusText(status) {
 }
 
 // Confirm or decline booking payment
-async function confirmBooking(bookingNumber, action) {
+async function confirmBooking(bookingNumber, action, bookingId = null) {
     const actionText = action === 'confirm' ? 'تأكيد' : 'رفض';
     
-    if (!confirm(`هل أنت متأكد من ${actionText} هذا الحجز؟`)) {
+    let confirmMessage;
+    if (action === 'confirm' && !bookingId) {
+        // Confirming all weeks of recurring booking
+        confirmMessage = `هل أنت متأكد من ${actionText} جميع أسابيع هذا الحجز المتكرر؟`;
+    } else if (action === 'decline' && bookingId) {
+        // Declining specific week
+        confirmMessage = `هل أنت متأكد من ${actionText} هذا الأسبوع من الحجز المتكرر؟`;
+    } else {
+        // Regular booking or decline all
+        confirmMessage = `هل أنت متأكد من ${actionText} هذا الحجز؟`;
+    }
+    
+    if (!confirm(confirmMessage)) {
         return;
     }
     
     try {
+        const requestBody = {
+            bookingNumber: bookingNumber,
+            action: action
+        };
+        
+        // If bookingId is provided, include it to update only that specific week
+        if (bookingId) {
+            requestBody.bookingId = bookingId;
+        }
+        
         const response = await fetch('/api/confirm-booking', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                bookingNumber: bookingNumber,
-                action: action
-            })
+            body: JSON.stringify(requestBody)
         });
         
         const result = await response.json();

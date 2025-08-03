@@ -560,11 +560,11 @@ app.post('/api/book', async (req, res) => {
             }
         }
         
-        // Create all booking entries - EFFICIENT VERSION: One entry per date instead of per slot
+        // Create all booking entries - Store each week as separate entry for better admin control
         let bookingIndex = 0;
-        const pricePerDate = totalPrice; // Total price for all dates
+        const pricePerWeek = totalPrice; // Price per week (same for each occurrence)
         
-        console.log(`💰 Price distribution: Total=${totalPrice}, Duration=${duration}min, Slots=${timeSlots.length}, Weeks=${allBookingDates.length}, Per date=${pricePerDate}`);
+        console.log(`💰 Price distribution: Total per week=${totalPrice}, Duration=${duration}min, Slots=${timeSlots.length}, Weeks=${allBookingDates.length}, Per week=${pricePerWeek}`);
         
         for (const bookingDate of allBookingDates) {
             // Calculate the actual end time by adding duration to start time
@@ -574,10 +574,13 @@ app.post('/api/book', async (req, res) => {
             const endMins = endTimeMinutes % 60;
             const calculatedEndTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
             
+            // Calculate which week this is in the recurring sequence
+            const weekNumber = allBookingDates.indexOf(bookingDate) + 1;
+            
             const booking = {
                 id: `${bookingId}-${bookingIndex}`,
-                groupId: bookingId,
-                bookingNumber: bookingNumber,
+                groupId: bookingId, // Links all weeks together
+                bookingNumber: bookingNumber, // Same confirmation number for all weeks
                 name,
                 phone,
                 date: bookingDate,
@@ -588,14 +591,17 @@ app.post('/api/book', async (req, res) => {
                 endTime: calculatedEndTime,
                 bookedSlots: timeSlots.join(','), // Store all booked slots as comma-separated string
                 createdAt: new Date().toISOString(),
-                price: pricePerDate,
-                status: status,
+                price: pricePerWeek, // Price for this specific week
+                status: status, // Each week can have its own status
                 expiresAt: requirePaymentConfirmation ? 
                     new Date(Date.now() + (config.features && config.features.paymentTimeoutMinutes || 60) * 60 * 1000).toISOString() : 
                     null,
                 isRecurring: isRecurring,
                 recurringWeeks: recurringWeeks,
-                bookingDates: allBookingDates
+                weekNumber: weekNumber, // Which week in the sequence (1, 2, 3, etc.)
+                totalWeeks: allBookingDates.length, // Total number of weeks in this recurring booking
+                recurringSequence: `${weekNumber}/${allBookingDates.length}`, // Display format: "2/4" means week 2 of 4
+                allBookingDates: allBookingDates // Reference to all dates in this recurring booking
             };
             
             if (requirePaymentConfirmation) {
@@ -667,66 +673,59 @@ app.get('/api/admin/bookings', async (req, res) => {
     try {
         const bookings = await loadBookings();
         
-        // Group bookings by booking number and calculate totals
-        const groupedBookings = {};
-        
-        bookings.forEach(booking => {
-            const bookingNumber = booking.bookingNumber;
-            
-            if (!groupedBookings[bookingNumber]) {
-                // First booking in this group - use it as the base
-                groupedBookings[bookingNumber] = {
-                    ...booking,
-                    totalPrice: 0,
-                    allSlots: [],
-                    allDates: new Set()
-                };
-            }
-            
-            // Add to totals
-            groupedBookings[bookingNumber].totalPrice += (booking.price || 0);
-            
-            // Handle different slot storage formats
-            if (booking.bookedSlots) {
-                // New format: slots stored as comma-separated string
-                const slots = booking.bookedSlots.split(',');
-                groupedBookings[bookingNumber].allSlots.push(...slots);
-            } else {
-                // Legacy format: single slot in time field
-                groupedBookings[bookingNumber].allSlots.push(booking.time);
-            }
-            
-            groupedBookings[bookingNumber].allDates.add(booking.date);
-        });
-        
-        // Convert to array and format the results
-        const result = Object.values(groupedBookings).map(group => {
+        // For recurring bookings, show each week as separate entry
+        // For non-recurring, keep as single entry
+        const result = bookings.map(booking => {
             // Calculate proper time display
-            let timeDisplay = group.startTime || group.time;
-            if (group.endTime && group.endTime !== group.startTime) {
-                timeDisplay = `${group.startTime || group.time} - ${group.endTime}`;
+            let timeDisplay = booking.startTime || booking.time;
+            if (booking.endTime && booking.endTime !== booking.startTime) {
+                timeDisplay = `${booking.startTime || booking.time} - ${booking.endTime}`;
+            }
+            
+            // For recurring bookings, add week information to the display
+            let displayName = booking.name;
+            let displayBookingNumber = booking.bookingNumber;
+            
+            if (booking.isRecurring && booking.weekNumber) {
+                displayName = `${booking.name} (الأسبوع ${booking.weekNumber}/${booking.totalWeeks})`;
+                displayBookingNumber = `${booking.bookingNumber}-W${booking.weekNumber}`;
             }
             
             return {
-                id: group.id,
-                bookingNumber: group.bookingNumber,
-                name: group.name,
-                phone: group.phone,
-                date: group.date, // First date
-                time: timeDisplay, // Show proper time range
-                startTime: group.startTime || group.time,
-                endTime: group.endTime,
-                duration: group.duration || 30,
-                price: group.totalPrice, // Total price for all slots
-                status: group.status,
-                createdAt: group.createdAt,
-                expiresAt: group.expiresAt,
-                isRecurring: group.isRecurring || false,
-                recurringWeeks: group.recurringWeeks || 1,
+                id: booking.id,
+                groupId: booking.groupId,
+                bookingNumber: booking.bookingNumber, // Keep original booking number for operations
+                displayBookingNumber: displayBookingNumber, // For display purposes
+                name: booking.name,
+                displayName: displayName, // Enhanced name with week info
+                phone: booking.phone,
+                date: booking.date,
+                time: timeDisplay,
+                startTime: booking.startTime || booking.time,
+                endTime: booking.endTime,
+                duration: booking.duration || 30,
+                price: booking.price,
+                status: booking.status,
+                createdAt: booking.createdAt,
+                expiresAt: booking.expiresAt,
+                isRecurring: booking.isRecurring || false,
+                recurringWeeks: booking.recurringWeeks || 1,
+                weekNumber: booking.weekNumber || 1,
+                totalWeeks: booking.totalWeeks || 1,
+                recurringSequence: booking.recurringSequence || '1/1',
                 // Additional info for display
-                allDates: [...group.allDates].sort(),
-                totalSlots: group.allSlots.length
+                totalSlots: booking.totalSlots || 1
             };
+        });
+        
+        // Sort by creation date (newest first), then by week number for recurring bookings
+        result.sort((a, b) => {
+            // First sort by creation date
+            const dateComparison = new Date(b.createdAt) - new Date(a.createdAt);
+            if (dateComparison !== 0) return dateComparison;
+            
+            // If same creation date (recurring bookings), sort by week number
+            return (a.weekNumber || 1) - (b.weekNumber || 1);
         });
         
         res.json(result);
@@ -739,16 +738,33 @@ app.get('/api/admin/bookings', async (req, res) => {
 // Update booking status
 app.post('/api/confirm-booking', async (req, res) => {
     try {
-        const { bookingNumber, action } = req.body;
+        const { bookingNumber, action, bookingId } = req.body;
         
         if (!bookingNumber || !action) {
             return res.json({ success: false, message: 'رقم الحجز والإجراء مطلوبان' });
         }
         
         const bookings = await loadBookings();
-        const groupBookings = bookings.filter(b => b.bookingNumber === bookingNumber);
         
-        if (groupBookings.length === 0) {
+        let targetBookings = [];
+        
+        if (action === 'confirm') {
+            // For confirmation: ALWAYS confirm all weeks in the recurring booking
+            targetBookings = bookings.filter(b => b.bookingNumber === bookingNumber);
+        } else if (action === 'decline') {
+            // For decline: if bookingId is provided, decline only that specific week
+            // if no bookingId, decline all weeks
+            if (bookingId) {
+                const specificBooking = bookings.find(b => b.id === bookingId);
+                if (specificBooking) {
+                    targetBookings = [specificBooking];
+                }
+            } else {
+                targetBookings = bookings.filter(b => b.bookingNumber === bookingNumber);
+            }
+        }
+        
+        if (targetBookings.length === 0) {
             return res.json({ success: false, message: 'لم يتم العثور على الحجز' });
         }
         
@@ -761,11 +777,29 @@ app.post('/api/confirm-booking', async (req, res) => {
             updates.declinedAt = new Date().toISOString();
         }
         
-        for (const booking of groupBookings) {
+        for (const booking of targetBookings) {
             await db.updateBooking(booking.id, updates);
         }
         
-        res.json({ success: true, message: `تم ${action === 'confirm' ? 'تأكيد' : 'رفض'} الحجز بنجاح` });
+        let actionMessage = action === 'confirm' ? 'تأكيد' : 'رفض';
+        let responseMessage = '';
+        
+        if (action === 'confirm' && targetBookings.length > 1) {
+            // Confirming all weeks of recurring booking
+            responseMessage = `تم ${actionMessage} جميع الأسابيع (${targetBookings.length}) للحجز المتكرر رقم ${bookingNumber} بنجاح`;
+        } else if (action === 'decline' && targetBookings.length === 1 && targetBookings[0].isRecurring) {
+            // Declining single week of recurring booking
+            const booking = targetBookings[0];
+            responseMessage = `تم ${actionMessage} الأسبوع ${booking.weekNumber}/${booking.totalWeeks} من الحجز رقم ${bookingNumber} بنجاح`;
+        } else if (targetBookings.length > 1) {
+            // Multiple weeks
+            responseMessage = `تم ${actionMessage} ${targetBookings.length} من أسابيع الحجز رقم ${bookingNumber} بنجاح`;
+        } else {
+            // Single non-recurring booking
+            responseMessage = `تم ${actionMessage} الحجز رقم ${bookingNumber} بنجاح`;
+        }
+        
+        res.json({ success: true, message: responseMessage });
         
     } catch (error) {
         console.error('Error updating booking:', error);
@@ -803,10 +837,30 @@ app.post('/api/check-booking', async (req, res) => {
         
         console.log(`✅ Found booking: ${booking.bookingNumber} for ${booking.name}`);
         
-        // Get all bookings for this group to calculate total price and get booking dates
-        const groupBookings = bookings.filter(b => b.groupId === booking.groupId);
-        const totalPrice = groupBookings.reduce((sum, b) => sum + (b.price || 0), 0);
-        const bookingDates = [...new Set(groupBookings.map(b => b.date))].sort();
+        // Get all bookings with the same booking number (all weeks in recurring booking)
+        const allRelatedBookings = bookings.filter(b => b.bookingNumber === booking.bookingNumber);
+        
+        // Calculate total price and prepare detailed information for each week
+        const totalPrice = allRelatedBookings.reduce((sum, b) => sum + (b.price || 0), 0);
+        const bookingDates = [...new Set(allRelatedBookings.map(b => b.date))].sort();
+        
+        // Group by status for recurring bookings
+        const statusSummary = {};
+        allRelatedBookings.forEach(b => {
+            const status = b.status || 'confirmed';
+            if (!statusSummary[status]) {
+                statusSummary[status] = 0;
+            }
+            statusSummary[status]++;
+        });
+        
+        // Prepare detailed weeks information for recurring bookings
+        const weeksInfo = allRelatedBookings.map(b => ({
+            date: b.date,
+            weekNumber: b.weekNumber || 1,
+            status: b.status || 'confirmed',
+            price: b.price || 0
+        })).sort((a, b) => a.weekNumber - b.weekNumber);
         
         // Prepare response
         const bookingDetails = {
@@ -827,7 +881,11 @@ app.post('/api/check-booking', async (req, res) => {
             isRecurring: booking.isRecurring || false,
             recurringWeeks: booking.recurringWeeks || 1,
             bookingDates: bookingDates,
-            paymentInfo: booking.paymentInfo
+            paymentInfo: booking.paymentInfo,
+            // New fields for enhanced recurring booking support
+            statusSummary: statusSummary,
+            weeksInfo: weeksInfo,
+            totalWeeks: allRelatedBookings.length
         };
         
         res.json({ success: true, booking: bookingDetails });
