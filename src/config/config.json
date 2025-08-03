@@ -29,7 +29,7 @@
     "allowCancellation": true,
     "cancellationHours": 2,
     "enableRecurringBooking": true,
-    "maxRecurringWeeks": 8,
+    "maxRecurringWeeks": 16,
     "requirePaymentConfirmation": true,
     "paymentTimeoutMinutes": 60
   },

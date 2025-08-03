@@ -95,7 +95,7 @@ async function loadConfig() {
             
             // Update max weeks based on config
             const maxWeeks = Math.min(
-                config.features.maxRecurringWeeks || 8,
+                config.features.maxRecurringWeeks || 16,
                 Math.floor(config.maxBookingDaysAhead / 7)
             );
             
@@ -106,6 +106,8 @@ async function loadConfig() {
                 option.value = i;
                 option.textContent = i === 4 ? 'شهر (4 أسابيع)' : 
                                    i === 8 ? 'شهرين (8 أسابيع)' : 
+                                   i === 12 ? '3 أشهر (12 أسبوع)' :
+                                   i === 16 ? '4 أشهر (16 أسبوع)' :
                                    `${i} أسابيع`;
                 recurringWeeksSelect.appendChild(option);
             }

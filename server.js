@@ -544,7 +544,7 @@ app.post('/api/book', async (req, res) => {
         
         // Handle recurring bookings
         if (isRecurring && recurringWeeks > 1) {
-            const maxRecurringWeeks = config.features && config.features.maxRecurringWeeks || 8;
+            const maxRecurringWeeks = config.features && config.features.maxRecurringWeeks || 16;
             if (recurringWeeks > maxRecurringWeeks) {
                 return res.json({ 
                     success: false, 
