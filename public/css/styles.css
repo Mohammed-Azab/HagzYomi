@@ -204,20 +204,6 @@ body {
     background-color: rgba(33, 150, 243, 0.05);
 }
 
-.time-slot.selected {
-    background-color: var(--primary-color) !important;
-    color: white !important;
-    border-color: var(--primary-color) !important;
-    font-weight: bold;
-}
-
-.time-slot.selected-group {
-    background-color: rgba(33, 150, 243, 0.7) !important;
-    color: white !important;
-    border-color: var(--primary-color) !important;
-    font-weight: 500;
-}
-
 .duration-indicator {
     font-size: 0.8rem;
     opacity: 0.8;
@@ -229,6 +215,117 @@ body {
     color: var(--text-secondary) !important;
     cursor: not-allowed;
     opacity: 0.6;
+}
+
+/* Enhanced Time Slot Visualization */
+.slots-header {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.slots-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+}
+
+.legend-color.available {
+    background-color: var(--primary-color);
+}
+
+.legend-color.booked {
+    background-color: var(--border-color);
+}
+
+/* Available slot styling */
+.time-slot.available {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+}
+
+.time-slot.available:hover {
+    background-color: var(--primary-dark) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+/* Enhanced slot structure */
+.time-slot {
+    padding: 0.75rem 0.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    background: white;
+    color: #333333;
+    font-size: 0.95rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 70px;
+    position: relative;
+}
+
+/* Selection styles with higher specificity */
+.time-slots .time-slot.selected,
+.time-slots .time-slot.selected-group {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+    font-weight: bold !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4) !important;
+}
+
+.time-slots .time-slot.selected-group {
+    opacity: 0.8 !important;
+}
+
+.time-slots .time-slot.selected .duration-indicator,
+.time-slots .time-slot.selected-group .duration-indicator {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    color: var(--primary-color) !important;
+}
+
+.time-display {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.duration-indicator {
+    font-size: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--primary-color);
+    padding: 0.2rem 0.4rem;
+    border-radius: 12px;
+    margin-top: 0.3rem;
+    font-weight: 600;
+}
+
+.time-slot.available .duration-indicator {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--primary-color);
 }
 
 .loading {

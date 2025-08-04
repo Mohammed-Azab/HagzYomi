@@ -291,13 +291,44 @@ async function getAvailableSlots(date) {
     // Extract all booked slots from active bookings
     const bookedSlots = [];
     activeBookings.forEach(booking => {
+        console.log(`📅 Processing booking for ${booking.date}:`, {
+            id: booking.id,
+            time: booking.time,
+            duration: booking.duration,
+            starttime: booking.starttime,
+            endtime: booking.endtime,
+            bookedSlots: booking.bookedSlots,
+            status: booking.status
+        });
+        
         if (booking.bookedSlots) {
             // New format: slots stored as comma-separated string
             const slots = booking.bookedSlots.split(',');
+            console.log(`   New format slots:`, slots);
             bookedSlots.push(...slots);
         } else {
-            // Legacy format: single slot in time field
-            bookedSlots.push(booking.time);
+            // Legacy format: calculate slots from start time and duration
+            const startTime = booking.starttime || booking.time;
+            const duration = booking.duration || config.slotDurationMinutes;
+            
+            console.log(`   Legacy format - Start: ${startTime}, Duration: ${duration} minutes`);
+            
+            // Generate all 30-minute slots within the booking duration
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            let currentMinutes = startHour * 60 + startMinute;
+            const endMinutes = currentMinutes + duration;
+            
+            const bookingSlots = [];
+            while (currentMinutes < endMinutes) {
+                const hours = Math.floor(currentMinutes / 60) % 24;
+                const minutes = currentMinutes % 60;
+                const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                bookingSlots.push(timeString);
+                currentMinutes += config.slotDurationMinutes; // 30 minutes
+            }
+            
+            console.log(`   Calculated slots for ${startTime} (${duration}min):`, bookingSlots);
+            bookedSlots.push(...bookingSlots);
         }
     });
     
@@ -395,13 +426,22 @@ app.get('/api/slots/:date', async (req, res) => {
     
     try {
         // Get booked slots (excluding expired bookings)
-        const bookedSlots = await getAvailableSlots(date);
+        const bookedSlots = await getAvailableSlots(date); // NOTE: This function returns BOOKED slots despite its name
+        
+        console.log(`\n=== SLOT DEBUG for ${date} ===`);
+        console.log('Raw booked slots from DB:', bookedSlots);
         
         const allSlots = getTimeSlots();
+        console.log('All possible slots:', allSlots);
+        
         const now = getCairoTime(); // Use Cairo time for consistency
+        console.log('Current Cairo time:', now.toISOString());
         
         const availableSlots = allSlots.filter(slot => {
-            if (bookedSlots.includes(slot)) return false;
+            if (bookedSlots.includes(slot)) {
+                console.log(`${slot}: BOOKED`);
+                return false;
+            }
             
             const [slotHour] = slot.split(':').map(Number);
             const [startHour] = config.openingHours.start.split(':').map(Number);
@@ -417,8 +457,15 @@ app.get('/api/slots/:date', async (req, res) => {
             // Add 30-minute buffer for booking availability
             const thirtyMinutesFromNow = new Date(now.getTime() + (30 * 60 * 1000));
             
-            return slotDateTime > thirtyMinutesFromNow;
+            const isFuture = slotDateTime > thirtyMinutesFromNow;
+            console.log(`${slot}: slotTime=${slotDateTime.toISOString()}, thirtyMinFromNow=${thirtyMinutesFromNow.toISOString()}, isFuture=${isFuture}`);
+            
+            return isFuture;
         });
+        
+        console.log('Final available slots:', availableSlots);
+        console.log('Final booked slots:', bookedSlots);
+        console.log('=== END SLOT DEBUG ===\n');
         
         res.json({
             available: true,

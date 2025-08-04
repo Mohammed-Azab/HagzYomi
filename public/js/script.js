@@ -16,7 +16,6 @@ let countdownInterval = null; // Add global countdown control
 // DOM elements
 const bookingForm = document.getElementById('bookingForm');
 const dateInput = document.getElementById('bookingDate');
-const durationSelect = document.getElementById('bookingDuration');
 const timeSlotsContainer = document.getElementById('timeSlots');
 const submitBtn = document.getElementById('submitBtn');
 
@@ -147,9 +146,6 @@ function updateHeroContent() {
 function setupEventListeners() {
     // Date change handler
     dateInput.addEventListener('change', handleDateChange);
-    
-    // Duration change handler
-    durationSelect.addEventListener('change', handleDurationChange);
     
     // Form submission
     bookingForm.addEventListener('submit', handleFormSubmit);
@@ -343,15 +339,6 @@ async function handleDateChange() {
     await loadTimeSlots(date);
 }
 
-// Handle duration change
-async function handleDurationChange() {
-    if (selectedDate) {
-        selectedTime = null;
-        submitBtn.disabled = true;
-        await loadTimeSlots(selectedDate);
-    }
-}
-
 // Load available time slots for a date
 async function loadTimeSlots(date) {
     try {
@@ -359,6 +346,10 @@ async function loadTimeSlots(date) {
         
         const response = await fetch(`/api/slots/${date}`);
         const data = await response.json();
+        
+        console.log('Server response for date', date, ':', data);
+        console.log('Available slots:', data.slots);
+        console.log('Booked slots:', data.bookedSlots);
         
         if (!data.available) {
             timeSlotsContainer.innerHTML = `<p class="loading">${data.message}</p>`;
@@ -381,7 +372,10 @@ async function loadTimeSlots(date) {
 // Render time slots
 // Check if a time slot is in the past
 function isTimeSlotInPast(date, time) {
+    // Use Cairo time to match server logic
     const now = new Date();
+    const cairoNow = new Date(now.toLocaleString("en-US", {timeZone: "Africa/Cairo"}));
+    
     const [hours, minutes] = time.split(':').map(Number);
     
     // For overnight periods, times like 00:00-03:00 are considered next day
@@ -396,26 +390,48 @@ function isTimeSlotInPast(date, time) {
         slotDateTime.setDate(slotDateTime.getDate() + 1);
     }
     
-    return slotDateTime <= now;
+    // Add 30-minute buffer to match server logic
+    const thirtyMinutesFromNow = new Date(cairoNow.getTime() + (30 * 60 * 1000));
+    
+    console.log(`Frontend time check for ${time}: slotTime=${slotDateTime.toISOString()}, cairoNow=${cairoNow.toISOString()}, thirtyMinFromNow=${thirtyMinutesFromNow.toISOString()}, isPast=${slotDateTime <= thirtyMinutesFromNow}`);
+    
+    return slotDateTime <= thirtyMinutesFromNow;
 }
 
 function renderTimeSlots(availableSlots, bookedSlots) {
     timeSlotsContainer.innerHTML = '';
     
-    // Get all possible slots to show booked ones too
+    // Always show 30-minute intervals
     const allSlots = generateAllTimeSlots();
-    const selectedDuration = parseInt(durationSelect.value);
-    const slotsNeeded = selectedDuration / config.slotDurationMinutes;
     
     allSlots.forEach((time, index) => {
         const slotElement = document.createElement('div');
         slotElement.className = 'time-slot';
+        slotElement.setAttribute('data-time', time); // Add data attribute for easy identification
         
-        // Show only 12-hour format
-        slotElement.textContent = formatTimeToArabic12Hour(time);
+        // Create the time display
+        const timeDisplay = document.createElement('span');
+        timeDisplay.className = 'time-display';
+        timeDisplay.textContent = formatTimeToArabic12Hour(time);
+        slotElement.appendChild(timeDisplay);
+        
+        // Always show 30-minute duration
+        const durationText = document.createElement('span');
+        durationText.className = 'duration-indicator';
+        durationText.textContent = '30د';
+        slotElement.appendChild(durationText);
         
         // Check if time slot is in the past
         const isPastTime = isTimeSlotInPast(selectedDate, time);
+        
+        console.log(`Slot ${time}:`, {
+            bookedSlots: bookedSlots.includes(time),
+            isPastTime,
+            availableSlots: availableSlots.includes(time),
+            classification: bookedSlots.includes(time) ? 'booked' : 
+                         isPastTime ? 'past' : 
+                         availableSlots.includes(time) ? 'available' : 'unavailable'
+        });
         
         if (bookedSlots.includes(time)) {
             slotElement.classList.add('booked');
@@ -424,23 +440,9 @@ function renderTimeSlots(availableSlots, bookedSlots) {
             slotElement.classList.add('booked');
             slotElement.title = 'الوقت قد انتهى';
         } else if (availableSlots.includes(time)) {
-            // Check if we have enough consecutive slots for the selected duration
-            const canBook = canBookConsecutiveSlots(index, slotsNeeded, allSlots, bookedSlots, availableSlots);
-            
-            if (canBook) {
-                slotElement.addEventListener('click', () => selectTimeSlot(time, slotElement, selectedDuration));
-                
-                // Add duration indicator
-                if (selectedDuration > 30) {
-                    const durationText = document.createElement('span');
-                    durationText.className = 'duration-indicator';
-                    durationText.textContent = ` (${selectedDuration}د)`;
-                    slotElement.appendChild(durationText);
-                }
-            } else {
-                slotElement.classList.add('booked');
-                slotElement.title = 'لا توجد مواعيد كافية متتالية';
-            }
+            slotElement.classList.add('available');
+            slotElement.addEventListener('click', () => selectTimeSlot(time, slotElement, 30)); // Always select 30 minutes
+            slotElement.title = 'متاح للحجز (30 دقيقة)';
         } else {
             slotElement.classList.add('booked');
             slotElement.title = 'غير متاح';
@@ -448,29 +450,9 @@ function renderTimeSlots(availableSlots, bookedSlots) {
         
         timeSlotsContainer.appendChild(slotElement);
     });
-}
-
-// Check if we can book consecutive slots starting from a given index
-function canBookConsecutiveSlots(startIndex, slotsNeeded, allSlots, bookedSlots, availableSlots) {
-    // Check if we have enough slots remaining
-    if (startIndex + slotsNeeded > allSlots.length) {
-        return false;
-    }
     
-    // Check if all required consecutive slots are available
-    for (let i = 0; i < slotsNeeded; i++) {
-        const slotTime = allSlots[startIndex + i];
-        if (bookedSlots.includes(slotTime) || !availableSlots.includes(slotTime)) {
-            return false;
-        }
-        
-        // Check if slot is in the past
-        if (isTimeSlotInPast(selectedDate, slotTime)) {
-            return false;
-        }
-    }
-    
-    return true;
+    // Initialize booking progress indicator after loading slots
+    updateBookingProgress();
 }
 
 // Generate all possible time slots based on config
@@ -497,48 +479,194 @@ function generateAllTimeSlots() {
     return slots;
 }
 
+// Track selected slots for multi-slot booking
+let selectedSlots = [];
+let maxDuration = 0;
+
 // Select a time slot
 function selectTimeSlot(time, element, duration) {
-    // Remove previous selection
-    document.querySelectorAll('.time-slot.selected, .time-slot.selected-group').forEach(slot => {
-        slot.classList.remove('selected', 'selected-group');
-    });
+    // Check if this slot is already selected
+    const slotIndex = selectedSlots.findIndex(slot => slot.time === time);
     
-    // Add selection to clicked slot and consecutive slots
-    const allSlots = generateAllTimeSlots();
-    const startIndex = allSlots.indexOf(time);
-    const slotsNeeded = duration / config.slotDurationMinutes;
-    
-    // Highlight all selected slots
-    for (let i = 0; i < slotsNeeded; i++) {
-        const slotIndex = startIndex + i;
-        if (slotIndex < allSlots.length) {
-            const slotElement = timeSlotsContainer.children[slotIndex];
-            if (i === 0) {
-                slotElement.classList.add('selected');
-            } else {
-                slotElement.classList.add('selected-group');
-            }
-        }
+    if (slotIndex !== -1) {
+        // Deselect this slot and all slots after it in the sorted order
+        const allSlots = generateAllTimeSlots();
+        selectedSlots.sort((a, b) => {
+            const indexA = allSlots.indexOf(a.time);
+            const indexB = allSlots.indexOf(b.time);
+            return indexA - indexB;
+        });
+        
+        const sortedIndex = selectedSlots.findIndex(slot => slot.time === time);
+        selectedSlots = selectedSlots.slice(0, sortedIndex);
+        updateSlotVisuals();
+        updateSubmitButton();
+        return;
     }
     
-    selectedTime = time;
+    // Check maximum hours limit before adding new slot
+    const currentHours = (selectedSlots.length * 30) / 60; // Convert 30-min slots to hours
+    const maxHours = config.maxHoursPerPersonPerDay || 2;
     
-    // Enable submit button
+    if (currentHours >= maxHours) {
+        showError(`لا يمكن حجز أكثر من ${maxHours} ساعة في اليوم الواحد`);
+        return;
+    }
+    
+    // Add this slot to selection
+    selectedSlots.push({ time });
+    
+    // Sort slots by time order
+    const allSlots = generateAllTimeSlots();
+    selectedSlots.sort((a, b) => {
+        const indexA = allSlots.indexOf(a.time);
+        const indexB = allSlots.indexOf(b.time);
+        return indexA - indexB;
+    });
+    
+    // Check if all selected slots are consecutive
+    const selectedIndices = selectedSlots.map(slot => allSlots.indexOf(slot.time));
+    console.log('Selected times:', selectedSlots.map(s => s.time));
+    console.log('Selected indices:', selectedIndices);
+    console.log('All slots:', allSlots);
+    
+    const isConsecutive = selectedIndices.every((index, i) => {
+        if (i === 0) return true;
+        const isConsec = index === selectedIndices[i - 1] + 1;
+        console.log(`Checking ${selectedSlots[i].time} (index ${index}) vs previous ${selectedSlots[i-1].time} (index ${selectedIndices[i-1]}): ${isConsec}`);
+        return isConsec;
+    });
+    
+    console.log('Is consecutive:', isConsecutive);
+    
+    if (isConsecutive) {
+        updateSlotVisuals();
+        updateSubmitButton();
+    } else {
+        selectedSlots.pop();
+        updateSlotVisuals(); // Force visual refresh after removing invalid slot
+        showError('يجب اختيار الأوقات بشكل متتالي');
+    }
+}
+
+// Update visual appearance of selected slots
+function updateSlotVisuals() {
+    // Clear all previous selections more thoroughly
+    document.querySelectorAll('.time-slot').forEach(slot => {
+        slot.classList.remove('selected', 'selected-group');
+        // Clear inline styles completely
+        slot.style.backgroundColor = '';
+        slot.style.color = '';
+        slot.style.border = '';
+        slot.style.fontWeight = '';
+        slot.style.transform = '';
+        slot.style.boxShadow = '';
+    });
+    
+    console.log('Applying styles to:', selectedSlots.map(s => s.time));
+    
+    // Apply new selections using data attributes
+    selectedSlots.forEach((slot, index) => {
+        const slotElement = timeSlotsContainer.querySelector(`[data-time="${slot.time}"]`);
+        
+        if (slotElement) {
+            if (index === 0) {
+                slotElement.classList.add('selected');
+                console.log(`Added 'selected' class to ${slot.time}`);
+            } else {
+                slotElement.classList.add('selected-group');
+                console.log(`Added 'selected-group' class to ${slot.time}`);
+                // Add inline styles for testing
+                slotElement.style.backgroundColor = '#1976D2';
+                slotElement.style.color = 'white';
+                slotElement.style.border = '2px solid #1976D2';
+                slotElement.style.fontWeight = 'bold';
+            }
+            // Debug: show all classes on the element
+            console.log(`Element ${slot.time} classes:`, slotElement.className);
+        } else {
+            console.error(`Could not find element for ${slot.time}`);
+        }
+    });
+    
+    // Update booking progress indicator
+    updateBookingProgress();
+}
+
+// Update booking progress indicator
+function updateBookingProgress() {
+    const currentHours = (selectedSlots.length * 30) / 60;
+    const maxHours = config.maxHoursPerPersonPerDay || 2;
+    const remainingHours = maxHours - currentHours;
+    
+    // Find or create progress indicator
+    let progressElement = document.getElementById('bookingProgress');
+    if (!progressElement) {
+        progressElement = document.createElement('div');
+        progressElement.id = 'bookingProgress';
+        progressElement.style.cssText = 'margin: 10px 0; padding: 10px; background: #f0f8ff; border-radius: 5px; font-size: 14px;';
+        
+        const timeSlotsContainer = document.getElementById('timeSlots');
+        timeSlotsContainer.parentNode.insertBefore(progressElement, timeSlotsContainer);
+    }
+    
+    // Always show progress indicator
+    if (selectedSlots.length > 0) {
+        progressElement.innerHTML = `
+            <div style="color: #2196F3; font-weight: bold;">
+                📅 محدد حالياً: ${currentHours} ساعة (${selectedSlots.length} × 30 دقيقة)
+            </div>
+            <div style="color: ${remainingHours > 0 ? '#4CAF50' : '#f44336'}; margin-top: 5px;">
+                ${remainingHours > 0 
+                    ? `⏰ متبقي: ${remainingHours} ساعة` 
+                    : '⚠️ وصلت للحد الأقصى المسموح'}
+            </div>
+        `;
+    } else {
+        progressElement.innerHTML = `
+            <div style="color: #666; font-weight: bold;">
+                📅 محدد حالياً: 0 ساعة (0 × 30 دقيقة)
+            </div>
+            <div style="color: #4CAF50; margin-top: 5px;">
+                ⏰ متبقي: ${maxHours} ساعة
+            </div>
+        `;
+    }
+    progressElement.style.display = 'block';
+}
+
+// Update submit button state and text
+function updateSubmitButton() {
+    // Update the first slot's time if we have selections
+    if (selectedSlots.length > 0) {
+        selectedTime = selectedSlots[0].time;
+    } else {
+        selectedTime = null;
+    }
+    
+    if (selectedSlots.length === 0) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'احجز الآن';
+        return;
+    }
+    
+    const totalDuration = selectedSlots.length * 30;
+    
     submitBtn.disabled = false;
+    submitBtn.textContent = `احجز الآن (${totalDuration} دقيقة)`;
 }
 
 // Handle form submission
 async function handleFormSubmit(event) {
     event.preventDefault();
     
-    if (!selectedTime || !selectedDate) {
+    if (selectedSlots.length === 0 || !selectedDate) {
         showError('يرجى اختيار التاريخ والوقت');
         return;
     }
     
     const formData = new FormData(bookingForm);
-    const selectedDuration = parseInt(durationSelect.value);
+    const actualDuration = selectedSlots.length * 30; // Calculate actual duration from selected slots
     const isRecurring = enableRecurringCheckbox.checked;
     const recurringWeeks = isRecurring ? parseInt(recurringWeeksSelect.value) : 1;
     
@@ -546,8 +674,8 @@ async function handleFormSubmit(event) {
         name: formData.get('name').trim(),
         phone: formData.get('phone').trim(),
         date: selectedDate,
-        time: selectedTime,
-        duration: selectedDuration,
+        time: selectedTime, // First selected slot time
+        duration: actualDuration, // Use actual selected duration
         isRecurring: isRecurring,
         recurringWeeks: recurringWeeks
     };
@@ -630,7 +758,7 @@ ${result.booking.paymentInfo.instaPay ? `💳 إنستاباي: ${result.booking
             
             // Reset form
             bookingForm.reset();
-            durationSelect.value = '60'; // Reset to default
+            selectedSlots = []; // Reset selected slots
             selectedTime = null;
             selectedDate = null;
             timeSlotsContainer.innerHTML = '<p class="loading">اختر التاريخ لعرض المواعيد المتاحة</p>';
@@ -840,9 +968,9 @@ function formatDateForDisplay(dateString) {
     return date.toLocaleDateString('ar-EG', options);
 }
 
-// Auto-refresh slots every 30 seconds if date is selected
-setInterval(() => {
-    if (selectedDate && !document.hidden) {
-        loadTimeSlots(selectedDate);
-    }
-}, 30000);
+// Auto-refresh slots every 30 seconds if date is selected (DISABLED to prevent clearing selections)
+// setInterval(() => {
+//     if (selectedDate && !document.hidden) {
+//         loadTimeSlots(selectedDate);
+//     }
+// }, 30000);
