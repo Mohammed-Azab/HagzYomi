@@ -193,9 +193,54 @@ function displayBookingDetails(booking) {
     
     bookingDetails.innerHTML = `
         <div class="booking-card">
+            <div class="booking-status-section" style="
+                background: ${booking.status === 'pending' ? 'linear-gradient(135deg, #FFA726, #FF7043)' : 
+                            booking.status === 'confirmed' ? 'linear-gradient(135deg, #66BB6A, #4CAF50)' : 
+                            booking.status === 'declined' ? 'linear-gradient(135deg, #EF5350, #F44336)' : 
+                            booking.status === 'expired' ? 'linear-gradient(135deg, #BDBDBD, #9E9E9E)' :
+                            'linear-gradient(135deg, #BDBDBD, #9E9E9E)'};
+                color: white;
+                padding: 2rem;
+                border-radius: 15px;
+                text-align: center;
+                margin-bottom: 2rem;
+                box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+                position: relative;
+                overflow: hidden;
+            ">
+                <div style="font-size: 3rem; margin-bottom: 1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+                    ${booking.status === 'pending' ? '⏳' : 
+                      booking.status === 'confirmed' ? '✅' : 
+                      booking.status === 'declined' ? '❌' : 
+                      booking.status === 'expired' ? '⏰' : '❓'}
+                </div>
+                <h2 style="font-size: 2rem; font-weight: bold; margin: 0 0 0.5rem 0; text-shadow: 0 2px 6px rgba(0,0,0,0.4);">
+                    حالة الحجز
+                </h2>
+                <h3 style="font-size: 1.6rem; font-weight: 600; margin: 0; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                    ${getStatusText(booking.status)}
+                </h3>
+                ${booking.status === 'pending' ? `
+                <p style="margin: 1rem 0 0 0; font-size: 1.1rem; opacity: 0.95; font-weight: 500;">
+                    يرجى إتمام الدفع خلال الوقت المحدد لتأكيد حجزك
+                </p>
+                ` : booking.status === 'confirmed' ? `
+                <p style="margin: 1rem 0 0 0; font-size: 1.1rem; opacity: 0.95; font-weight: 500;">
+                    تم تأكيد حجزك بنجاح - مرحباً بك!
+                </p>
+                ` : booking.status === 'declined' ? `
+                <p style="margin: 1rem 0 0 0; font-size: 1.1rem; opacity: 0.95; font-weight: 500;">
+                    تم رفض الحجز - يرجى الاتصال للاستفسار
+                </p>
+                ` : booking.status === 'expired' ? `
+                <p style="margin: 1rem 0 0 0; font-size: 1.1rem; opacity: 0.95; font-weight: 500;">
+                    انتهت مهلة الدفع - يمكنك إعادة الحجز
+                </p>
+                ` : ''}
+            </div>
+            
             <div class="booking-header">
                 <h4>حجز رقم: ${booking.bookingNumber}</h4>
-                <span class="status-badge ${statusClass}">${statusText}</span>
             </div>
             <div class="booking-info">
                 <div class="info-row">
