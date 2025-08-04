@@ -44,8 +44,8 @@ async function loadConfig() {
 function updatePageTitle() {
     if (config.courtName) {
         // Update page title
-        document.title = `فحص حالة الحجز - ${config.courtName}`;
-        
+        document.title = `استعلام عن حالة الحجز - ${config.courtName}`;
+
         // Update header title
         const logoTitle = document.querySelector('.logo h1');
         if (logoTitle) {
@@ -106,7 +106,7 @@ async function handleFormSubmit(event) {
         showError('حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى');
     } finally {
         checkBtn.disabled = false;
-        checkBtn.textContent = 'فحص الحجز';
+        checkBtn.textContent = 'استعلام عن الحجز';
     }
 }
 

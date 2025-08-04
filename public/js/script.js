@@ -600,7 +600,7 @@ ${result.booking.paymentInfo.vodafoneCash ? `📱 فودافون كاش: ${resul
 ${result.booking.paymentInfo.instaPay ? `💳 إنستاباي: ${result.booking.paymentInfo.instaPay}` : ''}
 
 ⚠️ يرجى الدفع خلال ساعة واحدة لتأكيد الحجز
-📞 للاستعلام عن حالة الحجز، اختر "فحص الحجز" من القائمة`;
+📞 للاستعلام عن حالة الحجز، اختر "استعلام عن الحجز" من القائمة`;
 
                 if (result.booking.paymentInfo.instructions) {
                     successMessage += `\n\n📋 ${result.booking.paymentInfo.instructions}`;
