@@ -602,11 +602,30 @@ function calculateEndTime(startTime, durationMinutes) {
     return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
 }
 
+// Format hours in Arabic
+function formatHoursInArabic(hours) {
+    if (hours === 0.5) return 'نصف ساعة';
+    if (hours === 1) return 'ساعة';
+    if (hours === 1.5) return 'ساعة ونصف';
+    if (hours === 2) return 'ساعتان';
+    if (hours === 2.5) return 'ساعتان ونصف';
+    if (hours === 3) return '3 ساعات';
+    if (hours === 3.5) return '3 ساعات ونصف';
+    if (hours === 4) return '4 ساعات';
+    // For other values, show as decimal with "ساعة"
+    return `${hours} ساعة`;
+}
+
 // Update booking progress indicator
 function updateBookingProgress() {
     const currentHours = (selectedSlots.length * 30) / 60;
     const maxHours = config.maxHoursPerPersonPerDay || 2;
     const remainingHours = maxHours - currentHours;
+    
+    // Format hours display in Arabic
+    const currentHoursDisplay = formatHoursInArabic(currentHours);
+    const remainingHoursDisplay = formatHoursInArabic(remainingHours);
+    const maxHoursDisplay = formatHoursInArabic(maxHours);
     
     // Find or create progress indicator
     let progressElement = document.getElementById('bookingProgress');
@@ -628,14 +647,14 @@ function updateBookingProgress() {
         
         progressElement.innerHTML = `
             <div style="color: #2196F3; font-weight: bold;">
-                📅 محدد حالياً: ${currentHours} ساعة (${selectedSlots.length} × 30 دقيقة)
+                📅 محدد حالياً: ${currentHoursDisplay} (${selectedSlots.length} × 30 دقيقة)
             </div>
             <div style="color: #2196F3; margin-top: 5px;">
                 🕐 ${timeRange}
             </div>
             <div style="color: ${remainingHours > 0 ? '#4CAF50' : '#f44336'}; margin-top: 5px;">
                 ${remainingHours > 0 
-                    ? `⏰ متبقي: ${remainingHours} ساعة` 
+                    ? `⏰ متبقي: ${remainingHoursDisplay}` 
                     : '⚠️ وصلت للحد الأقصى المسموح'}
             </div>
         `;
@@ -645,7 +664,7 @@ function updateBookingProgress() {
                 📅 محدد حالياً: 0 ساعة (0 × 30 دقيقة)
             </div>
             <div style="color: #4CAF50; margin-top: 5px;">
-                ⏰ متبقي: ${maxHours} ساعة
+                ⏰ متبقي: ${maxHoursDisplay}
             </div>
         `;
     }
@@ -668,9 +687,13 @@ function updateSubmitButton() {
     }
     
     const totalDuration = selectedSlots.length * 30;
+    const totalHours = totalDuration / 60;
+    
+    // Format hours display in Arabic
+    const hoursDisplay = formatHoursInArabic(totalHours);
     
     submitBtn.disabled = false;
-    submitBtn.textContent = `احجز الآن (${totalDuration} دقيقة)`;
+    submitBtn.textContent = `احجز الآن (${hoursDisplay})`;
 }
 
 // Handle form submission
