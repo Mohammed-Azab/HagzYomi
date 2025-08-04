@@ -593,6 +593,15 @@ function updateSlotVisuals() {
     updateBookingProgress();
 }
 
+// Calculate end time for a booking
+function calculateEndTime(startTime, durationMinutes) {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + durationMinutes;
+    const endHours = Math.floor(totalMinutes / 60) % 24;
+    const endMinutes = totalMinutes % 60;
+    return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+}
+
 // Update booking progress indicator
 function updateBookingProgress() {
     const currentHours = (selectedSlots.length * 30) / 60;
@@ -612,9 +621,17 @@ function updateBookingProgress() {
     
     // Always show progress indicator
     if (selectedSlots.length > 0) {
+        // Calculate time range
+        const startTime = selectedSlots[0].time;
+        const endTime = calculateEndTime(startTime, selectedSlots.length * 30);
+        const timeRange = `من ${startTime} إلى ${endTime}`;
+        
         progressElement.innerHTML = `
             <div style="color: #2196F3; font-weight: bold;">
                 📅 محدد حالياً: ${currentHours} ساعة (${selectedSlots.length} × 30 دقيقة)
+            </div>
+            <div style="color: #2196F3; margin-top: 5px;">
+                🕐 ${timeRange}
             </div>
             <div style="color: ${remainingHours > 0 ? '#4CAF50' : '#f44336'}; margin-top: 5px;">
                 ${remainingHours > 0 
