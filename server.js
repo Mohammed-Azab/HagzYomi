@@ -98,20 +98,40 @@ async function loadBookings() {
     }
 }
 
+// Timezone-aware helper functions for Egypt/Cairo timezone
+function getCairoTime() {
+    // Get current time in Cairo timezone - use direct system method that works
+    const now = new Date();
+    const cairoMilliseconds = now.getTime() + (now.getTimezoneOffset() * 60000) + (3 * 60 * 60 * 1000); // Cairo is UTC+3 in summer (EEST)
+    return new Date(cairoMilliseconds);
+}
+
+function getCairoTimeISO() {
+    // Get current time in Cairo timezone as ISO string
+    const cairoTime = getCairoTime();
+    return cairoTime.toISOString();
+}
+
+function parseDateInCairo(dateString, timeString = '00:00') {
+    // Parse a date/time string as if it's in Cairo timezone
+    const dateTimeString = `${dateString}T${timeString}:00`;
+    return new Date(dateTimeString);
+}
+
 function formatDate(date) {
     return date.toISOString().split('T')[0];
 }
 
 function getWeekStart(date) {
-    const d = new Date(date);
+    const d = parseDateInCairo(date);
     const day = d.getDay();
     const diff = d.getDate() - day;
-    return new Date(d.setDate(diff));
+    return formatDate(new Date(d.setDate(diff)));
 }
 
 function isWorkingDay(date) {
     const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-    const dayIndex = new Date(date).getDay();
+    const dayIndex = parseDateInCairo(date).getDay();
     const dayName = dayNames[dayIndex];
     return config.workingDays.includes(dayName);
 }
@@ -166,8 +186,9 @@ async function generateBookingNumber() {
         // DD = day of month (01-31)
         // HH = hour (00-23) 
         // NN = random number (00-99)
+        // All based on Cairo time
         
-        const now = new Date();
+        const now = getCairoTime();
         const day = now.getDate().toString().padStart(2, '0');
         const hour = now.getHours().toString().padStart(2, '0');
         const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
@@ -208,7 +229,7 @@ async function generateBookingNumber() {
 async function expireOldBookings() {
     try {
         const bookings = await loadBookings();
-        const now = new Date();
+        const now = getCairoTime(); // Use Cairo time for consistency
         let expiredCount = 0;
         
         for (const booking of bookings) {
@@ -221,7 +242,7 @@ async function expireOldBookings() {
                     console.log(`⏰ Expiring booking ${booking.bookingNumber} (created: ${booking.createdAt}, expires: ${booking.expiresAt})`);
                     await db.updateBooking(booking.id, { 
                         status: 'expired',
-                        expiredAt: now.toISOString()
+                        expiredAt: getCairoTimeISO()
                     });
                     expiredCount++;
                 }
@@ -236,7 +257,7 @@ async function expireOldBookings() {
                     console.log(`⏰ Expiring legacy booking ${booking.bookingNumber} (created: ${booking.createdAt}, timeout: ${paymentTimeoutMinutes}min)`);
                     await db.updateBooking(booking.id, { 
                         status: 'expired',
-                        expiredAt: now.toISOString(),
+                        expiredAt: getCairoTimeISO(),
                         expiresAt: new Date(new Date(booking.createdAt).getTime() + (paymentTimeoutMinutes * 60 * 1000)).toISOString()
                     });
                     expiredCount++;
@@ -377,7 +398,7 @@ app.get('/api/slots/:date', async (req, res) => {
         const bookedSlots = await getAvailableSlots(date);
         
         const allSlots = getTimeSlots();
-        const now = new Date();
+        const now = getCairoTime(); // Use Cairo time for consistency
         
         const availableSlots = allSlots.filter(slot => {
             if (bookedSlots.includes(slot)) return false;
@@ -386,7 +407,7 @@ app.get('/api/slots/:date', async (req, res) => {
             const [startHour] = config.openingHours.start.split(':').map(Number);
             const [endHour] = config.openingHours.end.split(':').map(Number);
             
-            let slotDateTime = new Date(`${date}T${slot}:00`);
+            let slotDateTime = parseDateInCairo(date, slot);
             
             // Handle cross-midnight bookings
             if (endHour <= startHour && slotHour < startHour) {
@@ -430,10 +451,10 @@ app.post('/api/book', async (req, res) => {
         }
         
         // Check if booking time is in the past with proper timezone handling
-        const now = new Date();
+        const now = getCairoTime(); // Use Cairo time for consistency
         
-        // Parse the booking date and time properly
-        let bookingDateTime = new Date(`${date}T${time}:00`);
+        // Parse the booking date and time in Cairo timezone
+        let bookingDateTime = parseDateInCairo(date, time);
         
         // Handle cross-midnight bookings (when end hour is less than start hour)
         const [startHour] = config.openingHours.start.split(':').map(Number);
@@ -446,14 +467,14 @@ app.post('/api/book', async (req, res) => {
             bookingDateTime.setDate(bookingDateTime.getDate() + 1);
         }
         
-        // Add debug logging to see what's happening
-        console.log('🕐 Time validation debug:', {
-            now: now.toISOString(),
-            nowLocal: now.toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }),
+        // Add debug logging to see what's happening (all in Cairo time)
+        console.log('🕐 Time validation debug (Cairo timezone):', {
+            nowCairo: now.toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }),
+            nowUTC: now.toISOString(),
             bookingDate: date,
             bookingTime: time,
-            bookingDateTime: bookingDateTime.toISOString(),
-            bookingDateTimeLocal: bookingDateTime.toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }),
+            bookingDateTimeCairo: bookingDateTime.toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }),
+            bookingDateTimeUTC: bookingDateTime.toISOString(),
             comparison: bookingDateTime <= now ? 'PAST' : 'FUTURE',
             venueHours: `${config.openingHours.start} - ${config.openingHours.end}`,
             crossesMidnight: endHour <= startHour
@@ -463,9 +484,9 @@ app.post('/api/book', async (req, res) => {
         const thirtyMinutesFromNow = new Date(now.getTime() + (30 * 60 * 1000));
         
         if (bookingDateTime <= thirtyMinutesFromNow) {
-            console.log('❌ Booking time is too close or in the past');
-            console.log('❌ Booking DateTime:', bookingDateTime.toISOString());
-            console.log('❌ Thirty Minutes From Now:', thirtyMinutesFromNow.toISOString());
+            console.log('❌ Booking time is too close or in the past (Cairo time)');
+            console.log('❌ Booking DateTime (Cairo):', bookingDateTime.toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }));
+            console.log('❌ Thirty Minutes From Now (Cairo):', thirtyMinutesFromNow.toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }));
             
             const currentTime = now.toLocaleString('ar-EG', { 
                 timeZone: 'Africa/Cairo',
@@ -606,11 +627,11 @@ app.post('/api/book', async (req, res) => {
                 startTime: time,
                 endTime: calculatedEndTime,
                 bookedSlots: timeSlots.join(','), // Store all booked slots as comma-separated string
-                createdAt: new Date().toISOString(),
+                createdAt: getCairoTimeISO(),
                 price: pricePerWeek, // Price for this specific week
                 status: status, // Each week can have its own status
                 expiresAt: requirePaymentConfirmation ? 
-                    new Date(Date.now() + (config.features && config.features.paymentTimeoutMinutes || 60) * 60 * 1000).toISOString() : 
+                    new Date(getCairoTime().getTime() + (config.features && config.features.paymentTimeoutMinutes || 60) * 60 * 1000).toISOString() : 
                     null,
                 isRecurring: isRecurring,
                 recurringWeeks: recurringWeeks,
@@ -788,10 +809,10 @@ app.post('/api/confirm-booking', async (req, res) => {
         const updates = {};
         if (action === 'confirm') {
             updates.status = 'confirmed';
-            updates.confirmedAt = new Date().toISOString();
+            updates.confirmedAt = getCairoTimeISO();
         } else if (action === 'decline') {
             updates.status = 'declined';
-            updates.declinedAt = new Date().toISOString();
+            updates.declinedAt = getCairoTimeISO();
         }
         
         for (const booking of targetBookings) {
@@ -1115,20 +1136,12 @@ app.get('/api/admin/report', async (req, res) => {
 });
 
 // Helper functions for report generation
-function getWeekStart(dateString) {
-    const date = new Date(dateString);
-    const day = date.getDay();
-    const diff = date.getDate() - day; // Sunday is 0
-    const weekStart = new Date(date.setDate(diff));
-    return weekStart.toISOString().split('T')[0];
-}
-
 function getWeekEnd(dateString) {
-    const date = new Date(dateString);
+    const date = parseDateInCairo(dateString);
     const day = date.getDay();
     const diff = date.getDate() - day + 6; // Saturday is 6
     const weekEnd = new Date(date.setDate(diff));
-    return weekEnd.toISOString().split('T')[0];
+    return formatDate(weekEnd);
 }
 
 function generateCSVReport(bookings, title) {
@@ -1139,7 +1152,8 @@ function generateCSVReport(bookings, title) {
         csv += 'لا توجد بيانات للفترة المحددة\n';
     } else {
         bookings.forEach(booking => {
-            const createdAt = new Date(booking.createdAt).toLocaleString('ar-EG');
+            // Convert creation time to Cairo timezone for display
+            const createdAt = new Date(booking.createdAt).toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
             const status = getStatusTextForCSV(booking.status || 'confirmed');
             csv += `${booking.bookingNumber || booking.id},"${booking.name}","${booking.phone}","${booking.date}","${booking.time}","${booking.duration} دقيقة","${booking.price} جنيه","${status}","${createdAt}"\n`;
         });
@@ -1208,7 +1222,8 @@ function generateHTMLReport(bookings, title) {
                 </tr>`;
     } else {
         bookings.forEach(booking => {
-            const createdAt = new Date(booking.createdAt).toLocaleString('ar-EG');
+            // Convert creation time to Cairo timezone for display
+            const createdAt = new Date(booking.createdAt).toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
             const status = getStatusTextForCSV(booking.status || 'confirmed');
             html += `
                     <tr>
@@ -1257,6 +1272,16 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`🔑 Admin password: ${config.adminPassword || 'Not set'}`);
     console.log('🎯 Render deployment ready! 🌟');
     console.log('🗄️ Using Supabase cloud database for data persistence');
+    console.log(`🕐 Server timezone: Cairo/Egypt (Current time: ${new Date().toLocaleString('en-GB', { 
+        timeZone: 'Africa/Cairo',
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    })} Cairo time)`);
     console.log('═══════════════════════════════════════════════════════');
     
     // Start automatic booking expiration cleanup (runs every 30 minutes)
