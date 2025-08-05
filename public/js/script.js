@@ -246,7 +246,7 @@ function updateInfoPanel() {
         `${config.maxHoursPerPersonPerDay} ساعة يومياً`;
     
     document.getElementById('slotDuration').textContent = 
-        `${config.slotDurationMinutes} دقيقة (الحد الأدنى)`;
+        `${config.minBookingDurationMinutes || config.slotDurationMinutes} دقيقة (الحد الأدنى)`;
     
     // Update price information - show different rates for day/night if available
     if (config.pricing) {
@@ -403,10 +403,10 @@ function isTimeSlotInPast(date, time) {
             }
         }
         
-        // Add 30 minutes buffer to prevent booking slots that are too soon
-        const thirtyMinutesFromNow = new Date(egyptNow.getTime() + (30 * 60 * 1000));
+        // Add buffer to prevent booking slots that are too soon
+        const bufferTime = new Date(egyptNow.getTime() + (config.slotDurationMinutes * 60 * 1000));
         
-        return slotDateTime <= thirtyMinutesFromNow;
+        return slotDateTime <= bufferTime;
     } catch (error) {
         console.error('Error checking if time slot is in past:', error);
         return false; // Default to allowing the slot if there's an error
@@ -416,7 +416,7 @@ function isTimeSlotInPast(date, time) {
 function renderTimeSlots(availableSlots, bookedSlots) {
     timeSlotsContainer.innerHTML = '';
     
-    // Always show 30-minute intervals
+    // Always show slot intervals based on configuration
     const allSlots = generateAllTimeSlots();
     
     allSlots.forEach((time, index) => {
@@ -430,10 +430,10 @@ function renderTimeSlots(availableSlots, bookedSlots) {
         timeDisplay.textContent = formatTimeToArabic12Hour(time);
         slotElement.appendChild(timeDisplay);
         
-        // Always show 30-minute duration
+        // Always show slot duration from configuration
         const durationText = document.createElement('span');
         durationText.className = 'duration-indicator';
-        durationText.textContent = '30د';
+        durationText.textContent = `${config.slotDurationMinutes}د`;
         slotElement.appendChild(durationText);
         
         // Check if time slot is in the past
@@ -456,8 +456,8 @@ function renderTimeSlots(availableSlots, bookedSlots) {
             slotElement.title = 'الوقت قد انتهى';
         } else if (availableSlots.includes(time)) {
             slotElement.classList.add('available');
-            slotElement.addEventListener('click', () => selectTimeSlot(time, slotElement, 30)); // Always select 30 minutes
-            slotElement.title = 'متاح للحجز (30 دقيقة)';
+            slotElement.addEventListener('click', () => selectTimeSlot(time, slotElement, config.slotDurationMinutes));
+            slotElement.title = `متاح للحجز (${config.slotDurationMinutes} دقيقة)`;
         } else {
             slotElement.classList.add('booked');
             slotElement.title = 'غير متاح';
@@ -520,7 +520,7 @@ function selectTimeSlot(time, element, duration) {
     }
     
     // Check maximum hours limit before adding new slot
-    const currentHours = (selectedSlots.length * 30) / 60; // Convert 30-min slots to hours
+    const currentHours = (selectedSlots.length * config.slotDurationMinutes) / 60; // Convert slots to hours
     const maxHours = config.maxHoursPerPersonPerDay || 2;
     
     if (currentHours >= maxHours) {
@@ -633,7 +633,7 @@ function formatHoursInArabic(hours) {
 
 // Update booking progress indicator
 function updateBookingProgress() {
-    const currentHours = (selectedSlots.length * 30) / 60;
+    const currentHours = (selectedSlots.length * config.slotDurationMinutes) / 60;
     const maxHours = config.maxHoursPerPersonPerDay || 2;
     const remainingHours = maxHours - currentHours;
     
@@ -657,12 +657,12 @@ function updateBookingProgress() {
     if (selectedSlots.length > 0) {
         // Calculate time range
         const startTime = selectedSlots[0].time;
-        const endTime = calculateEndTime(startTime, selectedSlots.length * 30);
+        const endTime = calculateEndTime(startTime, selectedSlots.length * config.slotDurationMinutes);
         const timeRange = `من ${startTime} إلى ${endTime}`;
         
         progressElement.innerHTML = `
             <div style="color: #2196F3; font-weight: bold;">
-                📅 محدد حالياً: ${currentHoursDisplay} (${selectedSlots.length} × 30 دقيقة)
+                📅 محدد حالياً: ${currentHoursDisplay} (${selectedSlots.length} × ${config.slotDurationMinutes} دقيقة)
             </div>
             <div style="color: #2196F3; margin-top: 5px;">
                 🕐 ${timeRange}
@@ -674,9 +674,16 @@ function updateBookingProgress() {
             </div>
         `;
     } else {
+        const minBookingDuration = config.minBookingDurationMinutes || config.slotDurationMinutes;
+        const minHours = minBookingDuration / 60;
+        const minHoursDisplay = formatHoursInArabic(minHours);
+        
         progressElement.innerHTML = `
             <div style="color: #666; font-weight: bold;">
-                📅 محدد حالياً: 0 ساعة (0 × 30 دقيقة)
+                📅 محدد حالياً: 0 ساعة (0 × ${config.slotDurationMinutes} دقيقة)
+            </div>
+            <div style="color: #ff9800; margin-top: 5px;">
+                ⚠️ الحد الأدنى: ${minHoursDisplay}
             </div>
             <div style="color: #4CAF50; margin-top: 5px;">
                 ⏰ متبقي: ${maxHoursDisplay}
@@ -695,13 +702,24 @@ function updateSubmitButton() {
         selectedTime = null;
     }
     
+    const totalDuration = selectedSlots.length * config.slotDurationMinutes;
+    const minBookingDuration = config.minBookingDurationMinutes || config.slotDurationMinutes;
+    
     if (selectedSlots.length === 0) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'احجز الآن';
         return;
     }
     
-    const totalDuration = selectedSlots.length * 30;
+    // Check minimum booking duration
+    if (totalDuration < minBookingDuration) {
+        submitBtn.disabled = true;
+        const minHours = minBookingDuration / 60;
+        const minHoursDisplay = formatHoursInArabic(minHours);
+        submitBtn.textContent = `احجز ${minHoursDisplay} على الأقل`;
+        return;
+    }
+    
     const totalHours = totalDuration / 60;
     
     // Format hours display in Arabic
@@ -728,7 +746,7 @@ async function handleFormSubmit(event) {
     }
     
     const formData = new FormData(bookingForm);
-    const actualDuration = selectedSlots.length * 30; // Calculate actual duration from selected slots
+    const actualDuration = selectedSlots.length * config.slotDurationMinutes; // Calculate actual duration from selected slots
     const isRecurring = enableRecurringCheckbox.checked;
     const recurringWeeks = isRecurring ? parseInt(recurringWeeksSelect.value) : 1;
     
@@ -774,8 +792,8 @@ async function handleFormSubmit(event) {
         
         if (result.success) {
             // Calculate duration text from selected slots
-            const actualDuration = selectedSlots.length * 30;
-            const durationText = actualDuration === 30 ? '30 دقيقة' : 
+            const actualDuration = selectedSlots.length * config.slotDurationMinutes;
+            const durationText = actualDuration === config.slotDurationMinutes ? `${config.slotDurationMinutes} دقيقة` : 
                                 actualDuration === 60 ? 'ساعة واحدة' :
                                 actualDuration === 90 ? 'ساعة ونصف' : 
                                 actualDuration === 120 ? 'ساعتان' :

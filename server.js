@@ -65,7 +65,7 @@ try {
             openingHours: { start: "08:00", end: "22:00" },
             workingDays: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
             maxHoursPerPersonPerDay: 2,
-            slotDurationMinutes: 30,
+            slotDurationMinutes: 60,
             currency: "جنيه",
             pricePerHour: 50,
             adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
@@ -355,7 +355,7 @@ async function getAvailableSlots(date) {
             
             console.log(`   Legacy format - Start: ${startTime}, Duration: ${duration} minutes`);
             
-            // Generate all 30-minute slots within the booking duration
+            // Generate all slot intervals within the booking duration
             const [startHour, startMinute] = startTime.split(':').map(Number);
             let currentMinutes = startHour * 60 + startMinute;
             const endMinutes = currentMinutes + duration;
@@ -366,7 +366,7 @@ async function getAvailableSlots(date) {
                 const minutes = currentMinutes % 60;
                 const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
                 bookingSlots.push(timeString);
-                currentMinutes += config.slotDurationMinutes; // 30 minutes
+                currentMinutes += config.slotDurationMinutes;
             }
             
             console.log(`   Calculated slots for ${startTime} (${duration}min):`, bookingSlots);
@@ -503,11 +503,11 @@ app.get('/api/slots/:date', async (req, res) => {
                 slotDateTime.setDate(slotDateTime.getDate() + 1);
             }
             
-            // Add 30-minute buffer for booking availability
-            const thirtyMinutesFromNow = new Date(now.getTime() + (30 * 60 * 1000));
+            // Add buffer for booking availability
+            const bufferTime = new Date(now.getTime() + (config.slotDurationMinutes * 60 * 1000));
             
-            const isFuture = slotDateTime > thirtyMinutesFromNow;
-            console.log(`${slot}: slotTime=${slotDateTime.toISOString()}, thirtyMinFromNow=${thirtyMinutesFromNow.toISOString()}, isFuture=${isFuture}`);
+            const isFuture = slotDateTime > bufferTime;
+            console.log(`${slot}: slotTime=${slotDateTime.toISOString()}, bufferTime=${bufferTime.toISOString()}, isFuture=${isFuture}`);
             
             return isFuture;
         });
@@ -529,7 +529,7 @@ app.get('/api/slots/:date', async (req, res) => {
 
 // Create booking
 app.post('/api/book', async (req, res) => {
-    const { name, phone, date, time, duration = 30, isRecurring = false, recurringWeeks = 1 } = req.body;
+    const { name, phone, date, time, duration = config.slotDurationMinutes, isRecurring = false, recurringWeeks = 1 } = req.body;
     
     try {
         // Basic validation
@@ -541,9 +541,22 @@ app.post('/api/book', async (req, res) => {
             return res.json({ success: false, message: 'لا يمكن الحجز في هذا اليوم' });
         }
         
-        // Validate duration
-        if (![30, 60, 90, 120].includes(duration)) {
-            return res.json({ success: false, message: 'مدة الحجز غير صحيحة' });
+        // Validate duration - must be multiples of slot duration and at least minimum booking duration
+        const minBookingDuration = config.minBookingDurationMinutes || config.slotDurationMinutes;
+        const allowedDurations = [];
+        let currentDuration = minBookingDuration;
+        const maxDuration = config.maxHoursPerPersonPerDay * 60;
+        
+        while (currentDuration <= maxDuration) {
+            allowedDurations.push(currentDuration);
+            currentDuration += config.slotDurationMinutes;
+        }
+        
+        if (!allowedDurations.includes(duration)) {
+            return res.json({ 
+                success: false, 
+                message: `مدة الحجز يجب أن تكون ${minBookingDuration} دقيقة على الأقل وتكون من مضاعفات ${config.slotDurationMinutes} دقيقة` 
+            });
         }
         
         // Check if booking time is in the past with proper timezone handling
@@ -576,13 +589,13 @@ app.post('/api/book', async (req, res) => {
             crossesMidnight: endHour <= startHour
         });
         
-        // Allow booking if it's at least 30 minutes in the future
-        const thirtyMinutesFromNow = new Date(now.getTime() + (30 * 60 * 1000));
+        // Allow booking if it's at least the slot duration in the future
+        const bufferTime = new Date(now.getTime() + (config.slotDurationMinutes * 60 * 1000));
         
-        if (bookingDateTime <= thirtyMinutesFromNow) {
+        if (bookingDateTime <= bufferTime) {
             console.log('❌ Booking time is too close or in the past (Cairo time)');
             console.log('❌ Booking DateTime (Cairo):', bookingDateTime.toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }));
-            console.log('❌ Thirty Minutes From Now (Cairo):', thirtyMinutesFromNow.toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }));
+            console.log('❌ Buffer Time (Cairo):', bufferTime.toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }));
             
             const currentTime = now.toLocaleString('ar-EG', { 
                 timeZone: 'Africa/Cairo',
@@ -590,7 +603,7 @@ app.post('/api/book', async (req, res) => {
                 minute: '2-digit'
             });
             
-            const earliestBookingTime = thirtyMinutesFromNow.toLocaleString('ar-EG', { 
+            const earliestBookingTime = bufferTime.toLocaleString('ar-EG', { 
                 timeZone: 'Africa/Cairo',
                 hour: '2-digit',
                 minute: '2-digit'
@@ -598,7 +611,7 @@ app.post('/api/book', async (req, res) => {
             
             return res.json({ 
                 success: false, 
-                message: `الوقت الحالي ${currentTime}. يجب أن يكون موعد الحجز بعد الساعة ${earliestBookingTime} على الأقل (30 دقيقة من الآن)` 
+                message: `الوقت الحالي ${currentTime}. يجب أن يكون موعد الحجز بعد الساعة ${earliestBookingTime} على الأقل (${config.slotDurationMinutes} دقيقة من الآن)` 
             });
         }
         
@@ -840,7 +853,7 @@ app.get('/api/admin/bookings', async (req, res) => {
                 time: timeDisplay,
                 startTime: booking.startTime || booking.time,
                 endTime: booking.endTime,
-                duration: booking.duration || 30,
+                duration: booking.duration || config.slotDurationMinutes,
                 price: booking.price,
                 status: booking.status,
                 createdAt: booking.createdAt,
@@ -943,7 +956,7 @@ app.get('/api/admin/bookings/filter', async (req, res) => {
                 time: timeDisplay,
                 startTime: booking.startTime || booking.time,
                 endTime: booking.endTime,
-                duration: booking.duration || 30,
+                duration: booking.duration || config.slotDurationMinutes,
                 price: booking.price,
                 status: booking.status,
                 createdAt: booking.createdAt,
@@ -1107,7 +1120,7 @@ app.post('/api/check-booking', async (req, res) => {
             time: booking.time,
             startTime: booking.startTime || booking.time,
             endTime: booking.endTime || booking.time,
-            duration: booking.duration || 30,
+            duration: booking.duration || config.slotDurationMinutes,
             price: pricePerWeek, // Show price per week for consistency with booking success
             totalPrice: totalPrice, // Show total price separately for recurring bookings
             status: booking.status,

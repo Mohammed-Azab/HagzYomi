@@ -1107,7 +1107,7 @@ function formatDateTime(dateTimeString) {
 }
 
 function formatDuration(durationInMinutes) {
-    if (!durationInMinutes) return '30 دقيقة'; // Default fallback
+    if (!durationInMinutes) return `${config.slotDurationMinutes || 60} دقيقة`; // Default fallback from config
     
     const minutes = parseInt(durationInMinutes);
     if (minutes >= 60) {
