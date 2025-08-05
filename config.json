@@ -1,6 +1,11 @@
 {
   "courtName": "ملعب مركز الشباب الرياضي",
-  "pricePerHour": 200,
+  "pricing": {
+    "dayRate": 250,
+    "nightRate": 300,
+    "nightStartTime": "18:00"
+  },
+  "pricePerHour": 250,
   "slotDurationMinutes": 30,
   "maxHoursPerPersonPerDay": 2,
   "maxBookingDaysAhead": 240,

@@ -118,6 +118,28 @@ function parseDateInCairo(dateString, timeString = '00:00') {
     return new Date(dateTimeString);
 }
 
+// Calculate price based on time of day (day vs night rates)
+function calculateHourlyRate(startTime) {
+    // Check if pricing configuration exists
+    if (!config.pricing) {
+        return config.pricePerHour || 200; // Fallback to default price
+    }
+    
+    const nightStartTime = config.pricing.nightStartTime || "18:00";
+    const [nightHour, nightMinute] = nightStartTime.split(':').map(Number);
+    const [bookingHour, bookingMinute] = startTime.split(':').map(Number);
+    
+    const nightStartMinutes = nightHour * 60 + nightMinute;
+    const bookingMinutes = bookingHour * 60 + bookingMinute;
+    
+    // If booking is at or after night start time, use night rate
+    if (bookingMinutes >= nightStartMinutes) {
+        return config.pricing.nightRate;
+    } else {
+        return config.pricing.dayRate;
+    }
+}
+
 function formatDate(date) {
     return date.toISOString().split('T')[0];
 }
@@ -622,7 +644,10 @@ app.post('/api/book', async (req, res) => {
         const bookingNumber = await generateBookingNumber();
         const requirePaymentConfirmation = config.features && config.features.requirePaymentConfirmation || false;
         const status = requirePaymentConfirmation ? 'pending' : 'confirmed';
-        const totalPrice = config.pricePerHour * bookingHours;
+        
+        // Calculate price based on time of day (day vs night rates)
+        const hourlyRate = calculateHourlyRate(time);
+        const totalPrice = hourlyRate * bookingHours;
         
         let allBookingDates = [date];
         

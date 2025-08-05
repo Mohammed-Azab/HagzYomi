@@ -248,8 +248,15 @@ function updateInfoPanel() {
     document.getElementById('slotDuration').textContent = 
         `${config.slotDurationMinutes} دقيقة (الحد الأدنى)`;
     
-    document.getElementById('priceInfo').textContent = 
-        `${config.pricePerHour} ${config.currency}/ساعة`;
+    // Update price information - show different rates for day/night if available
+    if (config.pricing) {
+        document.getElementById('priceInfo').innerHTML = 
+            `${config.pricing.dayRate} ${config.currency}/ساعة (نهاري)<br>` +
+            `${config.pricing.nightRate} ${config.currency}/ساعة (ليلي - من ${config.pricing.nightStartTime})`;
+    } else {
+        document.getElementById('priceInfo').textContent = 
+            `${config.pricePerHour} ${config.currency}/ساعة`;
+    }
     
     // Update working days
     const dayNames = {
