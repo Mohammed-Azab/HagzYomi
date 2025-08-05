@@ -2537,6 +2537,32 @@ textarea.form-control {
     color: white;
 }
 
+/* Date Filter Input Styling */
+.filter-controls input[type="date"] {
+    border: 2px solid var(--border-color);
+    background: rgb(255, 255, 255);
+    color: rgba(33, 150, 243, 1);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: var(--transition);
+    min-width: 150px;
+}
+
+.filter-controls input[type="date"]:hover {
+    border-color: var(--primary-color);
+    background: rgba(33, 150, 243, 0.05);
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.15);
+}
+
+.filter-controls input[type="date"]:focus {
+    border-color: var(--primary-color);
+    background: rgb(255, 255, 255);
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+    outline: none;
+}
+
 /* Responsive filter controls */
 @media (max-width: 768px) {
     .filter-controls {
@@ -2551,5 +2577,16 @@ textarea.form-control {
     .filter-btn .count {
         font-size: 0.6rem;
         padding: 0.05rem 0.3rem;
+    }
+    
+    .filter-controls input[type="date"],
+    .filter-controls .form-control {
+        min-width: 120px;
+        margin: 0.25rem;
+    }
+    
+    .filter-controls .btn-secondary {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
     }
 }
