@@ -33,11 +33,94 @@ const errorMessage = document.getElementById('errorMessage');
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async function() {
+    // Disable browser back/forward cache to ensure fresh page load
+    if (window.performance && window.performance.navigation.type === window.performance.navigation.TYPE_BACK_FORWARD) {
+        location.reload();
+    }
+    
+    // Clear all stored data and reset form on page load/refresh
+    clearAllData();
+    
     await loadConfig();
     setupEventListeners();
     setMinDate(); // Call after config is loaded
     updateInfoPanel();
 });
+
+// Force page reload on browser back/forward navigation
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        // Page was loaded from cache, force reload to clear everything
+        location.reload();
+    }
+});
+
+// Clear all data and reset form state
+function clearAllData() {
+    // Clear global variables
+    selectedDate = null;
+    selectedTime = null;
+    selectedSlots = [];
+    
+    // Clear form inputs
+    if (bookingForm) {
+        bookingForm.reset();
+    }
+    
+    // Clear date input
+    if (dateInput) {
+        dateInput.value = '';
+    }
+    
+    // Clear time slots container
+    if (timeSlotsContainer) {
+        timeSlotsContainer.innerHTML = '';
+    }
+    
+    // Reset submit button
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'احجز الآن';
+    }
+    
+    // Clear recurring options
+    if (enableRecurringCheckbox) {
+        enableRecurringCheckbox.checked = false;
+    }
+    if (recurringOptions) {
+        recurringOptions.style.display = 'none';
+    }
+    if (recurringWeeksSelect) {
+        recurringWeeksSelect.value = '1';
+    }
+    
+    // Clear any booking progress display
+    const progressElement = document.getElementById('bookingProgress');
+    if (progressElement) {
+        progressElement.style.display = 'none';
+        progressElement.innerHTML = '';
+    }
+    
+    // Clear any countdown timers
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
+    
+    // Clear any modal states
+    if (successModal) {
+        successModal.classList.remove('show');
+    }
+    if (errorModal) {
+        errorModal.classList.remove('show');
+    }
+    
+    // Clear any localStorage or sessionStorage (if any is used in the future)
+    // localStorage.clear();
+    // sessionStorage.clear();
+    
+    console.log('✅ All data cleared on page load/refresh');
+}
 
 // Load configuration from server
 async function loadConfig() {
@@ -339,9 +422,19 @@ async function handleDateChange() {
     const date = dateInput.value;
     if (!date) return;
     
+    // Clear all previous selections when date changes
     selectedDate = date;
     selectedTime = null;
+    selectedSlots = [];
     submitBtn.disabled = true;
+    submitBtn.textContent = 'احجز الآن';
+    
+    // Clear booking progress display
+    const progressElement = document.getElementById('bookingProgress');
+    if (progressElement) {
+        progressElement.style.display = 'none';
+        progressElement.innerHTML = '';
+    }
     
     await loadTimeSlots(date);
 }
