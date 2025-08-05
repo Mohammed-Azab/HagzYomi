@@ -2387,3 +2387,169 @@ textarea.form-control {
 .btn-payment:hover {
     background-color: var(--primary-dark);
 }
+
+/* Filter Buttons */
+.filter-controls {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border-color);
+    background: rgb(255, 255, 255);
+    color: rgba(33, 150, 243, 1);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.filter-btn:hover {
+    border-color: var(--primary-color);
+    background: rgba(33, 150, 243, 0.05);
+    color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+}
+
+.filter-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 3px 12px rgba(33, 150, 243, 0.3);
+}
+
+.filter-btn.active:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+}
+
+.filter-btn i {
+    font-size: 0.8rem;
+}
+
+.filter-btn .count {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.1rem 0.4rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 0.25rem;
+}
+
+.filter-btn.active .count {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Filter button variants */
+.filter-btn.filter-all {
+    border-color: #6c757d;
+    color: #6c757d;
+}
+
+.filter-btn.filter-all:hover {
+    border-color: #5a6268;
+    background: rgba(108, 117, 125, 0.1);
+    color: #5a6268;
+}
+
+.filter-btn.filter-all.active {
+    background: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+.filter-btn.filter-pending {
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.filter-btn.filter-pending:hover {
+    border-color: #e0a800;
+    background: rgba(255, 193, 7, 0.1);
+    color: #d4910c;
+}
+
+.filter-btn.filter-pending.active {
+    background: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+}
+
+.filter-btn.filter-confirmed {
+    border-color: var(--secondary-color);
+    color: #155724;
+}
+
+.filter-btn.filter-confirmed:hover {
+    border-color: #218838;
+    background: rgba(76, 175, 80, 0.1);
+    color: #1e7e34;
+}
+
+.filter-btn.filter-confirmed.active {
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: white;
+}
+
+.filter-btn.filter-declined {
+    border-color: var(--danger-color);
+    color: #721c24;
+}
+
+.filter-btn.filter-declined:hover {
+    border-color: #c82333;
+    background: rgba(244, 67, 54, 0.1);
+    color: #a71d2a;
+}
+
+.filter-btn.filter-declined.active {
+    background: var(--danger-color);
+    border-color: var(--danger-color);
+    color: white;
+}
+
+.filter-btn.filter-expired {
+    border-color: #6c757d;
+    color: #495057;
+}
+
+.filter-btn.filter-expired:hover {
+    border-color: #545b62;
+    background: rgba(108, 117, 125, 0.1);
+    color: #383d41;
+}
+
+.filter-btn.filter-expired.active {
+    background: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+/* Responsive filter controls */
+@media (max-width: 768px) {
+    .filter-controls {
+        gap: 0.5rem;
+    }
+    
+    .filter-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    .filter-btn .count {
+        font-size: 0.6rem;
+        padding: 0.05rem 0.3rem;
+    }
+}

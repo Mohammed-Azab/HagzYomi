@@ -13,37 +13,6 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/styles.css?v=20250805192000">
-    <style>
-        .filter-btn {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            color: #495057;
-            padding: 0.5rem 1rem;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-        }
-        .filter-btn:hover {
-            background: #e9ecef;
-            border-color: #adb5bd;
-        }
-        .filter-btn.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-        .filter-controls {
-            border: 1px solid #dee2e6;
-        }
-        @media (max-width: 768px) {
-            .filter-controls > div {
-                flex-direction: column;
-                align-items: flex-start !important;
-                gap: 0.5rem !important;
-            }
-        }
-    </style>
 </head>
 <body>
     <header class="header">
@@ -84,10 +53,11 @@
 
             <!-- Filter Controls -->
             <div class="filter-controls" style="background: var(--card-background); padding: 1rem; border-radius: var(--border-radius); box-shadow: var(--shadow); margin-bottom: 1rem;">
-                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                    <span style="font-weight: 600; color: var(--primary-color);">🔍 تصفية الحجوزات:</span>
+                <!-- Date Filters -->
+                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <span style="font-weight: 600; color: var(--primary-color);"> تصفية بالتاريخ:</span>
                     
-                    <button class="filter-btn active" data-filter="all">
+                    <button class="filter-btn filter-all active" data-filter="all">
                         📋 الكل
                     </button>
                     <button class="filter-btn" data-filter="today">
@@ -106,6 +76,28 @@
                             📅 تصفية بالتاريخ
                         </button>
                     </div>
+                </div>
+                
+                <!-- Status Filters -->
+                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <span style="font-weight: 600; color: var(--primary-color);"> تصفية بالحالة:</span>
+                    
+                    <button class="filter-btn filter-pending" data-status-filter="pending">
+                        ⏳ في الانتظار
+                        <span class="count">0</span>
+                    </button>
+                    <button class="filter-btn filter-confirmed" data-status-filter="confirmed">
+                        ✅ مؤكدة
+                        <span class="count">0</span>
+                    </button>
+                    <button class="filter-btn filter-declined" data-status-filter="declined">
+                        ❌ مرفوضة
+                        <span class="count">0</span>
+                    </button>
+                    <button class="filter-btn filter-expired" data-status-filter="expired">
+                        ⌛ منتهية الصلاحية
+                        <span class="count">0</span>
+                    </button>
                     
                     <div style="margin-left: auto;">
                         <span id="filterStatus" style="color: #666; font-size: 0.9rem;"></span>

@@ -9,6 +9,7 @@
 
 // Global variables
 let bookings = [];
+let allBookings = []; // Store all bookings for status filtering
 let bookingToDelete = null;
 let config = {};
 let userRole = { isAdmin: false, isSuperAdmin: false, isViewer: false };
@@ -76,7 +77,13 @@ function setupEventListeners() {
     filterButtons.forEach(btn => {
         btn.addEventListener('click', function() {
             const filter = this.getAttribute('data-filter');
-            applyFilter(filter);
+            const statusFilter = this.getAttribute('data-status-filter');
+            
+            if (filter) {
+                applyFilter(filter);
+            } else if (statusFilter) {
+                applyStatusFilter(statusFilter);
+            }
         });
     });
     
@@ -610,8 +617,10 @@ async function loadBookings() {
         }
         
         bookings = await response.json();
+        allBookings = [...bookings]; // Store all bookings for status filtering
         renderBookings();
         updateStatistics();
+        updateStatusFilterCounts(); // Update status filter counts
         
     } catch (error) {
         console.error('Error loading bookings:', error);
@@ -1298,14 +1307,91 @@ async function applyFilter(filter, date = null) {
         }
         
         bookings = await response.json();
+        allBookings = [...bookings]; // Update allBookings with filtered results
+        
+        // Reset status filter buttons when applying date filters
+        const statusFilterButtons = document.querySelectorAll('[data-status-filter]');
+        statusFilterButtons.forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
         renderBookings();
         updateStatistics();
+        updateStatusFilterCounts(); // Update status filter counts
         updateFilterStatus(filter, date);
         
     } catch (error) {
         console.error('Error applying filter:', error);
         showMessage('خطأ في تطبيق التصفية', 'error');
     }
+}
+
+// Apply status filter function
+async function applyStatusFilter(status) {
+    try {
+        // Update filter button states
+        const statusFilterButtons = document.querySelectorAll('[data-status-filter]');
+        statusFilterButtons.forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        const activeBtn = document.querySelector(`[data-status-filter="${status}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+        
+        // Filter bookings by status
+        const filteredBookings = allBookings.filter(booking => booking.status === status);
+        bookings = filteredBookings;
+        
+        renderBookings();
+        updateStatistics();
+        updateStatusFilterCounts();
+        
+        // Update filter status display
+        const filterStatus = document.getElementById('filterStatus');
+        if (filterStatus) {
+            const statusNames = {
+                'pending': 'في الانتظار',
+                'confirmed': 'مؤكدة',
+                'declined': 'مرفوضة',
+                'expired': 'منتهية الصلاحية'
+            };
+            filterStatus.textContent = `عرض ${bookings.length} حجز ${statusNames[status]}`;
+        }
+        
+    } catch (error) {
+        console.error('Error applying status filter:', error);
+        showMessage('خطأ في تطبيق تصفية الحالة', 'error');
+    }
+}
+
+// Update status filter counts
+function updateStatusFilterCounts() {
+    const statusCounts = {
+        pending: 0,
+        confirmed: 0,
+        declined: 0,
+        expired: 0
+    };
+    
+    // Count bookings by status
+    allBookings.forEach(booking => {
+        if (statusCounts.hasOwnProperty(booking.status)) {
+            statusCounts[booking.status]++;
+        }
+    });
+    
+    // Update count displays
+    Object.keys(statusCounts).forEach(status => {
+        const btn = document.querySelector(`[data-status-filter="${status}"]`);
+        if (btn) {
+            const countElement = btn.querySelector('.count');
+            if (countElement) {
+                countElement.textContent = statusCounts[status];
+            }
+        }
+    });
 }
 
 // Update filter status display
