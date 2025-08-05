@@ -43,6 +43,29 @@ class SupabaseDatabase {
     transformBookingFromDb(dbBooking) {
         if (!dbBooking) return null;
         
+        // Helper function to safely parse JSON
+        const safeJsonParse = (jsonString, defaultValue = null) => {
+            if (!jsonString || jsonString === '' || jsonString === null || jsonString === undefined) {
+                return defaultValue;
+            }
+            
+            // Handle string representation of empty array
+            if (jsonString === '[]' || jsonString === '[ ]') {
+                return Array.isArray(defaultValue) ? [] : defaultValue;
+            }
+            
+            try {
+                const parsed = JSON.parse(jsonString);
+                return parsed;
+            } catch (error) {
+                // Only log for non-empty, non-trivial parsing errors
+                if (jsonString.length > 10) {
+                    console.warn('Failed to parse JSON:', jsonString, error.message);
+                }
+                return defaultValue;
+            }
+        };
+        
         return {
             id: dbBooking.id,
             groupId: dbBooking.groupid,
@@ -62,12 +85,12 @@ class SupabaseDatabase {
             expiresAt: dbBooking.expiresat,
             isRecurring: dbBooking.isrecurring,
             recurringWeeks: dbBooking.recurringweeks,
-            bookingDates: dbBooking.bookingdates ? JSON.parse(dbBooking.bookingdates) : null,
-            paymentInfo: dbBooking.paymentinfo ? JSON.parse(dbBooking.paymentinfo) : null,
+            bookingDates: safeJsonParse(dbBooking.bookingdates, null),
+            paymentInfo: safeJsonParse(dbBooking.paymentinfo, null),
             // Payment tracking fields
             paid_amount: dbBooking.paid_amount || 0,
             remaining_amount: dbBooking.remaining_amount || 0,
-            payment_history: dbBooking.payment_history ? JSON.parse(dbBooking.payment_history) : [],
+            payment_history: safeJsonParse(dbBooking.payment_history, []),
             fully_paid: dbBooking.fully_paid || false
         };
     }
@@ -120,7 +143,7 @@ class SupabaseDatabase {
                 // Payment tracking fields
                 paid_amount: booking.paid_amount || 0,
                 remaining_amount: booking.remaining_amount || (booking.price || 0),
-                payment_history: booking.payment_history ? JSON.stringify(booking.payment_history) : JSON.stringify([]),
+                payment_history: Array.isArray(booking.payment_history) ? JSON.stringify(booking.payment_history) : JSON.stringify([]),
                 fully_paid: booking.fully_paid || false
             };
 
@@ -161,7 +184,7 @@ class SupabaseDatabase {
             // Payment tracking fields
             if (updates.paid_amount !== undefined) dbUpdates.paid_amount = updates.paid_amount;
             if (updates.remaining_amount !== undefined) dbUpdates.remaining_amount = updates.remaining_amount;
-            if (updates.payment_history !== undefined) dbUpdates.payment_history = JSON.stringify(updates.payment_history);
+            if (updates.payment_history !== undefined) dbUpdates.payment_history = Array.isArray(updates.payment_history) ? JSON.stringify(updates.payment_history) : JSON.stringify([]);
             if (updates.fully_paid !== undefined) dbUpdates.fully_paid = updates.fully_paid;
             
             const { data, error } = await this.supabase

@@ -729,6 +729,17 @@ function renderBookings() {
         </tr>
         `;
     }).join('');
+    
+    // Force text color for all table cells
+    setTimeout(() => {
+        const tableRows = document.querySelectorAll('#bookings-table tr');
+        tableRows.forEach(row => {
+            const cells = row.querySelectorAll('td, th');
+            cells.forEach(cell => {
+                cell.style.setProperty('color', '#333333', 'important');
+            });
+        });
+    }, 100);
 }
 
 // Update statistics

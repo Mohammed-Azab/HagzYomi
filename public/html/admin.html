@@ -12,7 +12,7 @@
     <meta name="description" content="لوحة إدارة نظام حجز ملاعب كرة القدم - تطوير Mohammed Azab">
     
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/styles.css?v=20250805192000">
     <style>
         .filter-btn {
             background: #f8f9fa;
@@ -129,7 +129,7 @@
             </div>
 
             <div class="table-container">
-                <table class="table">
+                <table class="table" style="color: #333333 !important;">
                     <thead>
                         <tr>
                             <th>رقم الحجز</th>
@@ -598,5 +598,51 @@
     </div>
 
     <script src="../js/admin.js"></script>
+    <script>
+        // Force text color for table cells - multiple approaches
+        function forceTableTextColor() {
+            setTimeout(() => {
+                // Method 1: Target specific table elements
+                const bookingsTable = document.getElementById('bookingsTable');
+                if (bookingsTable) {
+                    const allCells = bookingsTable.querySelectorAll('td, th');
+                    allCells.forEach(cell => {
+                        cell.style.setProperty('color', '#333333', 'important');
+                        cell.style.color = '#333333';
+                    });
+                }
+                
+                // Method 2: Target by class
+                const tableCells = document.querySelectorAll('.table td, .table th');
+                tableCells.forEach(cell => {
+                    cell.style.setProperty('color', '#333333', 'important');
+                    cell.style.color = '#333333';
+                });
+                
+                // Method 3: Global table targeting
+                const allTableCells = document.querySelectorAll('table td, table th');
+                allTableCells.forEach(cell => {
+                    cell.style.setProperty('color', '#333333', 'important');
+                    cell.style.color = '#333333';
+                });
+            }, 100);
+        }
+        
+        // Apply on page load
+        document.addEventListener('DOMContentLoaded', forceTableTextColor);
+        
+        // Apply after a delay in case content loads asynchronously
+        setTimeout(forceTableTextColor, 1000);
+        setTimeout(forceTableTextColor, 2000);
+        
+        // Observer to apply styling when table content changes
+        const observer = new MutationObserver(forceTableTextColor);
+        document.addEventListener('DOMContentLoaded', () => {
+            const tableContainer = document.querySelector('.table-container');
+            if (tableContainer) {
+                observer.observe(tableContainer, { childList: true, subtree: true });
+            }
+        });
+    </script>
 </body>
 </html>
