@@ -363,22 +363,38 @@ async function loadTimeSlots(date) {
 // Render time slots
 // Check if a time slot is in the past
 function isTimeSlotInPast(date, time) {
-    const now = new Date();
-    const [hours, minutes] = time.split(':').map(Number);
-    
-    // For overnight periods, times like 00:00-03:00 are considered next day
-    const [startHour] = config.openingHours.start.split(':').map(Number);
-    const [endHour] = config.openingHours.end.split(':').map(Number);
-    
-    let slotDateTime = new Date(`${date}T${time}:00`);
-    
-    // If this is an overnight period and the current time is before start hour
-    if (endHour <= startHour && hours < startHour) {
-        // Add one day to the slot time
-        slotDateTime.setDate(slotDateTime.getDate() + 1);
+    try {
+        // Get current time in Egypt timezone (UTC+2)
+        const now = new Date();
+        const egyptOffset = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+        const egyptNow = new Date(now.getTime() + egyptOffset);
+        
+        const [hours, minutes] = time.split(':').map(Number);
+        
+        // Create slot datetime in Egypt timezone
+        let slotDateTime = new Date(`${date}T${time}:00.000Z`);
+        slotDateTime = new Date(slotDateTime.getTime() + egyptOffset);
+        
+        // Handle overnight periods (e.g., 22:00-05:00)
+        if (config.openingHours) {
+            const [startHour] = config.openingHours.start.split(':').map(Number);
+            const [endHour] = config.openingHours.end.split(':').map(Number);
+            
+            // If end hour is less than start hour, it's an overnight period
+            if (endHour <= startHour && hours < startHour) {
+                // Times like 00:00-04:30 should be treated as next day
+                slotDateTime.setDate(slotDateTime.getDate() + 1);
+            }
+        }
+        
+        // Add 30 minutes buffer to prevent booking slots that are too soon
+        const thirtyMinutesFromNow = new Date(egyptNow.getTime() + (30 * 60 * 1000));
+        
+        return slotDateTime <= thirtyMinutesFromNow;
+    } catch (error) {
+        console.error('Error checking if time slot is in past:', error);
+        return false; // Default to allowing the slot if there's an error
     }
-    
-    return slotDateTime <= now;
 }
 
 function renderTimeSlots(availableSlots, bookedSlots) {

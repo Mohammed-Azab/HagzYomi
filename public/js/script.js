@@ -379,30 +379,38 @@ async function loadTimeSlots(date) {
 // Render time slots
 // Check if a time slot is in the past
 function isTimeSlotInPast(date, time) {
-    // Use Cairo time to match server logic
-    const now = new Date();
-    const cairoNow = new Date(now.toLocaleString("en-US", {timeZone: "Africa/Cairo"}));
-    
-    const [hours, minutes] = time.split(':').map(Number);
-    
-    // For overnight periods, times like 00:00-03:00 are considered next day
-    const [startHour] = config.openingHours.start.split(':').map(Number);
-    const [endHour] = config.openingHours.end.split(':').map(Number);
-    
-    let slotDateTime = new Date(`${date}T${time}:00`);
-    
-    // If this is an overnight period and the current time is before start hour
-    if (endHour <= startHour && hours < startHour) {
-        // Add one day to the slot time
-        slotDateTime.setDate(slotDateTime.getDate() + 1);
+    try {
+        // Get current time in Egypt timezone (UTC+2)
+        const now = new Date();
+        const egyptOffset = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+        const egyptNow = new Date(now.getTime() + egyptOffset);
+        
+        const [hours, minutes] = time.split(':').map(Number);
+        
+        // Create slot datetime in Egypt timezone
+        let slotDateTime = new Date(`${date}T${time}:00.000Z`);
+        slotDateTime = new Date(slotDateTime.getTime() + egyptOffset);
+        
+        // Handle overnight periods (e.g., 22:00-05:00)
+        if (config.openingHours) {
+            const [startHour] = config.openingHours.start.split(':').map(Number);
+            const [endHour] = config.openingHours.end.split(':').map(Number);
+            
+            // If end hour is less than start hour, it's an overnight period
+            if (endHour <= startHour && hours < startHour) {
+                // Times like 00:00-04:30 should be treated as next day
+                slotDateTime.setDate(slotDateTime.getDate() + 1);
+            }
+        }
+        
+        // Add 30 minutes buffer to prevent booking slots that are too soon
+        const thirtyMinutesFromNow = new Date(egyptNow.getTime() + (30 * 60 * 1000));
+        
+        return slotDateTime <= thirtyMinutesFromNow;
+    } catch (error) {
+        console.error('Error checking if time slot is in past:', error);
+        return false; // Default to allowing the slot if there's an error
     }
-    
-    // Add 30-minute buffer to match server logic
-    const thirtyMinutesFromNow = new Date(cairoNow.getTime() + (30 * 60 * 1000));
-    
-    console.log(`Frontend time check for ${time}: slotTime=${slotDateTime.toISOString()}, cairoNow=${cairoNow.toISOString()}, thirtyMinFromNow=${thirtyMinutesFromNow.toISOString()}, isPast=${slotDateTime <= thirtyMinutesFromNow}`);
-    
-    return slotDateTime <= thirtyMinutesFromNow;
 }
 
 function renderTimeSlots(availableSlots, bookedSlots) {
@@ -707,7 +715,14 @@ function updateSubmitButton() {
 async function handleFormSubmit(event) {
     event.preventDefault();
     
+    console.log('Form submit debug:', {
+        selectedSlots: selectedSlots.length,
+        selectedDate: selectedDate,
+        selectedTime: selectedTime
+    });
+    
     if (selectedSlots.length === 0 || !selectedDate) {
+        console.log('Validation failed - missing slots or date');
         showError('يرجى اختيار التاريخ والوقت');
         return;
     }
@@ -727,14 +742,18 @@ async function handleFormSubmit(event) {
         recurringWeeks: recurringWeeks
     };
     
+    console.log('Booking data:', bookingData);
+    
     // Validate form data
     if (!bookingData.name || !bookingData.phone) {
+        console.log('Validation failed - missing name or phone');
         showError('يرجى ملء جميع البيانات المطلوبة');
         return;
     }
     
     // Validate phone number (simple validation)
     if (!/^[0-9+\-\s()]{10,}$/.test(bookingData.phone)) {
+        console.log('Validation failed - invalid phone number');
         showError('يرجى إدخال رقم هاتف صحيح');
         return;
     }
@@ -754,9 +773,13 @@ async function handleFormSubmit(event) {
         const result = await response.json();
         
         if (result.success) {
-            const durationText = selectedDuration === 30 ? '30 دقيقة' : 
-                                selectedDuration === 60 ? 'ساعة واحدة' :
-                                selectedDuration === 90 ? 'ساعة ونصف' : 'ساعتان';
+            // Calculate duration text from selected slots
+            const actualDuration = selectedSlots.length * 30;
+            const durationText = actualDuration === 30 ? '30 دقيقة' : 
+                                actualDuration === 60 ? 'ساعة واحدة' :
+                                actualDuration === 90 ? 'ساعة ونصف' : 
+                                actualDuration === 120 ? 'ساعتان' :
+                                `${actualDuration} دقيقة`;
             
             let successMessage = '';
             
@@ -809,6 +832,8 @@ ${result.booking.paymentInfo.instaPay ? `💳 إنستاباي: ${result.booking
             selectedTime = null;
             selectedDate = null;
             timeSlotsContainer.innerHTML = '<p class="loading">اختر التاريخ لعرض المواعيد المتاحة</p>';
+            updateBookingProgress(); // Update progress indicator
+            updateSubmitButton(); // Update submit button state
             
         } else {
             showError(result.message || 'حدث خطأ أثناء الحجز');
@@ -819,7 +844,7 @@ ${result.booking.paymentInfo.instaPay ? `💳 إنستاباي: ${result.booking
         showError('حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى');
     } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'احجز الآن';
+        updateSubmitButton(); // Use the function to properly update button text
     }
 }
 
