@@ -1512,17 +1512,18 @@ body {
         background-color: var(--primary-color) !important;
     }
     
-    /* Make first column (booking ID) sticky */
-    .table th:first-child,
-    .table td:first-child {
+    /* Make second column (name) sticky for better mobile UX */
+    .table th:nth-child(2),
+    .table td:nth-child(2) {
         position: sticky;
         right: 0;
         z-index: 3;
         background: var(--card-background);
         box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        min-width: 120px; /* Ensure names have enough space */
     }
     
-    .table th:first-child {
+    .table th:nth-child(2) {
         background-color: var(--primary-color) !important;
         z-index: 6;
     }
