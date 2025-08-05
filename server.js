@@ -26,34 +26,52 @@ const PORT = process.env.PORT || 3000;
 // Initialize database
 const db = new SupabaseDatabase();
 
-// Load configuration from config.json
+// Load configuration using enhanced config manager
+const configManager = require('./src/config/config-manager');
 let config;
 try {
-    const configFile = fs.readFileSync(path.join(__dirname, 'src/config/config.json'), 'utf8');
-    config = JSON.parse(configFile);
+    // Initialize the layered configuration system
+    configManager.initConfigSystem();
+    
+    // Load configuration with admin overrides
+    config = configManager.loadConfig();
     
     // Add admin passwords from environment
     config.adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
     config.superAdminPassword = process.env.SUPER_ADMIN_PASSWORD;
     
-    console.log('✅ Configuration loaded from config.json');
+    console.log('✅ Enhanced configuration system loaded');
 } catch (error) {
-    console.error('❌ Error loading config.json:', error.message);
+    console.error('❌ Error loading enhanced configuration, falling back to legacy:', error.message);
     
-    // Fallback to default configuration
-    config = {
-        courtName: "ملعب كرة القدم",
-        openingHours: { start: "08:00", end: "22:00" },
-        workingDays: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
-        maxHoursPerPersonPerDay: 2,
-        slotDurationMinutes: 30,
-        currency: "جنيه",
-        pricePerHour: 50,
-        adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
-        superAdminPassword: process.env.SUPER_ADMIN_PASSWORD,
-        contactInfo: { phone: "01234567890", email: "info@hagzyomi.com" },
-        paymentInfo: { vodafoneCash: "01234567890", instaPay: "محمد عزب", instructions: "يرجى إرسال قيمة الحجز خلال ساعة واحدة لتأكيد الحجز" }
-    };
+    // Fallback to legacy config loading
+    try {
+        const configFile = fs.readFileSync(path.join(__dirname, 'src/config/config.json'), 'utf8');
+        config = JSON.parse(configFile);
+        
+        // Add admin passwords from environment
+        config.adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+        config.superAdminPassword = process.env.SUPER_ADMIN_PASSWORD;
+        
+        console.log('✅ Legacy configuration loaded as fallback');
+    } catch (legacyError) {
+        console.error('❌ Error loading legacy config.json:', legacyError.message);
+        
+        // Fallback to default configuration
+        config = {
+            courtName: "ملعب كرة القدم",
+            openingHours: { start: "08:00", end: "22:00" },
+            workingDays: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
+            maxHoursPerPersonPerDay: 2,
+            slotDurationMinutes: 30,
+            currency: "جنيه",
+            pricePerHour: 50,
+            adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
+            superAdminPassword: process.env.SUPER_ADMIN_PASSWORD,
+            contactInfo: { phone: "01234567890", email: "info@hagzyomi.com" },
+            paymentInfo: { vodafoneCash: "01234567890", instaPay: "محمد عزب", instructions: "يرجى إرسال قيمة الحجز خلال ساعة واحدة لتأكيد الحجز" }
+        };
+    }
 }
 
 // Middleware
@@ -1039,17 +1057,13 @@ app.post('/api/admin/update-config', async (req, res) => {
     try {
         const newConfig = req.body;
         
-        // Preserve sensitive fields
-        newConfig.adminPassword = config.adminPassword;
-        newConfig.superAdminPassword = config.superAdminPassword;
+        // Use the enhanced config manager to save admin changes
+        configManager.saveAdminConfig(newConfig);
         
-        // Update config file
-        fs.writeFileSync(path.join(__dirname, 'config.json'), JSON.stringify(newConfig, null, 2));
-        
-        // Update in-memory config
+        // Update in-memory config by merging with current base
         Object.assign(config, newConfig);
         
-        res.json({ success: true, message: 'تم تحديث الإعدادات بنجاح' });
+        res.json({ success: true, message: 'تم تحديث الإعدادات بنجاح - ستبقى التغييرات حتى عند التحديثات' });
     } catch (error) {
         console.error('Error updating config:', error);
         res.status(500).json({ error: 'خطأ في حفظ الإعدادات' });

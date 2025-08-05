@@ -347,12 +347,19 @@ function populateConfigForm(config) {
     console.log('Populating config form with:', config);
     
     try {
-        // Basic settings
+        // Business settings (editable by super admin)
         setValue('courtName', config.courtName);
-        setValue('pricePerHour', config.pricePerHour);
-        setValue('slotDurationMinutes', config.slotDurationMinutes);
         setValue('maxHoursPerPersonPerDay', config.maxHoursPerPersonPerDay);
-        setValue('maxBookingDaysAhead', config.maxBookingDaysAhead);
+        
+        // Pricing settings (main business focus)
+        setValue('dayRate', config.pricing?.dayRate);
+        setValue('nightRate', config.pricing?.nightRate);
+        setValue('nightStartTime', config.pricing?.nightStartTime);
+        
+        // Display technical settings as read-only info
+        setValue('pricePerHourReadOnly', config.pricePerHour + ' جنيه');
+        setValue('slotDurationReadOnly', config.slotDurationMinutes + ' دقيقة');
+        setValue('maxBookingDaysReadOnly', config.maxBookingDaysAhead + ' يوم');
         
         // Working hours
         setValue('openingStart', config.openingHours?.start);
@@ -364,15 +371,12 @@ function populateConfigForm(config) {
             checkbox.checked = config.workingDays?.includes(checkbox.value);
         });
         
-        // Features
-        setCheckbox('enableOnlineBooking', config.features?.enableOnlineBooking);
-        setCheckbox('requirePhoneVerification', config.features?.requirePhoneVerification);
+        // Features (only business policies)
         setCheckbox('allowCancellation', config.features?.allowCancellation);
         setValue('cancellationHours', config.features?.cancellationHours);
-        setCheckbox('enableRecurringBooking', config.features?.enableRecurringBooking);
-        setValue('maxRecurringWeeks', config.features?.maxRecurringWeeks);
-        setCheckbox('requirePaymentConfirmation', config.features?.requirePaymentConfirmation);
-        setValue('paymentTimeoutMinutes', config.features?.paymentTimeoutMinutes);
+        
+        // Display technical features as read-only info
+        // These are shown in the interface but not editable
         
         // Payment info
         setValue('vodafoneCash', config.paymentInfo?.vodafoneCash);
@@ -422,13 +426,22 @@ function setCheckbox(id, value) {
 function collectConfigFormData() {
     const config = {};
     
-    // Basic settings
+    // Business settings (editable)
     config.courtName = getValue('courtName');
-    config.pricePerHour = parseInt(getValue('pricePerHour'));
-    config.slotDurationMinutes = parseInt(getValue('slotDurationMinutes'));
     config.maxHoursPerPersonPerDay = parseInt(getValue('maxHoursPerPersonPerDay'));
-    config.maxBookingDaysAhead = parseInt(getValue('maxBookingDaysAhead'));
     config.currency = "جنيه";
+    
+    // Pricing settings (main business focus)
+    config.pricing = {
+        dayRate: parseInt(getValue('dayRate')),
+        nightRate: parseInt(getValue('nightRate')),
+        nightStartTime: getValue('nightStartTime')
+    };
+    
+    // Preserve technical settings (don't allow admin to change)
+    config.pricePerHour = config.pricePerHour || 250; // Keep existing value
+    config.slotDurationMinutes = config.slotDurationMinutes || 30; // Keep existing value
+    config.maxBookingDaysAhead = config.maxBookingDaysAhead || 240; // Keep existing value
     
     // Working hours
     config.openingHours = {
@@ -443,16 +456,19 @@ function collectConfigFormData() {
     });
     config.workingDays = workingDays;
     
-    // Features
+    // Features (only business policies that admin can change)
     config.features = {
-        enableOnlineBooking: getCheckboxValue('enableOnlineBooking'),
-        requirePhoneVerification: getCheckboxValue('requirePhoneVerification'),
+        // Preserve technical settings
+        enableOnlineBooking: config.features?.enableOnlineBooking || true,
+        requirePhoneVerification: config.features?.requirePhoneVerification || false,
+        enableRecurringBooking: config.features?.enableRecurringBooking || true,
+        maxRecurringWeeks: config.features?.maxRecurringWeeks || 16,
+        requirePaymentConfirmation: config.features?.requirePaymentConfirmation || true,
+        paymentTimeoutMinutes: config.features?.paymentTimeoutMinutes || 60,
+        
+        // Allow admin to change these business policies
         allowCancellation: getCheckboxValue('allowCancellation'),
-        cancellationHours: parseInt(getValue('cancellationHours')),
-        enableRecurringBooking: getCheckboxValue('enableRecurringBooking'),
-        maxRecurringWeeks: parseInt(getValue('maxRecurringWeeks')),
-        requirePaymentConfirmation: getCheckboxValue('requirePaymentConfirmation'),
-        paymentTimeoutMinutes: parseInt(getValue('paymentTimeoutMinutes'))
+        cancellationHours: parseInt(getValue('cancellationHours'))
     };
     
     // Payment info

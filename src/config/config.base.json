@@ -1,0 +1,57 @@
+{
+  "courtName": "ملعب مركز الشباب الرياضي",
+  "openingHours": {
+    "start": "07:00",
+    "end": "05:00"
+  },
+  "workingDays": [
+    "الأحد",
+    "الاثنين", 
+    "الثلاثاء",
+    "الأربعاء",
+    "الخميس",
+    "الجمعة",
+    "السبت"
+  ],
+  "maxHoursPerPersonPerDay": 2,
+  "slotDurationMinutes": 30,
+  "maxBookingDaysAhead": 240,
+  "currency": "جنيه",
+  "pricing": {
+    "dayRate": 250,
+    "nightRate": 300,
+    "nightStartTime": "20:00"
+  },
+  "pricePerHour": 250,
+  "contactInfo": {
+    "phone": "01157000063",
+    "address": "مركز شباب قرموط صهبرة",
+    "email": "Mazab10@gmail.com"
+  },
+  "features": {
+    "enableOnlineBooking": true,
+    "requirePhoneVerification": false,
+    "allowCancellation": true,
+    "cancellationHours": 2,
+    "enableRecurringBooking": true,
+    "maxRecurringWeeks": 16,
+    "requirePaymentConfirmation": true,
+    "paymentTimeoutMinutes": 60
+  },
+  "paymentInfo": {
+    "vodafoneCash": "01157000063",
+    "instaPay": "mazab10@instapay",
+    "instaPayLink": "https://ipn.eg/S/mazab10/instapay/1FHsXY",
+    "instructions": "يرجى إرسال قيمة الحجز لتأكيد حجزك",
+    "paymentTimeoutSeconds": 10
+  },
+  "ui": {
+    "headerTitle": "مركز شباب قرموط صهبرة",
+    "headerSubtitle": "احجز ملعبك بسهولة",
+    "heroTitle": "ملعب مركز الشباب الرياضي",
+    "heroSubtitle": "احجز موعدك الآن واستمتع بلعب كرة القدم",
+    "primaryColor": "#4CAF50",
+    "theme": "light"
+  }
+}
+ 

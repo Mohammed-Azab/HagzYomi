@@ -19,6 +19,9 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 
+# Admin configuration overrides (persistent on server)
+src/config/config.override.json
+
 # Database files
 data/hagz_yomi.db
 data/hagz_yomi.db-journal

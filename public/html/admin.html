@@ -218,11 +218,11 @@
                 <!-- User-Friendly Form Editor (Super Admin Only) -->
                 <div id="configFormEditor" style="display: none;">
                     <div class="config-tabs" style="margin-bottom: 1rem;">
-                        <button class="config-tab active" data-tab="basic">الإعدادات الأساسية</button>
-                        <button class="config-tab" data-tab="hours">ساعات العمل</button>
-                        <button class="config-tab" data-tab="features">الميزات</button>
-                        <button class="config-tab" data-tab="payment">معلومات الدفع</button>
-                        <button class="config-tab" data-tab="ui">واجهة المستخدم</button>
+                        <button class="config-tab active" data-tab="basic">💰 التسعير والإعدادات</button>
+                        <button class="config-tab" data-tab="hours">🕐 ساعات العمل</button>
+                        <button class="config-tab" data-tab="features">🏪 السياسات التجارية</button>
+                        <button class="config-tab" data-tab="payment">💳 معلومات الدفع</button>
+                        <button class="config-tab" data-tab="ui">🎨 شكل الموقع</button>
                     </div>
 
                     <!-- Basic Settings Tab -->
@@ -231,26 +231,49 @@
                             <label>اسم الملعب:</label>
                             <input type="text" id="courtName" class="form-control">
                         </div>
-                        <div class="form-group">
-                            <label>السعر بالساعة (جنيه):</label>
-                            <input type="number" id="pricePerHour" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label>مدة الحجز الأساسية (دقائق):</label>
-                            <select id="slotDurationMinutes" class="form-control">
-                                <option value="30">30 دقيقة</option>
-                                <option value="60">60 دقيقة</option>
-                                <option value="90">90 دقيقة</option>
-                                <option value="120">120 دقيقة</option>
-                            </select>
-                        </div>
+                        
                         <div class="form-group">
                             <label>الحد الأقصى للحجز يومياً (ساعات):</label>
                             <input type="number" id="maxHoursPerPersonPerDay" class="form-control" min="1" max="12">
+                            <small class="form-text">كم ساعة يمكن للشخص الواحد حجزها في اليوم الواحد</small>
                         </div>
-                        <div class="form-group">
-                            <label>الحد الأقصى للحجز المسبق (أيام):</label>
-                            <input type="number" id="maxBookingDaysAhead" class="form-control" min="1" max="365">
+                        
+                        <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; margin: 1rem 0; border-left: 4px solid #2196F3;">
+                            <h4 style="margin: 0 0 1rem 0; color: #1976D2;">💰 إعدادات التسعير</h4>
+                            <div class="form-group">
+                                <label>سعر النهار (جنيه):</label>
+                                <input type="number" id="dayRate" class="form-control" placeholder="250">
+                                <small class="form-text">السعر المطبق من بداية اليوم حتى غروب الشمس</small>
+                            </div>
+                            <div class="form-group">
+                                <label>سعر الليل (جنيه):</label>
+                                <input type="number" id="nightRate" class="form-control" placeholder="300">
+                                <small class="form-text">السعر المطبق من غروب الشمس حتى نهاية اليوم</small>
+                            </div>
+                            <div class="form-group">
+                                <label>وقت بداية سعر الليل:</label>
+                                <input type="time" id="nightStartTime" class="form-control" placeholder="18:00">
+                                <small class="form-text">الوقت الذي يبدأ فيه تطبيق سعر الليل (توقيت مصر)</small>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; border-left: 4px solid #6c757d;">
+                            <h4 style="margin: 0 0 1rem 0; color: #495057;">🔧 الإعدادات التقنية (للمطور فقط)</h4>
+                            <div class="form-group">
+                                <label>مدة الحجز الأساسية:</label>
+                                <input type="text" id="slotDurationReadOnly" class="form-control" readonly style="background: #e9ecef;">
+                                <small class="form-text">لا يمكن تغييرها - تؤثر على منطق النظام</small>
+                            </div>
+                            <div class="form-group">
+                                <label>الحد الأقصى للحجز المسبق:</label>
+                                <input type="text" id="maxBookingDaysReadOnly" class="form-control" readonly style="background: #e9ecef;">
+                                <small class="form-text">لا يمكن تغييرها - تؤثر على أداء النظام</small>
+                            </div>
+                            <div class="form-group">
+                                <label>السعر القديم (متوافق مع النظام القديم):</label>
+                                <input type="text" id="pricePerHourReadOnly" class="form-control" readonly style="background: #e9ecef;">
+                                <small class="form-text">يتم الاحتفاظ به للتوافق مع النظام القديم</small>
+                            </div>
                         </div>
                     </div>
 
@@ -280,32 +303,37 @@
 
                     <!-- Features Tab -->
                     <div class="config-tab-content" id="features-tab" style="display: none;">
-                        <div class="form-group">
-                            <label><input type="checkbox" id="enableOnlineBooking"> تفعيل الحجز الإلكتروني</label>
+                        <div style="background: #d4edda; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #28a745;">
+                            <h4 style="margin: 0 0 1rem 0; color: #155724;">🏪 السياسات التجارية</h4>
+                            <div class="form-group">
+                                <label><input type="checkbox" id="allowCancellation"> السماح بإلغاء الحجز</label>
+                            </div>
+                            <div class="form-group">
+                                <label>ساعات الإلغاء المسموحة:</label>
+                                <input type="number" id="cancellationHours" class="form-control" min="1" max="48">
+                                <small class="form-text">كم ساعة قبل الموعد يُسمح بالإلغاء</small>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label><input type="checkbox" id="requirePhoneVerification"> تأكيد رقم الهاتف</label>
-                        </div>
-                        <div class="form-group">
-                            <label><input type="checkbox" id="allowCancellation"> السماح بإلغاء الحجز</label>
-                        </div>
-                        <div class="form-group">
-                            <label>ساعات الإلغاء المسموحة:</label>
-                            <input type="number" id="cancellationHours" class="form-control" min="1" max="48">
-                        </div>
-                        <div class="form-group">
-                            <label><input type="checkbox" id="enableRecurringBooking"> تفعيل الحجز المتكرر</label>
-                        </div>
-                        <div class="form-group">
-                            <label>الحد الأقصى للأسابيع المتكررة:</label>
-                            <input type="number" id="maxRecurringWeeks" class="form-control" min="1" max="52">
-                        </div>
-                        <div class="form-group">
-                            <label><input type="checkbox" id="requirePaymentConfirmation"> تأكيد الدفع مطلوب</label>
-                        </div>
-                        <div class="form-group">
-                            <label>مهلة تأكيد الدفع (دقائق):</label>
-                            <input type="number" id="paymentTimeoutMinutes" class="form-control" min="15" max="1440">
+                        
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; border-left: 4px solid #6c757d;">
+                            <h4 style="margin: 0 0 1rem 0; color: #495057;">🔧 الإعدادات التقنية (للمطور فقط)</h4>
+                            <p style="color: #6c757d; font-style: italic;">هذه الإعدادات تؤثر على عمل النظام ولا يمكن تغييرها من هنا</p>
+                            <div class="form-group">
+                                <label>تفعيل الحجز الإلكتروني:</label>
+                                <input type="text" value="مفعل" class="form-control" readonly style="background: #e9ecef;">
+                            </div>
+                            <div class="form-group">
+                                <label>تأكيد رقم الهاتف:</label>
+                                <input type="text" value="معطل" class="form-control" readonly style="background: #e9ecef;">
+                            </div>
+                            <div class="form-group">
+                                <label>تفعيل الحجز المتكرر:</label>
+                                <input type="text" value="مفعل" class="form-control" readonly style="background: #e9ecef;">
+                            </div>
+                            <div class="form-group">
+                                <label>تأكيد الدفع مطلوب:</label>
+                                <input type="text" value="مفعل" class="form-control" readonly style="background: #e9ecef;">
+                            </div>
                         </div>
                     </div>
 
