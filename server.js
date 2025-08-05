@@ -1152,6 +1152,43 @@ app.delete('/api/admin/booking/:id', async (req, res) => {
     }
 });
 
+// Delete all recurring bookings by booking number
+app.delete('/api/admin/booking/recurring/:bookingNumber', async (req, res) => {
+    if (!req.session.isAdmin) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    try {
+        const { bookingNumber } = req.params;
+        
+        // Get all bookings and filter by booking number
+        const allBookings = await db.getAllBookings();
+        const recurringBookings = allBookings.filter(b => b.bookingNumber === bookingNumber);
+        
+        if (!recurringBookings || recurringBookings.length === 0) {
+            return res.json({ success: false, message: 'لا توجد حجوزات بهذا الرقم' });
+        }
+        
+        // Delete all bookings with this booking number
+        let deletedCount = 0;
+        for (const booking of recurringBookings) {
+            const result = await db.deleteBooking(booking.id);
+            if (result.changes > 0) {
+                deletedCount++;
+            }
+        }
+        
+        res.json({ 
+            success: true, 
+            deletedCount,
+            message: `تم حذف ${deletedCount} حجز متكرر بنجاح`
+        });
+    } catch (error) {
+        console.error('Error deleting recurring bookings:', error);
+        res.status(500).json({ success: false, message: 'خطأ في قاعدة البيانات' });
+    }
+});
+
 // Update configuration (super admin only)
 app.post('/api/admin/update-config', async (req, res) => {
     if (!req.session.isAdmin || req.session.adminRole !== 'superAdmin') {

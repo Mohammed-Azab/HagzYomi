@@ -697,6 +697,11 @@ function renderBookings() {
                     <button class="btn btn-danger btn-small" onclick="showDeleteModal('${booking.id}')" title="حذف الحجز">
                         🗑️ حذف
                     </button>
+                    ${booking.isRecurring ? `
+                        <button class="btn btn-danger btn-small" onclick="showDeleteAllRecurringModal('${booking.bookingNumber}')" title="حذف جميع الأسابيع المتكررة" style="background-color: #dc3545; margin-left: 0.25rem;">
+                            🗑️ حذف الكل
+                        </button>
+                    ` : ''}
                 </div>
             </td>
             ` : ''}
@@ -715,8 +720,9 @@ function updateStatistics() {
     const todayBookings = bookings.filter(booking => booking.date === today);
     todayBookingsEl.textContent = todayBookings.length;
     
-    // Total revenue
-    const totalRevenue = bookings.reduce((sum, booking) => sum + booking.price, 0);
+    // Total revenue (confirmed bookings only)
+    const confirmedBookings = bookings.filter(booking => booking.status === 'confirmed');
+    const totalRevenue = confirmedBookings.reduce((sum, booking) => sum + booking.price, 0);
     totalRevenueEl.textContent = `${totalRevenue} جنيه`;
     
     // Popular times
@@ -1298,8 +1304,48 @@ function updateFilterStatus(filter, date = null) {
     filterStatus.textContent = statusText;
 }
 
+// Show delete all recurring confirmation modal
+function showDeleteAllRecurringModal(bookingNumber) {
+    const booking = bookings.find(b => b.bookingNumber === bookingNumber);
+    if (!booking || !booking.isRecurring) return;
+    
+    const confirmMessage = `هل أنت متأكد من حذف جميع الأسابيع المتكررة لهذا الحجز؟\nسيتم حذف ${booking.totalWeeks} أسبوع`;
+    
+    if (confirm(confirmMessage)) {
+        deleteAllRecurringBookings(bookingNumber);
+    }
+}
+
+// Delete all recurring bookings by booking number
+async function deleteAllRecurringBookings(bookingNumber) {
+    try {
+        const response = await fetch(`/api/admin/booking/recurring/${bookingNumber}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.status === 401) {
+            window.location.href = '/admin-login';
+            return;
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage(`تم حذف جميع الأسابيع المتكررة بنجاح (${result.deletedCount} حجز)`, 'success');
+            loadBookings(); // Reload bookings
+        } else {
+            showMessage(result.message || 'فشل في حذف الحجوزات المتكررة', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error deleting recurring bookings:', error);
+        showMessage('خطأ في حذف الحجوزات المتكررة', 'error');
+    }
+}
+
 // Make functions globally accessible for inline HTML handlers
 window.showDeleteModal = showDeleteModal;
 window.confirmBooking = confirmBooking;
 window.selectFormat = selectFormat;
 window.applyFilter = applyFilter;
+window.showDeleteAllRecurringModal = showDeleteAllRecurringModal;
