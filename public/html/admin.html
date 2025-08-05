@@ -13,6 +13,37 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .filter-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .filter-btn:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        .filter-controls {
+            border: 1px solid #dee2e6;
+        }
+        @media (max-width: 768px) {
+            .filter-controls > div {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 0.5rem !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <header class="header">
@@ -51,6 +82,37 @@
                 </div>
             </div>
 
+            <!-- Filter Controls -->
+            <div class="filter-controls" style="background: var(--card-background); padding: 1rem; border-radius: var(--border-radius); box-shadow: var(--shadow); margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <span style="font-weight: 600; color: var(--primary-color);">🔍 تصفية الحجوزات:</span>
+                    
+                    <button class="filter-btn active" data-filter="all">
+                        📋 الكل
+                    </button>
+                    <button class="filter-btn" data-filter="today">
+                        📅 اليوم
+                    </button>
+                    <button class="filter-btn" data-filter="week">
+                        📆 هذا الأسبوع
+                    </button>
+                    <button class="filter-btn" data-filter="month">
+                        🗓️ هذا الشهر
+                    </button>
+                    
+                    <div style="margin-left: 1rem;">
+                        <input type="date" id="filterDate" class="form-control" style="display: inline-block; width: auto; margin-left: 0.5rem;">
+                        <button class="btn btn-sm btn-secondary" id="filterByDate">
+                            📅 تصفية بالتاريخ
+                        </button>
+                    </div>
+                    
+                    <div style="margin-left: auto;">
+                        <span id="filterStatus" style="color: #666; font-size: 0.9rem;"></span>
+                    </div>
+                </div>
+            </div>
+
             <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
                 <div class="stat-card" style="background: var(--card-background); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); text-align: center;">
                     <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">إجمالي الحجوزات</h3>
@@ -60,7 +122,7 @@
                     <h3 style="color: var(--secondary-color); margin-bottom: 0.5rem;">حجوزات اليوم</h3>
                     <div id="todayBookings" style="font-size: 2rem; font-weight: bold; color: var(--secondary-color);">0</div>
                 </div>
-                <div class="stat-card" style="background: var(--card-background); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); text-align: center;">
+                <div id="revenueCard" class="stat-card" style="background: var(--card-background); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); text-align: center;">
                     <h3 style="color: var(--accent-color); margin-bottom: 0.5rem;">إجمالي الإيرادات</h3>
                     <div id="totalRevenue" style="font-size: 2rem; font-weight: bold; color: var(--accent-color);">0 جنيه</div>
                 </div>
@@ -79,7 +141,7 @@
                             <th>السعر</th>
                             <th>الحالة</th>
                             <th>وقت الحجز</th>
-                            <th>الإجراءات</th>
+                            <th id="actionsHeader">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="bookingsTable">

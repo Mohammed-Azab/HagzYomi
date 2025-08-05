@@ -11,13 +11,16 @@
 let bookings = [];
 let bookingToDelete = null;
 let config = {};
-let userRole = { isAdmin: false, isSuperAdmin: false };
+let userRole = { isAdmin: false, isSuperAdmin: false, isViewer: false };
 
 // DOM elements
 const bookingsTable = document.getElementById('bookingsTable');
 const refreshBtn = document.getElementById('refreshBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const deleteModal = document.getElementById('deleteModal');
+
+// Current filter state
+let currentFilter = 'all';
 
 // Configuration modal elements
 const configBtn = document.getElementById('configBtn');
@@ -69,6 +72,27 @@ document.addEventListener('DOMContentLoaded', async function() {
 function setupEventListeners() {
     refreshBtn.addEventListener('click', loadBookings);
     logoutBtn.addEventListener('click', logout);
+    
+    // Filter event listeners
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const filterByDateBtn = document.getElementById('filterByDate');
+    
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const filter = this.getAttribute('data-filter');
+            applyFilter(filter);
+        });
+    });
+    
+    if (filterByDateBtn) {
+        filterByDateBtn.addEventListener('click', function() {
+            const filterDate = document.getElementById('filterDate');
+            const selectedDate = filterDate.value;
+            if (selectedDate) {
+                applyFilter('date', selectedDate);
+            }
+        });
+    }
     
     // Configuration modal handlers
     configBtn.addEventListener('click', showConfigModal);
@@ -273,13 +297,14 @@ async function loadUserRole() {
         userRole = await response.json();
     } catch (error) {
         console.error('Error loading user role:', error);
-        userRole = { isAdmin: false, isSuperAdmin: false };
+        userRole = { isAdmin: false, isSuperAdmin: false, isViewer: false };
     }
 }
 
 // Setup UI permissions based on user role
 function setupUIPermissions() {
     const configBtn = document.getElementById('configBtn');
+    const downloadModalBtn = document.getElementById('downloadModalBtn');
     const userRoleIndicator = document.getElementById('userRoleIndicator');
     
     // Update role indicator
@@ -289,13 +314,35 @@ function setupUIPermissions() {
     } else if (userRole.isAdmin) {
         userRoleIndicator.innerHTML = '👤 <strong>مدير</strong> - إدارة الحجوزات';
         userRoleIndicator.style.color = '#2196F3';
+    } else if (userRole.isViewer) {
+        userRoleIndicator.innerHTML = '👁️ <strong>مشاهد</strong> - عرض الحجوزات فقط';
+        userRoleIndicator.style.color = '#ff9800';
     }
     
-    // Hide config button for regular admins
+    // Hide config button for non-super admins
     if (!userRole.isSuperAdmin) {
         configBtn.style.display = 'none';
     } else {
         configBtn.style.display = 'inline-block';
+    }
+    
+    // Hide download button for viewers
+    if (userRole.isViewer) {
+        downloadModalBtn.style.display = 'none';
+    } else {
+        downloadModalBtn.style.display = 'inline-block';
+    }
+    
+    // Hide actions column for viewers
+    const actionsHeader = document.getElementById('actionsHeader');
+    if (userRole.isViewer && actionsHeader) {
+        actionsHeader.style.display = 'none';
+    }
+    
+    // Hide total revenue for viewers
+    const revenueCard = document.getElementById('revenueCard');
+    if (userRole.isViewer && revenueCard) {
+        revenueCard.style.display = 'none';
     }
 }
 
@@ -599,12 +646,97 @@ async function loadBookings() {
     }
 }
 
+// Apply filter to bookings
+async function applyFilter(filter, date = null) {
+    try {
+        currentFilter = filter;
+        
+        // Update filter button states
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        if (filter !== 'date') {
+            const activeBtn = document.querySelector(`[data-filter="${filter}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+        }
+        
+        // Load filtered bookings
+        let endpoint = '/api/admin/bookings';
+        let params = new URLSearchParams();
+        
+        if (filter !== 'all') {
+            endpoint = '/api/admin/bookings/filter';
+            params.append('filter', filter);
+            
+            if (filter === 'date' && date) {
+                params.append('date', date);
+            }
+        }
+        
+        const url = params.toString() ? `${endpoint}?${params}` : endpoint;
+        const response = await fetch(url);
+        
+        if (response.status === 401) {
+            window.location.href = '/admin-login';
+            return;
+        }
+        
+        if (!response.ok) {
+            throw new Error('فشل في تحميل الحجوزات المفلترة');
+        }
+        
+        bookings = await response.json();
+        renderBookings();
+        updateStatistics();
+        updateFilterStatus(filter, date);
+        
+    } catch (error) {
+        console.error('Error applying filter:', error);
+        showMessage('خطأ في تطبيق التصفية', 'error');
+    }
+}
+
+// Update filter status display
+function updateFilterStatus(filter, date = null) {
+    const filterStatus = document.getElementById('filterStatus');
+    if (!filterStatus) return;
+    
+    let statusText = '';
+    const count = bookings.length;
+    
+    switch(filter) {
+        case 'all':
+            statusText = `عرض جميع الحجوزات (${count})`;
+            break;
+        case 'today':
+            statusText = `حجوزات اليوم (${count})`;
+            break;
+        case 'week':
+            statusText = `حجوزات هذا الأسبوع (${count})`;
+            break;
+        case 'month':
+            statusText = `حجوزات هذا الشهر (${count})`;
+            break;
+        case 'date':
+            statusText = `حجوزات ${date} (${count})`;
+            break;
+    }
+    
+    filterStatus.textContent = statusText;
+}
+
 // Render bookings table
 function renderBookings() {
+    const colspan = userRole.isViewer ? "9" : "10";
+    
     if (bookings.length === 0) {
         bookingsTable.innerHTML = `
             <tr>
-                <td colspan="9" style="text-align: center; padding: 2rem;">
+                <td colspan="${colspan}" style="text-align: center; padding: 2rem;">
                     لا توجد حجوزات حتى الآن
                 </td>
             </tr>
@@ -637,6 +769,7 @@ function renderBookings() {
                 </span>
             </td>
             <td>${formatDateTime(booking.createdAt)}</td>
+            ${!userRole.isViewer ? `
             <td>
                 <div class="action-buttons">
                     ${booking.status === 'pending' ? `
@@ -652,6 +785,7 @@ function renderBookings() {
                     </button>
                 </div>
             </td>
+            ` : ''}
         </tr>
     `).join('');
 }

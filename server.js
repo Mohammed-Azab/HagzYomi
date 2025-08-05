@@ -39,6 +39,7 @@ try {
     // Add admin passwords from environment
     config.adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
     config.superAdminPassword = process.env.SUPER_ADMIN_PASSWORD;
+    config.viewerPassword = process.env.VIEWER_PASSWORD || 'viewer123';
     
     console.log('✅ Enhanced configuration system loaded');
 } catch (error) {
@@ -52,6 +53,7 @@ try {
         // Add admin passwords from environment
         config.adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
         config.superAdminPassword = process.env.SUPER_ADMIN_PASSWORD;
+        config.viewerPassword = process.env.VIEWER_PASSWORD || 'viewer123';
         
         console.log('✅ Legacy configuration loaded as fallback');
     } catch (legacyError) {
@@ -427,6 +429,10 @@ app.post('/api/admin/login', async (req, res) => {
         role = 'superAdmin';
         isValidPassword = true;
     } else if (password === config.adminPassword) {
+        role = 'admin';
+        isValidPassword = true;
+    } else if (password === config.viewerPassword) {
+        role = 'viewer';
         isValidPassword = true;
     }
     
@@ -450,9 +456,12 @@ app.get('/api/admin/user-role', (req, res) => {
         return res.status(401).json({ error: 'غير مصرح' });
     }
     
+    const role = req.session.adminRole || 'admin';
     res.json({ 
-        role: req.session.adminRole || 'admin',
-        isSuperAdmin: req.session.adminRole === 'superAdmin'
+        role: role,
+        isAdmin: role === 'admin' || role === 'superAdmin',
+        isSuperAdmin: role === 'superAdmin',
+        isViewer: role === 'viewer'
     });
 });
 
@@ -859,6 +868,101 @@ app.get('/api/admin/bookings', async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error('Error fetching bookings:', error);
+        res.status(500).json({ error: 'خطأ في قاعدة البيانات' });
+    }
+});
+
+// Get filtered bookings (for viewer role with filters)
+app.get('/api/admin/bookings/filter', async (req, res) => {
+    if (!req.session.isAdmin) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    try {
+        const { filter, date, startDate, endDate } = req.query;
+        const bookings = await loadBookings();
+        
+        let filteredBookings = bookings;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Apply date filters
+        if (filter === 'today') {
+            const todayStr = today.toISOString().split('T')[0];
+            filteredBookings = bookings.filter(b => b.date === todayStr);
+        } else if (filter === 'week') {
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6); // End of week (Saturday)
+            
+            filteredBookings = bookings.filter(b => {
+                const bookingDate = new Date(b.date);
+                return bookingDate >= weekStart && bookingDate <= weekEnd;
+            });
+        } else if (filter === 'month') {
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            
+            filteredBookings = bookings.filter(b => {
+                const bookingDate = new Date(b.date);
+                return bookingDate >= monthStart && bookingDate <= monthEnd;
+            });
+        } else if (filter === 'custom' && startDate && endDate) {
+            filteredBookings = bookings.filter(b => {
+                const bookingDate = new Date(b.date);
+                return bookingDate >= new Date(startDate) && bookingDate <= new Date(endDate);
+            });
+        } else if (filter === 'date' && date) {
+            filteredBookings = bookings.filter(b => b.date === date);
+        }
+        
+        // Format bookings for display
+        const result = filteredBookings.map(booking => {
+            let timeDisplay = booking.startTime || booking.time;
+            if (booking.endTime && booking.endTime !== booking.startTime) {
+                timeDisplay = `${booking.startTime || booking.time} - ${booking.endTime}`;
+            }
+            
+            let displayName = booking.name;
+            let displayBookingNumber = booking.bookingNumber;
+            
+            if (booking.isRecurring && booking.weekNumber) {
+                displayName = `${booking.name} (الأسبوع ${booking.weekNumber}/${booking.totalWeeks})`;
+                displayBookingNumber = `${booking.bookingNumber}-W${booking.weekNumber}`;
+            }
+            
+            return {
+                id: booking.id,
+                bookingNumber: booking.bookingNumber,
+                displayBookingNumber: displayBookingNumber,
+                name: booking.name,
+                displayName: displayName,
+                phone: booking.phone,
+                date: booking.date,
+                time: timeDisplay,
+                startTime: booking.startTime || booking.time,
+                endTime: booking.endTime,
+                duration: booking.duration || 30,
+                price: booking.price,
+                status: booking.status,
+                createdAt: booking.createdAt,
+                isRecurring: booking.isRecurring || false,
+                weekNumber: booking.weekNumber || 1,
+                totalWeeks: booking.totalWeeks || 1
+            };
+        });
+        
+        // Sort by date and time
+        result.sort((a, b) => {
+            const dateComparison = new Date(a.date + ' ' + a.startTime) - new Date(b.date + ' ' + b.startTime);
+            if (dateComparison !== 0) return dateComparison;
+            return (a.weekNumber || 1) - (b.weekNumber || 1);
+        });
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching filtered bookings:', error);
         res.status(500).json({ error: 'خطأ في قاعدة البيانات' });
     }
 });
