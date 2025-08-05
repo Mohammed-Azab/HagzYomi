@@ -276,21 +276,34 @@ function displayBookingDetails(booking) {
                     <span class="value">${booking.isRecurring && booking.recurringWeeks > 1 ? `${booking.price} جنيه (لكل أسبوع)` : `${booking.price} جنيه`}</span>
                 </div>
                 ${booking.paid_amount !== undefined ? `
-                <div class="info-row payment-row">
-                    <span class="label">المبلغ المدفوع:</span>
-                    <span class="value payment-paid">${booking.paid_amount || 0} جنيه</span>
-                </div>
-                <div class="info-row payment-row">
-                    <span class="label">المبلغ المتبقي:</span>
-                    <span class="value payment-remaining">${(booking.price || 0) - (booking.paid_amount || 0)} جنيه</span>
-                </div>
-                <div class="info-row payment-row">
-                    <span class="label">حالة الدفع:</span>
-                    <span class="value payment-status ${(booking.paid_amount || 0) >= (booking.price || 0) ? 'fully-paid' : 'partially-paid'}">
-                        ${(booking.paid_amount || 0) >= (booking.price || 0) ? 'مدفوع بالكامل' : 
-                          (booking.paid_amount || 0) >= 200 ? 'دفعة جزئية (مؤكد)' : 
-                          'في انتظار الدفع'}
-                    </span>
+                <div style="margin: 1.5rem 0; padding: 1rem 0; border-top: 2px solid #e9ecef; border-bottom: 2px solid #e9ecef;">
+                    <h4 style="color: var(--primary-color); margin: 0 0 1rem 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        💰 تفاصيل الدفع
+                    </h4>
+                    <div class="info-row payment-row">
+                        <span class="label">المبلغ المدفوع:</span>
+                        <span class="value">
+                            <div class="amount-display ${(booking.paid_amount || 0) >= (booking.price || 0) ? 'fully-paid' : 'partially-paid'}">
+                                ${booking.paid_amount || 0} جنيه
+                            </div>
+                        </span>
+                    </div>
+                    <div class="info-row payment-row">
+                        <span class="label">المبلغ المتبقي:</span>
+                        <span class="value">
+                            <div class="amount-display ${((booking.price || 0) - (booking.paid_amount || 0)) > 0 ? 'has-remaining' : 'no-remaining'}">
+                                ${(booking.price || 0) - (booking.paid_amount || 0)} جنيه
+                            </div>
+                        </span>
+                    </div>
+                    <div class="info-row payment-row">
+                        <span class="label">حالة الدفع:</span>
+                        <span class="value payment-status ${(booking.paid_amount || 0) >= (booking.price || 0) ? 'fully-paid' : 'partially-paid'}">
+                            ${(booking.paid_amount || 0) >= (booking.price || 0) ? 'مدفوع بالكامل ✅' : 
+                              (booking.paid_amount || 0) >= 200 ? 'دفعة جزئية (مؤكد) ⚠️' : 
+                              'في انتظار الدفع ⏳'}
+                        </span>
+                    </div>
                 </div>
                 ` : `
                 <div class="info-row">

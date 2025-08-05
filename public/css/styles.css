@@ -2189,7 +2189,91 @@ textarea.form-control {
     margin-bottom: 1rem;
 }
 
-/* Payment display styles for check-booking page */
+/* Check Booking Page - Enhanced Payment Display */
+.booking-info .payment-row .amount-display {
+    display: inline-block;
+    font-weight: 600;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    margin: 0.2rem 0;
+    font-size: 1rem;
+    text-align: center;
+    min-width: 100px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.booking-info .payment-row .amount-display.fully-paid {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    color: #155724;
+    border-color: #c3e6cb;
+    box-shadow: 0 2px 8px rgba(21, 87, 36, 0.2);
+}
+
+.booking-info .payment-row .amount-display.partially-paid {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    color: #856404;
+    border-color: #ffeaa7;
+    box-shadow: 0 2px 8px rgba(133, 100, 4, 0.2);
+}
+
+.booking-info .payment-row .amount-display.has-remaining {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    color: #721c24;
+    border-color: #f5c6cb;
+    box-shadow: 0 2px 8px rgba(114, 28, 36, 0.2);
+}
+
+.booking-info .payment-row .amount-display.no-remaining {
+    background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+    color: #0c5460;
+    border-color: #bee5eb;
+    box-shadow: 0 2px 8px rgba(12, 84, 96, 0.2);
+}
+
+/* Enhanced payment status styling for check booking */
+.booking-info .payment-status {
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: inline-block;
+    text-align: center;
+    min-width: 160px;
+    border: 2px solid transparent;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.booking-info .payment-status.fully-paid {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border-color: #28a745;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.booking-info .payment-status.partially-paid {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: #343a40;
+    border-color: #ffc107;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+/* Payment row highlighting */
+.booking-info .payment-row {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.05), rgba(33, 150, 243, 0.02));
+    border-left: 4px solid var(--primary-color);
+    border-radius: 0 8px 8px 0;
+    padding: 0.8rem;
+    margin: 0.4rem 0;
+    transition: all 0.3s ease;
+}
+
+.booking-info .payment-row:hover {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05));
+    transform: translateX(-2px);
+    box-shadow: 2px 0 8px rgba(33, 150, 243, 0.2);
+}
 .payment-row {
     background-color: #f8f9fa;
     border-left: 4px solid var(--primary-color);
