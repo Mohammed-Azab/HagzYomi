@@ -63,7 +63,12 @@ class SupabaseDatabase {
             isRecurring: dbBooking.isrecurring,
             recurringWeeks: dbBooking.recurringweeks,
             bookingDates: dbBooking.bookingdates ? JSON.parse(dbBooking.bookingdates) : null,
-            paymentInfo: dbBooking.paymentinfo ? JSON.parse(dbBooking.paymentinfo) : null
+            paymentInfo: dbBooking.paymentinfo ? JSON.parse(dbBooking.paymentinfo) : null,
+            // Payment tracking fields
+            paid_amount: dbBooking.paid_amount || 0,
+            remaining_amount: dbBooking.remaining_amount || 0,
+            payment_history: dbBooking.payment_history ? JSON.parse(dbBooking.payment_history) : [],
+            fully_paid: dbBooking.fully_paid || false
         };
     }
 
@@ -111,7 +116,12 @@ class SupabaseDatabase {
                 isrecurring: booking.isRecurring || false,
                 recurringweeks: booking.recurringWeeks || 1,
                 bookingdates: booking.bookingDates ? JSON.stringify(booking.bookingDates) : null,
-                paymentinfo: booking.paymentInfo ? JSON.stringify(booking.paymentInfo) : null
+                paymentinfo: booking.paymentInfo ? JSON.stringify(booking.paymentInfo) : null,
+                // Payment tracking fields
+                paid_amount: booking.paid_amount || 0,
+                remaining_amount: booking.remaining_amount || (booking.price || 0),
+                payment_history: booking.payment_history ? JSON.stringify(booking.payment_history) : JSON.stringify([]),
+                fully_paid: booking.fully_paid || false
             };
 
             // Remove undefined/null values to avoid issues
@@ -148,7 +158,11 @@ class SupabaseDatabase {
             if (updates.status !== undefined) dbUpdates.status = updates.status;
             if (updates.expiresAt !== undefined) dbUpdates.expiresat = updates.expiresAt;
             if (updates.price !== undefined) dbUpdates.price = updates.price;
-            // Note: confirmedAt and declinedAt columns don't exist in current table
+            // Payment tracking fields
+            if (updates.paid_amount !== undefined) dbUpdates.paid_amount = updates.paid_amount;
+            if (updates.remaining_amount !== undefined) dbUpdates.remaining_amount = updates.remaining_amount;
+            if (updates.payment_history !== undefined) dbUpdates.payment_history = JSON.stringify(updates.payment_history);
+            if (updates.fully_paid !== undefined) dbUpdates.fully_paid = updates.fully_paid;
             
             const { data, error } = await this.supabase
                 .from('bookings')

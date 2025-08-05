@@ -624,7 +624,7 @@ async function loadBookings() {
 
 // Render bookings table
 function renderBookings() {
-    const colspan = userRole.isViewer ? "10" : "11";
+    const colspan = userRole.isViewer ? "11" : "12";
     
     if (bookings.length === 0) {
         bookingsTable.innerHTML = `
@@ -664,7 +664,13 @@ function renderBookings() {
         return dateB - dateA;
     });
     
-    bookingsTable.innerHTML = sortedBookings.map(booking => `
+    bookingsTable.innerHTML = sortedBookings.map(booking => {
+        const paidAmount = booking.paid_amount || 0;
+        const totalPrice = booking.price || 0;
+        const remainingAmount = totalPrice - paidAmount;
+        const isFullyPaid = paidAmount >= totalPrice;
+        
+        return `
         <tr>
             <td style="font-weight: 600; color: var(--primary-color);">${booking.displayBookingNumber || booking.bookingNumber || booking.id}</td>
             <td>${booking.displayName || booking.name}</td>
@@ -676,15 +682,21 @@ function renderBookings() {
             <td>${formatDate(booking.date)}</td>
             <td>${booking.time}</td>
             <td>${formatDuration(booking.duration)}</td>
-            <td>${booking.price} جنيه</td>
-            <td class="payment-info">
-                <div>مدفوع: ${booking.paid_amount || 0} جنيه</div>
-                <div>متبقي: ${(booking.price || 0) - (booking.paid_amount || 0)} جنيه</div>
-                ${!userRole.isViewer ? `
-                    <button class="btn btn-small btn-payment" onclick="openPaymentModal('${booking.id}', '${booking.price || 0}', '${booking.paid_amount || 0}')">
-                        تسجيل دفعة
+            <td>${totalPrice} جنيه</td>
+            <td class="payment-paid">
+                <div class="amount-display ${isFullyPaid ? 'fully-paid' : 'partially-paid'}">
+                    ${paidAmount} جنيه
+                </div>
+                ${!userRole.isViewer && remainingAmount > 0 ? `
+                    <button class="btn btn-small btn-payment" onclick="openPaymentModal('${booking.id}', '${totalPrice}', '${paidAmount}')" title="تسجيل دفعة جديدة">
+                        دفعة
                     </button>
                 ` : ''}
+            </td>
+            <td class="payment-remaining">
+                <div class="amount-display ${remainingAmount > 0 ? 'has-remaining' : 'no-remaining'}">
+                    ${remainingAmount} جنيه
+                </div>
             </td>
             <td>
                 <span class="status-badge status-${booking.status || 'confirmed'}">
@@ -715,7 +727,8 @@ function renderBookings() {
             </td>
             ` : ''}
         </tr>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Update statistics
