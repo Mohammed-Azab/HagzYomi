@@ -43,8 +43,10 @@
     "vodafoneCash": "01157000063",
     "instaPay": "mazab10@instapay",
     "instaPayLink": "https://ipn.eg/S/mazab10/instapay/1FHsXY",
-    "instructions": "يرجى إرسال قيمة الحجز لتأكيد حجزك",
-    "paymentTimeoutSeconds": 10
+    "instructions": "يرجى إرسال 200 جنيه على الأقل لتأكيد حجزك. الباقي يمكن دفعه لاحقاً",
+    "paymentTimeoutSeconds": 10,
+    "minimumDeposit": 200,
+    "allowPartialPayment": true
   },
   "ui": {
     "headerTitle": "مركز شباب قرموط صهبرة",

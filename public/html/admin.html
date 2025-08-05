@@ -139,6 +139,7 @@
                             <th>الوقت</th>
                             <th>المدة</th>
                             <th>السعر</th>
+                            <th>المدفوعات</th>
                             <th>الحالة</th>
                             <th>وقت الحجز</th>
                             <th id="actionsHeader">الإجراءات</th>
@@ -146,7 +147,7 @@
                     </thead>
                     <tbody id="bookingsTable">
                         <tr>
-                            <td colspan="10" style="text-align: center; padding: 2rem;">
+                            <td colspan="11" style="text-align: center; padding: 2rem;">
                                 <div class="loading">جاري تحميل الحجوزات...</div>
                             </td>
                         </tr>
@@ -564,6 +565,36 @@
             </p>
         </div>
     </footer>
+
+    <!-- Payment Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>تسجيل دفعة</h3>
+                <button class="modal-close" id="closePaymentModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="paymentInfo" class="mb-3">
+                    <p><strong>السعر الإجمالي:</strong> <span id="totalPrice">0</span> جنيه</p>
+                    <p><strong>المبلغ المدفوع:</strong> <span id="currentPaid">0</span> جنيه</p>
+                    <p><strong>المبلغ المتبقي:</strong> <span id="remainingAmount">0</span> جنيه</p>
+                </div>
+                <div class="form-group">
+                    <label for="paymentAmount">مبلغ الدفعة الجديدة (جنيه):</label>
+                    <input type="number" id="paymentAmount" class="form-control" min="0" step="0.01" placeholder="أدخل المبلغ">
+                </div>
+                <div class="form-group">
+                    <label for="paymentNote">ملاحظات (اختياري):</label>
+                    <textarea id="paymentNote" class="form-control" rows="3" placeholder="أدخل أي ملاحظات حول الدفعة"></textarea>
+                </div>
+                <div id="paymentError" class="alert alert-danger" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelPaymentBtn">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="confirmPaymentBtn">تسجيل الدفعة</button>
+            </div>
+        </div>
+    </div>
 
     <script src="../js/admin.js"></script>
 </body>

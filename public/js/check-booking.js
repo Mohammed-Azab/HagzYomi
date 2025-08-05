@@ -138,9 +138,17 @@ function displayBookingDetails(booking) {
                </div>` 
             : '';
             
+        const minDepositInfo = booking.paid_amount < 200 
+            ? `<div class="deposit-notice">
+                 <p><strong>💰 الحد الأدنى للدفع:</strong> 200 جنيه لتأكيد الحجز</p>
+                 <p>يمكن دفع المبلغ المتبقي لاحقاً</p>
+               </div>`
+            : '';
+            
         paymentInfo = `
             <div class="payment-info">
                 <h4>معلومات الدفع:</h4>
+                ${minDepositInfo}
                 <p><strong>فودافون كاش:</strong> ${booking.paymentInfo.vodafoneCash}</p>
                 <p><strong>إنستاباي:</strong> ${booking.paymentInfo.instaPay}</p>
                 <p class="payment-instructions">${booking.paymentInfo.instructions}</p>
@@ -264,9 +272,32 @@ function displayBookingDetails(booking) {
                     <span class="value">${booking.duration} دقيقة</span>
                 </div>
                 <div class="info-row">
+                    <span class="label">السعر الإجمالي:</span>
+                    <span class="value">${booking.isRecurring && booking.recurringWeeks > 1 ? `${booking.price} جنيه (لكل أسبوع)` : `${booking.price} جنيه`}</span>
+                </div>
+                ${booking.paid_amount !== undefined ? `
+                <div class="info-row payment-row">
+                    <span class="label">المبلغ المدفوع:</span>
+                    <span class="value payment-paid">${booking.paid_amount || 0} جنيه</span>
+                </div>
+                <div class="info-row payment-row">
+                    <span class="label">المبلغ المتبقي:</span>
+                    <span class="value payment-remaining">${(booking.price || 0) - (booking.paid_amount || 0)} جنيه</span>
+                </div>
+                <div class="info-row payment-row">
+                    <span class="label">حالة الدفع:</span>
+                    <span class="value payment-status ${(booking.paid_amount || 0) >= (booking.price || 0) ? 'fully-paid' : 'partially-paid'}">
+                        ${(booking.paid_amount || 0) >= (booking.price || 0) ? 'مدفوع بالكامل' : 
+                          (booking.paid_amount || 0) >= 200 ? 'دفعة جزئية (مؤكد)' : 
+                          'في انتظار الدفع'}
+                    </span>
+                </div>
+                ` : `
+                <div class="info-row">
                     <span class="label">السعر:</span>
                     <span class="value">${booking.isRecurring && booking.recurringWeeks > 1 ? `${booking.price} جنيه (لكل أسبوع)` : `${booking.price} جنيه`}</span>
                 </div>
+                `}
                 <div class="info-row">
                     <span class="label">تاريخ الحجز:</span>
                     <span class="value">${new Date(booking.createdAt).toLocaleString('ar-EG')}</span>

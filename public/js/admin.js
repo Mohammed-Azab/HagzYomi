@@ -624,7 +624,7 @@ async function loadBookings() {
 
 // Render bookings table
 function renderBookings() {
-    const colspan = userRole.isViewer ? "9" : "10";
+    const colspan = userRole.isViewer ? "10" : "11";
     
     if (bookings.length === 0) {
         bookingsTable.innerHTML = `
@@ -677,6 +677,15 @@ function renderBookings() {
             <td>${booking.time}</td>
             <td>${formatDuration(booking.duration)}</td>
             <td>${booking.price} جنيه</td>
+            <td class="payment-info">
+                <div>مدفوع: ${booking.paid_amount || 0} جنيه</div>
+                <div>متبقي: ${(booking.price || 0) - (booking.paid_amount || 0)} جنيه</div>
+                ${!userRole.isViewer ? `
+                    <button class="btn btn-small btn-payment" onclick="openPaymentModal('${booking.id}', '${booking.price || 0}', '${booking.paid_amount || 0}')">
+                        تسجيل دفعة
+                    </button>
+                ` : ''}
+            </td>
             <td>
                 <span class="status-badge status-${booking.status || 'confirmed'}">
                     ${getStatusText(booking.status || 'confirmed')}
@@ -1340,6 +1349,117 @@ async function deleteAllRecurringBookings(bookingNumber) {
     } catch (error) {
         console.error('Error deleting recurring bookings:', error);
         showMessage('خطأ في حذف الحجوزات المتكررة', 'error');
+    }
+}
+
+// Payment Management Functions
+let currentBookingForPayment = null;
+
+function openPaymentModal(bookingId, totalPrice, paidAmount) {
+    if (userRole.isViewer) {
+        showMessage('ليس لديك صلاحية لتسجيل الدفعات', 'error');
+        return;
+    }
+    
+    currentBookingForPayment = { id: bookingId, totalPrice: parseFloat(totalPrice), paidAmount: parseFloat(paidAmount) };
+    const remainingAmount = currentBookingForPayment.totalPrice - currentBookingForPayment.paidAmount;
+    
+    // Update modal content
+    document.getElementById('totalPrice').textContent = currentBookingForPayment.totalPrice;
+    document.getElementById('currentPaid').textContent = currentBookingForPayment.paidAmount;
+    document.getElementById('remainingAmount').textContent = remainingAmount;
+    
+    // Clear previous input
+    document.getElementById('paymentAmount').value = '';
+    document.getElementById('paymentNote').value = '';
+    document.getElementById('paymentError').style.display = 'none';
+    
+    // Show modal
+    document.getElementById('paymentModal').classList.add('show');
+    
+    // Setup event listeners if not already done
+    setupPaymentModalListeners();
+}
+
+function setupPaymentModalListeners() {
+    const modal = document.getElementById('paymentModal');
+    const closeBtn = document.getElementById('closePaymentModal');
+    const cancelBtn = document.getElementById('cancelPaymentBtn');
+    const confirmBtn = document.getElementById('confirmPaymentBtn');
+    
+    // Remove existing listeners to prevent duplicates
+    closeBtn.onclick = null;
+    cancelBtn.onclick = null;
+    confirmBtn.onclick = null;
+    modal.onclick = null;
+    
+    closeBtn.onclick = hidePaymentModal;
+    cancelBtn.onclick = hidePaymentModal;
+    confirmBtn.onclick = recordPayment;
+    
+    // Close on backdrop click
+    modal.onclick = function(e) {
+        if (e.target === modal) hidePaymentModal();
+    };
+}
+
+function hidePaymentModal() {
+    document.getElementById('paymentModal').classList.remove('show');
+    currentBookingForPayment = null;
+}
+
+async function recordPayment() {
+    if (!currentBookingForPayment) return;
+    
+    const paymentAmountInput = document.getElementById('paymentAmount');
+    const paymentNoteInput = document.getElementById('paymentNote');
+    const errorDiv = document.getElementById('paymentError');
+    
+    const paymentAmount = parseFloat(paymentAmountInput.value);
+    const paymentNote = paymentNoteInput.value.trim();
+    
+    // Validation
+    if (isNaN(paymentAmount) || paymentAmount <= 0) {
+        errorDiv.textContent = 'يرجى إدخال مبلغ صحيح أكبر من صفر';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    const remainingAmount = currentBookingForPayment.totalPrice - currentBookingForPayment.paidAmount;
+    if (paymentAmount > remainingAmount) {
+        errorDiv.textContent = `المبلغ المدخل أكبر من المتبقي (${remainingAmount} جنيه)`;
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/admin/record-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                bookingId: currentBookingForPayment.id,
+                amount: paymentAmount,
+                note: paymentNote
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showMessage('تم تسجيل الدفعة بنجاح', 'success');
+            hidePaymentModal();
+            loadBookings(); // Refresh the bookings table
+        } else {
+            errorDiv.textContent = result.message || 'فشل في تسجيل الدفعة';
+            errorDiv.style.display = 'block';
+        }
+        
+    } catch (error) {
+        console.error('Error recording payment:', error);
+        errorDiv.textContent = 'خطأ في تسجيل الدفعة';
+        errorDiv.style.display = 'block';
     }
 }
 

@@ -750,7 +750,13 @@ app.post('/api/book', async (req, res) => {
                 weekNumber: weekNumber, // Which week in the sequence (1, 2, 3, etc.)
                 totalWeeks: allBookingDates.length, // Total number of weeks in this recurring booking
                 recurringSequence: `${weekNumber}/${allBookingDates.length}`, // Display format: "2/4" means week 2 of 4
-                allBookingDates: allBookingDates // Reference to all dates in this recurring booking
+                allBookingDates: allBookingDates, // Reference to all dates in this recurring booking
+                // Payment tracking fields
+                paidAmount: 0, // Amount paid so far
+                remainingAmount: pricePerWeek, // Amount still owed
+                minimumDeposit: config.paymentInfo?.minimumDeposit || 200, // Minimum required payment
+                paymentHistory: [], // Array to track payment history
+                fullyPaid: false // Whether booking is fully paid
             };
             
             if (requirePaymentConfirmation) {
@@ -791,7 +797,10 @@ app.post('/api/book', async (req, res) => {
         
         if (requirePaymentConfirmation) {
             response.booking.paymentInfo = config.paymentInfo;
-            response.message = `تم إنشاء الحجز برقم ${bookingNumber}. يرجى الدفع خلال ${config.features && config.features.paymentTimeoutMinutes || 60} دقيقة لتأكيد الحجز.`;
+            const minimumDeposit = config.paymentInfo?.minimumDeposit || 200;
+            response.booking.minimumDeposit = minimumDeposit;
+            response.booking.remainingAmount = totalPrice;
+            response.message = `تم إنشاء الحجز برقم ${bookingNumber}. يرجى دفع ${minimumDeposit} جنيه على الأقل خلال ${config.features && config.features.paymentTimeoutMinutes || 60} دقيقة لتأكيد الحجز. الباقي (${totalPrice - minimumDeposit} جنيه) يمكن دفعه لاحقاً.`;
         } else {
             response.message = `تم تأكيد الحجز برقم ${bookingNumber} بنجاح!`;
         }
@@ -1130,6 +1139,11 @@ app.post('/api/check-booking', async (req, res) => {
             recurringWeeks: booking.recurringWeeks || 1,
             bookingDates: bookingDates,
             paymentInfo: booking.paymentInfo,
+            // Payment tracking information
+            paid_amount: booking.paid_amount || 0,
+            remaining_amount: (booking.total_price || booking.price || 0) - (booking.paid_amount || 0),
+            payment_history: booking.payment_history || [],
+            fully_paid: booking.fully_paid || false,
             // New fields for enhanced recurring booking support
             statusSummary: statusSummary,
             weeksInfo: weeksInfo,
@@ -1250,6 +1264,99 @@ app.post('/api/admin/cleanup-expired', async (req, res) => {
     } catch (error) {
         console.error('Error in manual cleanup:', error);
         res.status(500).json({ error: 'خطأ في تنظيف الحجوزات المنتهية الصلاحية' });
+    }
+});
+
+// Record payment for a booking (admin/super admin only)
+app.post('/api/admin/record-payment', async (req, res) => {
+    if (!req.session.isAdmin) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    // Viewers cannot edit payments
+    if (req.session.adminRole === 'viewer') {
+        return res.status(403).json({ error: 'المشاهد لا يمكنه تعديل المدفوعات' });
+    }
+    
+    try {
+        const { bookingId, paidAmount, paymentNote } = req.body;
+        
+        if (!bookingId || !paidAmount || paidAmount <= 0) {
+            return res.json({ success: false, message: 'بيانات الدفع غير صحيحة' });
+        }
+        
+        const bookings = await loadBookings();
+        const booking = bookings.find(b => b.id === bookingId);
+        
+        if (!booking) {
+            return res.json({ success: false, message: 'الحجز غير موجود' });
+        }
+        
+        // Calculate new payment totals
+        const currentPaidAmount = booking.paidAmount || 0;
+        const newPaidAmount = currentPaidAmount + parseFloat(paidAmount);
+        const totalPrice = booking.price || 0;
+        const newRemainingAmount = Math.max(0, totalPrice - newPaidAmount);
+        const isFullyPaid = newRemainingAmount === 0;
+        const minimumDeposit = booking.minimumDeposit || config.paymentInfo?.minimumDeposit || 200;
+        
+        // Check if payment exceeds total price
+        if (newPaidAmount > totalPrice) {
+            return res.json({ 
+                success: false, 
+                message: `المبلغ المدفوع (${newPaidAmount} جنيه) يتجاوز إجمالي سعر الحجز (${totalPrice} جنيه)` 
+            });
+        }
+        
+        // Create payment history entry
+        const paymentEntry = {
+            amount: parseFloat(paidAmount),
+            date: getCairoTimeISO(),
+            note: paymentNote || '',
+            recordedBy: req.session.adminRole || 'admin'
+        };
+        
+        // Update booking with payment information
+        const paymentHistory = booking.paymentHistory || [];
+        paymentHistory.push(paymentEntry);
+        
+        const updates = {
+            paidAmount: newPaidAmount,
+            remainingAmount: newRemainingAmount,
+            fullyPaid: isFullyPaid,
+            paymentHistory: JSON.stringify(paymentHistory),
+            lastPaymentDate: getCairoTimeISO()
+        };
+        
+        // If minimum deposit is met and booking was pending, confirm it
+        if (booking.status === 'pending' && newPaidAmount >= minimumDeposit) {
+            updates.status = 'confirmed';
+            updates.confirmedAt = getCairoTimeISO();
+        }
+        
+        await db.updateBooking(bookingId, updates);
+        
+        let statusMessage = '';
+        if (isFullyPaid) {
+            statusMessage = 'تم دفع المبلغ كاملاً';
+        } else if (newPaidAmount >= minimumDeposit) {
+            statusMessage = `تم دفع ${newPaidAmount} جنيه. المتبقي: ${newRemainingAmount} جنيه`;
+        } else {
+            statusMessage = `تم دفع ${newPaidAmount} جنيه. مطلوب ${minimumDeposit - newPaidAmount} جنيه إضافية على الأقل لتأكيد الحجز`;
+        }
+        
+        res.json({ 
+            success: true, 
+            message: `تم تسجيل الدفع بنجاح. ${statusMessage}`,
+            paidAmount: newPaidAmount,
+            remainingAmount: newRemainingAmount,
+            fullyPaid: isFullyPaid,
+            status: updates.status || booking.status
+        });
+        
+    } catch (error) {
+        console.error('Error recording payment:', error);
+        res.status(500).json({ success: false, message: 'خطأ في تسجيل الدفع' });
     }
 });
 
